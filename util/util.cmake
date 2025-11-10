@@ -3,11 +3,10 @@ AddTarget(util	shared_lib
 	SOURCE_DIRECTORY
 		"${CMAKE_CURRENT_LIST_DIR}"
 	LINK_LIBRARIES
+		Qt${QT_MAJOR_VERSION}::Core
 		Qt${QT_MAJOR_VERSION}::Gui
 		XercesC::XercesC
 	LINK_TARGETS
 		logging
 		zip
-	DEPENDENCIES
-		flicu
 )
