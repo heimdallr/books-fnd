@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <filesystem>
 #include <vector>
 
 namespace HomeCompa::Util
@@ -115,5 +116,80 @@ bool Intersect(const Container1& container1, const Container2& container2)
 {
 	return Intersect(std::cbegin(container1), std::cend(container1), std::cbegin(container2), std::cend(container2));
 }
+
+template <typename T>
+QString ToQString(const T& str) = delete;
+
+template <>
+inline QString ToQString<std::string>(const std::string& str)
+{
+	return QString::fromStdString(str);
+}
+
+template <>
+inline QString ToQString<QString>(const QString& str)
+{
+	return str;
+}
+
+template <>
+inline QString ToQString<std::wstring>(const std::wstring& str)
+{
+	return QString::fromStdWString(str);
+}
+
+template <>
+inline QString ToQString<std::pair<std::wstring, std::wstring>>(const std::pair<std::wstring, std::wstring>& str)
+{
+	return QString("%1/%2").arg(QString::fromStdWString(str.first), QString::fromStdWString(str.second));
+}
+
+template <>
+inline QString ToQString<std::filesystem::path>(const std::filesystem::path& str)
+{
+	return QString::fromStdWString(str);
+}
+
+template <class T>
+[[nodiscard]] T FakeCopyInit(T) noexcept = delete;
+
+template <class T = void>
+struct CaseInsensitiveComparer
+{
+	[[nodiscard]] constexpr bool operator()(const T& lhs, const T& rhs) const noexcept(noexcept(FakeCopyInit<bool>(lhs < rhs)))
+	{
+		return QString::compare(ToQString(lhs), ToQString(rhs), Qt::CaseInsensitive) < 0;
+	}
+};
+
+template <>
+struct CaseInsensitiveComparer<void>
+{
+	template <class L, class R>
+	[[nodiscard]] constexpr auto operator()(L&& lhs, R&& rhs) const noexcept(noexcept(static_cast<L&&>(lhs) < static_cast<R&&>(rhs))) -> decltype(static_cast<L&&>(lhs) < static_cast<R&&>(rhs))
+	{
+		return QString::compare(ToQString(static_cast<L&&>(lhs)), ToQString(static_cast<R&&>(rhs)), Qt::CaseInsensitive) < 0;
+	}
+
+	using is_transparent = int;
+};
+
+template <typename T>
+struct CaseInsensitiveHash
+{
+	size_t operator()(const T& value) const
+	{
+		return std::hash<QString>()(ToQString(value));
+	}
+};
+
+template <typename First, typename Second>
+struct PairHash
+{
+	size_t operator()(const std::pair<First, Second>& value) const
+	{
+		return std::rotl(std::hash<First>()(value.first), 1) | std::hash<Second>()(value.second);
+	}
+};
 
 } // namespace HomeCompa::Util
