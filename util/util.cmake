@@ -7,6 +7,7 @@ AddTarget(util	shared_lib
 		Qt${QT_MAJOR_VERSION}::Gui
 		XercesC::XercesC
 	LINK_TARGETS
+		fljxl
 		logging
 		zip
 )
