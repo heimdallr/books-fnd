@@ -21,7 +21,7 @@ constexpr auto COMPILATIONS                       = L"compilations.7z";
 constexpr auto COMPILATIONS_JSON                  = "compilations.json";
 constexpr auto AUTHORS_FOLDER                     = L"authors";
 
-constexpr auto TIME                               = "time";
-constexpr auto NAME                               = "name";
-constexpr auto TEXT                               = "text";
+constexpr auto TIME = "time";
+constexpr auto NAME = "name";
+constexpr auto TEXT = "text";
 }

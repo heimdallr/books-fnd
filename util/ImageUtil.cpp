@@ -64,7 +64,7 @@ constexpr std::pair<const char*, ImageFormatDescription> SIGNATURES[] {
 	{		 "\xFF\x0A",  { nullptr, &JxlDecoder, &JxlRecoder } },
 };
 
-}
+} // namespace
 
 QPixmap Decode(const QByteArray& bytes)
 {
