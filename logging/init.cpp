@@ -1,5 +1,7 @@
 #include "init.h"
 
+#include <QCommandLineParser>
+
 #include <plog/Appenders/RollingFileAppender.h>
 #include <plog/Formatters/TxtFormatter.h>
 
@@ -7,8 +9,7 @@
 #include "QtLoHandler.h"
 #include "log.h"
 
-namespace HomeCompa::Log
-{
+using namespace HomeCompa::Log;
 
 struct LoggingInitializer::Impl
 {
@@ -30,4 +31,13 @@ LoggingInitializer::LoggingInitializer(const std::filesystem::path& path)
 
 LoggingInitializer::~LoggingInitializer() = default;
 
+QString LoggingInitializer::AddLogFileOption(QCommandLineParser& parser, const QString& defaultPath)
+{
+	static constexpr auto LOG = "log";
+	parser.addOption({
+		{ QString(LOG[0]), QString(LOG) },
+		"Log file path",
+		defaultPath
+    });
+	return LOG;
 }

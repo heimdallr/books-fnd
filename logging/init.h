@@ -7,12 +7,18 @@
 
 #include "export/logging.h"
 
+class QCommandLineParser;
+class QString;
+
 namespace HomeCompa::Log
 {
 
 class LOGGING_EXPORT LoggingInitializer final
 {
 	NON_COPY_MOVABLE(LoggingInitializer)
+
+public:
+	static QString AddLogFileOption(QCommandLineParser& parser, const QString& defaultPath);
 
 public:
 	explicit LoggingInitializer(const std::filesystem::path& path);
