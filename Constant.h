@@ -18,6 +18,7 @@ constexpr auto REVIEWS_FOLDER                     = L"reviews";
 constexpr auto REVIEWS_ADDITIONAL_ARCHIVE_NAME    = L"additional.zip";
 constexpr auto REVIEWS_ADDITIONAL_BOOKS_FILE_NAME = "books.json";
 constexpr auto COMPILATIONS                       = L"compilations.7z";
+constexpr auto CONTENTS                           = L"contents.7z";
 constexpr auto COMPILATIONS_JSON                  = "compilations.json";
 constexpr auto AUTHORS_FOLDER                     = L"authors";
 
