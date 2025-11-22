@@ -4,6 +4,8 @@
 #include <filesystem>
 #include <vector>
 
+#include <QString>
+
 namespace HomeCompa::Util
 {
 

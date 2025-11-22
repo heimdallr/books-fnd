@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <memory>
+#include <string_view>
 #include <vector>
 
 #include "fnd/observer.h"
