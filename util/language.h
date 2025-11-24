@@ -167,6 +167,7 @@ constexpr Language LANGUAGES[] {
 	{ "sd", QT_TRANSLATE_NOOP("Language", "Sindhi") },
 	{ "se", QT_TRANSLATE_NOOP("Language", "Northern Sami") },
 	{ "sg", QT_TRANSLATE_NOOP("Language", "Sango") },
+	{ "sh", QT_TRANSLATE_NOOP("Language", "Serbo-Croatian") },
 	{ "si", QT_TRANSLATE_NOOP("Language", "Sinhalese") },
 	{ "sk", QT_TRANSLATE_NOOP("Language", "Slovak") },
 	{ "sl", QT_TRANSLATE_NOOP("Language", "Slovenian") },
