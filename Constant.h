@@ -21,6 +21,7 @@ constexpr auto COMPILATIONS                       = L"compilations.7z";
 constexpr auto CONTENTS                           = L"contents.7z";
 constexpr auto COMPILATIONS_JSON                  = "compilations.json";
 constexpr auto AUTHORS_FOLDER                     = L"authors";
+constexpr auto INP_FIELDS_DESCRIPTION             = "AUTHOR;GENRE;TITLE;SERIES;SERNO;FILE;SIZE;LIBID;DEL;EXT;DATE;LANG;LIBRATE;KEYWORDS;YEAR;SOURCELIB";
 
 constexpr auto TIME = "time";
 constexpr auto NAME = "name";
