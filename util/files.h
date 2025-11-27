@@ -7,9 +7,9 @@
 namespace HomeCompa::Util
 {
 
-UTIL_EXPORT QStringList ResolveWildcard(const QString& wildcard);
-UTIL_EXPORT QString     RemoveIllegalPathCharacters(QString str);
-UTIL_EXPORT QString     ToRelativePath(const QString& path);
-UTIL_EXPORT QString     ToAbsolutePath(const QString& path);
+UTIL_EXPORT std::vector<QString> ResolveWildcard(const QString& wildcard);
+UTIL_EXPORT QString              RemoveIllegalPathCharacters(QString str);
+UTIL_EXPORT QString              ToRelativePath(const QString& path);
+UTIL_EXPORT QString              ToAbsolutePath(const QString& path);
 
 }
