@@ -26,4 +26,13 @@ constexpr auto INP_FIELDS_DESCRIPTION             = "AUTHOR;GENRE;TITLE;SERIES;S
 constexpr auto TIME = "time";
 constexpr auto NAME = "name";
 constexpr auto TEXT = "text";
-}
+
+constexpr auto FOLDER = "folder";
+constexpr auto FILE   = "file";
+constexpr auto SUM    = "sum";
+constexpr auto COUNT  = "count";
+
+constexpr auto COMPILATION = "compilation";
+constexpr auto COVERED     = "covered";
+constexpr auto PART        = "part";
+} // namespace HomeCompa::Inpx
