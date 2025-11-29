@@ -194,4 +194,26 @@ struct PairHash
 	}
 };
 
+template <typename... Args>
+struct TupleHash
+{
+	size_t operator()(const std::tuple<Args...>& value) const
+	{
+		size_t result = 42;
+
+		const auto update = [&]<typename T>(const T& e) {
+			result = std::rotl(result, 1) | std::hash<T>()(e);
+		};
+
+		std::apply(
+			[&]<typename... T> (const T&... e) {
+				((update(e)), ...);
+			},
+			value
+		);
+
+		return result;
+	}
+};
+
 } // namespace HomeCompa::Util
