@@ -51,9 +51,8 @@ void Progress::Increment(const size_t value, const std::string& comment)
 		m_currentPct = currentPct;
 	});
 
-	const auto now      = std::chrono::system_clock::now();
-	const auto expected = m_startedAt + (now - m_startedAt) / count * m_total;
-	const auto left     = DurationToString(std::chrono::duration_cast<std::chrono::milliseconds>(expected - now).count());
+	const auto now  = std::chrono::system_clock::now();
+	const auto left = count >= m_total ? std::string { "done" } : DurationToString(std::chrono::duration_cast<std::chrono::milliseconds>(m_startedAt + (now - m_startedAt) / count * m_total - now).count());
 
 	if (comment.empty())
 	{
