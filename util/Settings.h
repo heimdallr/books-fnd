@@ -36,6 +36,7 @@ public:
 	void Remove(const QString& key) override;
 
 	void Save(const QString& path) const override;
+	void Load(const QString& path) override;
 
 	std::recursive_mutex& BeginGroup(const QString& group) const override;
 	void                  EndGroup() const override;

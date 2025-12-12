@@ -42,6 +42,7 @@ public:
 	virtual void Remove(const QString& key) = 0;
 
 	virtual void Save(const QString& path) const = 0;
+	virtual void Load(const QString& path)       = 0;
 
 	virtual void RegisterObserver(ISettingsObserver* observer)   = 0;
 	virtual void UnregisterObserver(ISettingsObserver* observer) = 0;

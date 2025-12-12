@@ -10,6 +10,30 @@
 namespace HomeCompa
 {
 
+namespace
+{
+
+void Copy(ISettings& dst, const ISettings& src)
+{
+	const auto enumerate = [&](const auto& r) -> void {
+		for (const auto& key : src.GetKeys())
+		{
+			const auto value = src.Get(key);
+			dst.Set(key, value, false);
+		}
+
+		for (const auto& group : src.GetGroups())
+		{
+			const SettingsGroup dstGroup(dst, group), srcGroup(src, group);
+			r(r);
+		}
+	};
+
+	enumerate(enumerate);
+}
+
+}
+
 struct Settings::Impl final : Observable<ISettingsObserver>
 {
 	explicit Impl(const QString& fileName)
@@ -97,22 +121,15 @@ void Settings::Remove(const QString& key)
 void Settings::Save(const QString& path) const
 {
 	QFile::remove(path);
-	Settings   dst(path);
-	const auto enumerate = [&](const auto& r) -> void {
-		for (const auto& key : GetKeys())
-		{
-			const auto value = Get(key);
-			dst.Set(key, value, false);
-		}
+	Settings dst(path);
+	Copy(dst, *this);
+}
 
-		for (const auto& group : GetGroups())
-		{
-			const SettingsGroup srcGroup(*this, group), dstGroup(dst, group);
-			r(r);
-		}
-	};
-
-	enumerate(enumerate);
+void Settings::Load(const QString& path)
+{
+	assert(QFile::exists(path));
+	const Settings src(path);
+	Copy(*this, src);
 }
 
 void Settings::RegisterObserver(ISettingsObserver* observer)
