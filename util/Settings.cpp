@@ -1,5 +1,6 @@
 #include "Settings.h"
 
+#include <QFile>
 #include <QSettings>
 
 #include "fnd/observable.h"
@@ -49,15 +50,17 @@ QVariant Settings::Get(const QString& key, const QVariant& defaultValue) const
 	return m_impl->settings.value(key, defaultValue);
 }
 
-void Settings::Set(const QString& key, const QVariant& value)
+void Settings::Set(const QString& key, const QVariant& value, const bool sync)
 {
 	if (Get(key) == value)
 		return;
 
 	std::lock_guard lock(m_impl->mutex);
 	m_impl->settings.setValue(key, value);
-	m_impl->settings.sync();
+	if (!sync)
+		return;
 
+	m_impl->settings.sync();
 	m_impl->Perform(&ISettingsObserver::HandleValueChanged, m_impl->Key(key), std::cref(value));
 }
 
@@ -89,6 +92,27 @@ void Settings::Remove(const QString& key)
 	std::lock_guard lock(m_impl->mutex);
 	m_impl->settings.remove(key);
 	m_impl->settings.sync();
+}
+
+void Settings::Save(const QString& path) const
+{
+	QFile::remove(path);
+	Settings   dst(path);
+	const auto enumerate = [&](const auto& r) -> void {
+		for (const auto& key : GetKeys())
+		{
+			const auto value = Get(key);
+			dst.Set(key, value, false);
+		}
+
+		for (const auto& group : GetGroups())
+		{
+			const SettingsGroup srcGroup(*this, group), dstGroup(dst, group);
+			r(r);
+		}
+	};
+
+	enumerate(enumerate);
 }
 
 void Settings::RegisterObserver(ISettingsObserver* observer)
