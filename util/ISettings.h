@@ -31,7 +31,7 @@ public:
 
 public:
 	[[nodiscard]] virtual QVariant Get(const QString& key, const QVariant& defaultValue = {}) const = 0;
-	virtual void                   Set(const QString& key, const QVariant& value)                   = 0;
+	virtual void                   Set(const QString& key, const QVariant& value, bool sync = true) = 0;
 
 	[[nodiscard]] virtual bool HasKey(const QString& key) const     = 0;
 	[[nodiscard]] virtual bool HasGroup(const QString& group) const = 0;
@@ -40,6 +40,9 @@ public:
 	[[nodiscard]] virtual QStringList GetGroups() const = 0;
 
 	virtual void Remove(const QString& key) = 0;
+
+	virtual void Save(const QString& path) const = 0;
+	virtual void Load(const QString& path)       = 0;
 
 	virtual void RegisterObserver(ISettingsObserver* observer)   = 0;
 	virtual void UnregisterObserver(ISettingsObserver* observer) = 0;

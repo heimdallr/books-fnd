@@ -1,5 +1,6 @@
 #include "Settings.h"
 
+#include <QFile>
 #include <QSettings>
 
 #include "fnd/observable.h"
@@ -8,6 +9,30 @@
 
 namespace HomeCompa
 {
+
+namespace
+{
+
+void Copy(ISettings& dst, const ISettings& src)
+{
+	const auto enumerate = [&](const auto& r) -> void {
+		for (const auto& key : src.GetKeys())
+		{
+			const auto value = src.Get(key);
+			dst.Set(key, value, false);
+		}
+
+		for (const auto& group : src.GetGroups())
+		{
+			const SettingsGroup dstGroup(dst, group), srcGroup(src, group);
+			r(r);
+		}
+	};
+
+	enumerate(enumerate);
+}
+
+}
 
 struct Settings::Impl final : Observable<ISettingsObserver>
 {
@@ -49,15 +74,17 @@ QVariant Settings::Get(const QString& key, const QVariant& defaultValue) const
 	return m_impl->settings.value(key, defaultValue);
 }
 
-void Settings::Set(const QString& key, const QVariant& value)
+void Settings::Set(const QString& key, const QVariant& value, const bool sync)
 {
 	if (Get(key) == value)
 		return;
 
 	std::lock_guard lock(m_impl->mutex);
 	m_impl->settings.setValue(key, value);
-	m_impl->settings.sync();
+	if (!sync)
+		return;
 
+	m_impl->settings.sync();
 	m_impl->Perform(&ISettingsObserver::HandleValueChanged, m_impl->Key(key), std::cref(value));
 }
 
@@ -89,6 +116,20 @@ void Settings::Remove(const QString& key)
 	std::lock_guard lock(m_impl->mutex);
 	m_impl->settings.remove(key);
 	m_impl->settings.sync();
+}
+
+void Settings::Save(const QString& path) const
+{
+	QFile::remove(path);
+	Settings dst(path);
+	Copy(dst, *this);
+}
+
+void Settings::Load(const QString& path)
+{
+	assert(QFile::exists(path));
+	const Settings src(path);
+	Copy(*this, src);
 }
 
 void Settings::RegisterObserver(ISettingsObserver* observer)
