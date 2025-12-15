@@ -206,7 +206,7 @@ struct TupleHash
 		};
 
 		std::apply(
-			[&]<typename... T> (const T&... e) {
+			[&]<typename... T>(const T&... e) {
 				((update(e)), ...);
 			},
 			value

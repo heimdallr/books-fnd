@@ -17,7 +17,7 @@ class UTIL_EXPORT Progress
 public:
 	Progress(size_t total, std::string name);
 	~Progress();
-	void Increment(size_t value, const std::string& comment = {});
+	void   Increment(size_t value, const std::string& comment = {});
 	size_t GetCount() const noexcept;
 
 private:
