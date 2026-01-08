@@ -16,3 +16,12 @@ private:
 
 // rule 5
 #define NON_COPY_MOVABLE(NAME) NON_COPYABLE(NAME) NON_MOVABLE(NAME)
+
+#define DEFAULT_COPY_MOVABLE(NAME)              \
+public:                                         \
+	NAME(const NAME&)                = default; \
+	NAME& operator=(const NAME&)     = default; \
+	NAME(NAME&&) noexcept            = default; \
+	NAME& operator=(NAME&&) noexcept = default; \
+                                                \
+private:
