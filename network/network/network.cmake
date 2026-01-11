@@ -8,7 +8,4 @@ AddTarget(network	shared_lib
 		logging
 	LINK_LIBRARIES
 		Qt${QT_MAJOR_VERSION}::Network
-	QT_PLUGINS
-		qopensslbackend
-		qschannelbackend
 )
