@@ -1,5 +1,7 @@
 #include "downloader.h"
 
+#include <ranges>
+
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
@@ -15,6 +17,14 @@ public:
 	{
 		QObject::connect(&m_manager, &QNetworkAccessManager::finished, &m_manager, [](QNetworkReply* reply) {
 			reply->deleteLater();
+		});
+		QObject::connect(&m_manager, &QNetworkAccessManager::sslErrors, &m_manager, [this](QNetworkReply* reply, const QList<QSslError>& errors) {
+			QStringList list;
+			std::ranges::transform(errors, std::back_inserter(list), [](const auto& item) {
+				return QString("%1 (%2)").arg(item.errorString()).arg(static_cast<int>(item.error()));
+			});
+			PLOGW << list.join(", ");
+			reply->ignoreSslErrors(errors);
 		});
 	}
 
