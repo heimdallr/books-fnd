@@ -17,6 +17,8 @@ struct UTIL_EXPORT QStringWrapper
 	static bool Compare(const QStringWrapper& lhs, const QStringWrapper& rhs, int emptyStringWeight = std::numeric_limits<int>::max());
 
 	bool operator<(const QStringWrapper& rhs) const;
+	bool operator>(const QStringWrapper& rhs) const;
+	bool operator==(const QStringWrapper& rhs) const;
 };
 
 }

@@ -1,6 +1,12 @@
 #include "SortString.h"
 
+#include <QCollator>
+#include <QLocale>
 #include <QString>
+
+#include "fnd/FindPair.h"
+
+#include "config/locales.h"
 
 using namespace HomeCompa::Util;
 
@@ -51,13 +57,15 @@ int FixCategoryDefault(uchar)
 	return 1;
 }
 
-int FixCategoryRu(const uchar ch)
+int FixCategoryCyr(const uchar ch)
 {
 	return ch == 4 ? 0 : 1;
 }
 
 using FixCategoryGetter               = int (*)(uchar);
 FixCategoryGetter FIX_CATEGORY_GETTER = &FixCategoryDefault;
+
+QCollator COLLATOR;
 
 int Category(const QString& s, const int emptyStringWeight) noexcept
 {
@@ -76,16 +84,36 @@ int Category(const QString& s, const int emptyStringWeight) noexcept
 
 void QStringWrapper::SetLocale(const QString& locale)
 {
-	FIX_CATEGORY_GETTER = locale == "en" ? &FixCategoryDefault : &FixCategoryRu;
+	static constexpr std::pair<const char*, std::pair<QLocale::Language, FixCategoryGetter>> localeDescription[] {
+		{ "ru",         { QLocale::Russian, &FixCategoryCyr } },
+		{ "uk",       { QLocale::Ukrainian, &FixCategoryCyr } },
+		{ "en", { QLocale::AnyLanguage, &FixCategoryDefault } },
+	};
+	static_assert(std::size(localeDescription) == std::size(Loc::LOCALES));
+	auto [language, fixCategoryGetter] = FindSecond(localeDescription, locale.toStdString().data(), PszComparer {});
+	if (language != QLocale::AnyLanguage)
+		COLLATOR.setLocale(language);
+	COLLATOR.setCaseSensitivity(Qt::CaseInsensitive);
+	FIX_CATEGORY_GETTER = fixCategoryGetter;
 }
 
 bool QStringWrapper::Compare(const QStringWrapper& lhs, const QStringWrapper& rhs, const int emptyStringWeight)
 {
 	const auto lCategory = Category(lhs.data, emptyStringWeight), rCategory = Category(rhs.data, emptyStringWeight);
-	return lCategory != rCategory ? lCategory < rCategory : QString::compare(lhs.data, rhs.data, Qt::CaseInsensitive) < 0;
+	return lCategory != rCategory ? lCategory < rCategory : COLLATOR.compare(lhs.data, rhs.data) < 0;
 }
 
 bool QStringWrapper::operator<(const QStringWrapper& rhs) const
 {
 	return Compare(*this, rhs);
+}
+
+bool QStringWrapper::operator>(const QStringWrapper& rhs) const
+{
+	return rhs < *this;
+}
+
+bool QStringWrapper::operator==(const QStringWrapper& rhs) const
+{
+	return !(*this < rhs || rhs < *this);
 }
