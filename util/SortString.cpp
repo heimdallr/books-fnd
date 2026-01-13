@@ -6,7 +6,9 @@
 
 #include "fnd/FindPair.h"
 
-#include "config/locales.h"
+#ifdef LOCALIZED_APPLICATION
+	#include "config/locales.h"
+#endif
 
 using namespace HomeCompa::Util;
 
@@ -89,7 +91,9 @@ void QStringWrapper::SetLocale(const QString& locale)
 		{ "uk",       { QLocale::Ukrainian, &FixCategoryCyr } },
 		{ "en", { QLocale::AnyLanguage, &FixCategoryDefault } },
 	};
+#ifdef LOCALIZED_APPLICATION
 	static_assert(std::size(localeDescription) == std::size(Loc::LOCALES));
+#endif
 	auto [language, fixCategoryGetter] = FindSecond(localeDescription, locale.toStdString().data(), PszComparer {});
 	if (language != QLocale::AnyLanguage)
 		COLLATOR.setLocale(language);
