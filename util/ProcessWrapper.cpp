@@ -1,4 +1,4 @@
-#include "process.h"
+#include "ProcessWrapper.h"
 
 #include <QDir>
 #include <QEventLoop>
