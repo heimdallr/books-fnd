@@ -1,8 +1,16 @@
 #pragma once
 
-#pragma warning(push, 0)
-#include <Windows.h>
-#pragma warning(pop)
+#include <iterator>
+#include <string>
+
+#include "export/util.h"
+
+namespace HomeCompa::Util
+{
+
+UTIL_EXPORT int MultiByteToWideCharImpl(const char* lpMultiByteStr, int cbMultiByte, wchar_t* lpWideCharStr, int cchWideChar);
+UTIL_EXPORT int WideCharToMultiByteImpl(const wchar_t* lpWideCharStr, int cchWideChar, char* lpMultiByteStr, int cbMultiByte);
+UTIL_EXPORT int CompareStringImpl(const wchar_t* lpString1, int cchCount1, const wchar_t* lpString2, int cchCount2);
 
 template <typename SizeType, typename StringType>
 SizeType StrSize(const StringType& str)
@@ -36,9 +44,9 @@ inline const char* MultiByteData(const char* data)
 template <typename StringType>
 std::wstring ToWide(const StringType& str)
 {
-	const auto   size = static_cast<std::wstring::size_type>(MultiByteToWideChar(CP_UTF8, 0, MultiByteData(str), StrSize<int>(str), nullptr, 0));
+	const auto   size = static_cast<std::wstring::size_type>(MultiByteToWideCharImpl(MultiByteData(str), StrSize<int>(str), nullptr, 0));
 	std::wstring result(size, 0);
-	MultiByteToWideChar(CP_UTF8, 0, MultiByteData(str), StrSize<int>(str), result.data(), StrSize<int>(result));
+	MultiByteToWideCharImpl(MultiByteData(str), StrSize<int>(str), result.data(), StrSize<int>(result));
 
 	return result;
 }
@@ -60,9 +68,9 @@ concept WideStringType = std::is_same_v<T, const std::wstring&> || std::is_same_
 template <WideStringType StringType>
 std::string ToMultiByte(const StringType& str)
 {
-	const auto  size = static_cast<std::wstring::size_type>(WideCharToMultiByte(CP_UTF8, 0, WideData(str), StrSize<int>(str), nullptr, 0, nullptr, nullptr));
+	const auto  size = static_cast<std::wstring::size_type>(WideCharToMultiByteImpl(WideData(str), StrSize<int>(str), nullptr, 0));
 	std::string result(size, 0);
-	WideCharToMultiByte(CP_UTF8, 0, WideData(str), StrSize<int>(str), result.data(), StrSize<int>(result), nullptr, nullptr);
+	WideCharToMultiByteImpl(WideData(str), StrSize<int>(str), result.data(), StrSize<int>(result));
 
 	return result;
 }
@@ -70,13 +78,13 @@ std::string ToMultiByte(const StringType& str)
 template <typename LhsType, typename RhsType>
 bool IsStringEqual(LhsType&& lhs, RhsType&& rhs)
 {
-	return CompareStringW(GetThreadLocale(), NORM_IGNORECASE, WideData(lhs), StrSize<int>(lhs), WideData(rhs), StrSize<int>(rhs)) == CSTR_EQUAL;
+	return CompareStringImpl(WideData(lhs), StrSize<int>(lhs), WideData(rhs), StrSize<int>(rhs)) == 0;
 }
 
 template <typename LhsType, typename RhsType>
 bool IsStringLess(LhsType&& lhs, RhsType&& rhs)
 {
-	return CompareStringW(GetThreadLocale(), NORM_IGNORECASE, WideData(lhs), StrSize<int>(lhs), WideData(rhs), StrSize<int>(rhs)) - CSTR_EQUAL < 0;
+	return CompareStringImpl(WideData(lhs), StrSize<int>(lhs), WideData(rhs), StrSize<int>(rhs)) < 0;
 }
 
 template <class T = void>
@@ -122,3 +130,5 @@ std::wstring_view Next(It& beg, const It end, const wchar_t separator)
 	beg = next != end ? std::next(next) : end;
 	return result;
 }
+
+} // namespace HomeCompa::Util

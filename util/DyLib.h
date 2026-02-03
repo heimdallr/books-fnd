@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <string>
 
+#include "fnd/NonCopyMovable.h"
+
 #include "export/Util.h"
 
 namespace HomeCompa::Util
@@ -10,6 +12,8 @@ namespace HomeCompa::Util
 
 class UTIL_EXPORT DyLib
 {
+	NON_COPY_MOVABLE(DyLib)
+
 public:
 	DyLib();
 	explicit DyLib(std::filesystem::path moduleName);
@@ -41,6 +45,8 @@ private:
 
 class AutoDetach
 {
+	NON_COPY_MOVABLE(AutoDetach)
+
 public:
 	explicit AutoDetach(DyLib& module, const bool detach = true)
 		: m_detach(detach)

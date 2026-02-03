@@ -38,7 +38,7 @@ LanguageMapping::LanguageMapping(const QString& langMappingFile)
 	}
 
 	std::ranges::transform(LANGUAGES, std::inserter(langs, langs.end()), [](const auto& item) {
-		return ToWide(item.key);
+		return Util::ToWide(item.key);
 	});
 	assert(std::size(langs) == std::size(LANGUAGES));
 }
