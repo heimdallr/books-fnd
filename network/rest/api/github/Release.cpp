@@ -1,7 +1,5 @@
 #include "Release.h"
 
-#include <ranges>
-
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QJsonValue>
@@ -24,18 +22,13 @@ QStringList ParseBody(const QJsonValue& data)
 	if (!data.isString())
 		return {};
 
-	QRegularExpression rx(R"(^.*?\[(.*?)\].*?\(.*?\)(.*?)$)");
+	const QRegularExpression rx(R"(^.*?\[(.*?)\].*?\(.*?\)(.*?)$)");
 
-	return data.toString().split("\r\n") | std::views::transform([&](const QString& item) {
-			   return rx.match(item);
-		   })
-	     | std::views::filter([](const QRegularExpressionMatch& item) {
-			   return item.hasMatch();
-		   })
-	     | std::views::transform([](const QRegularExpressionMatch& item) {
-			   return QString("%1%2").arg(item.captured(1), item.captured(2));
-		   })
-	     | std::ranges::to<QStringList>();
+	QStringList result;
+	for (const auto& item : data.toString().split("\r\n"))
+		if (const auto match = rx.match(item); match.hasMatch())
+			result << QString("%1%2").arg(match.captured(1), match.captured(2));
+	return result;
 }
 
 }
