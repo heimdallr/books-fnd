@@ -9,6 +9,7 @@
 
 namespace HomeCompa::Util
 {
+
 QStringList SplitStringWithQuotes(const QString& str)
 {
 	QRegularExpression              regex("\"([^\"]*)\"|([^\\s,]+)");

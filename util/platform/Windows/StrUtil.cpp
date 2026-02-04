@@ -22,5 +22,4 @@ int CompareStringImpl(const wchar_t* lpString1, const int cchCount1, const wchar
 	return CompareStringW(GetThreadLocale(), NORM_IGNORECASE, lpString1, cchCount1, lpString2, cchCount2) - CSTR_EQUAL;
 }
 
-
 }

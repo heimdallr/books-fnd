@@ -11,7 +11,9 @@ class QIODevice;
 
 namespace HomeCompa::ZipDetails
 {
+
 class ProgressCallback;
+
 }
 
 namespace HomeCompa::ZipDetails::SevenZip

@@ -9,9 +9,11 @@ class QString;
 
 namespace HomeCompa::ZipDetails
 {
+
 enum class Format;
 class IZip;
 class ProgressCallback;
+
 }
 
 namespace HomeCompa::ZipDetails::SevenZip

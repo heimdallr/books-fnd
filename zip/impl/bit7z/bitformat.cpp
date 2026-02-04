@@ -19,6 +19,7 @@ namespace bit7z
 
 namespace BitFormat
 {
+
 #ifdef BIT7Z_AUTO_FORMAT
 const BitInFormat Auto(0x00);
 #endif
@@ -87,6 +88,7 @@ const BitInFormat    Deb(0xEC);
 const BitInFormat    Cpio(0xED);
 const BitInOutFormat Tar(0xEE, BIT7Z_STRING(".tar"), BitCompressionMethod::Copy, FormatFeatures::MultipleFiles);
 const BitInOutFormat GZip(0xEF, BIT7Z_STRING(".gz"), BitCompressionMethod::Deflate, FormatFeatures::CompressionLevel);
+
 } // namespace BitFormat
 
 auto BitInFormat::value() const noexcept -> unsigned char

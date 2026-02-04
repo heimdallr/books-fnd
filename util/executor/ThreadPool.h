@@ -10,6 +10,7 @@
 
 namespace HomeCompa::Util
 {
+
 class ThreadPool
 {
 	NON_COPY_MOVABLE(ThreadPool)

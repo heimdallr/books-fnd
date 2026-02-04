@@ -2,7 +2,9 @@
 
 namespace HomeCompa
 {
+
 class Observer;
+
 }
 
 namespace HomeCompa::ObserverHelper

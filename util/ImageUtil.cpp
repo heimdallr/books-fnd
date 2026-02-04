@@ -11,6 +11,7 @@ namespace HomeCompa::Util
 
 namespace
 {
+
 using Decoder = QPixmap (*)(const QByteArray&);
 using Recoder = std::pair<QByteArray, const char*> (*)(const QByteArray& bytes, const char* type);
 

@@ -34,10 +34,12 @@ LoggingInitializer::~LoggingInitializer() = default;
 QString LoggingInitializer::AddLogFileOption(QCommandLineParser& parser, const QString& defaultPath)
 {
 	static constexpr auto LOG = "log";
-	parser.addOption({
-		{ QString(LOG[0]), QString(LOG) },
-		"Log file path",
-		defaultPath
-    });
+	parser.addOption(
+		{
+			{ QString(LOG[0]), QString(LOG) },
+			"Log file path",
+			defaultPath
+    }
+	);
 	return LOG;
 }

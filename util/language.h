@@ -10,6 +10,7 @@
 
 namespace HomeCompa
 {
+
 constexpr auto DEFAULT_LANGUAGES_MAPPING = L"LanguagesMapping.json";
 
 constexpr auto LANGUAGES_CONTEXT = "Language";

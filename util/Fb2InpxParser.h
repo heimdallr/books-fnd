@@ -9,7 +9,9 @@
 
 namespace HomeCompa
 {
+
 class Zip;
+
 }
 
 class QDateTime;

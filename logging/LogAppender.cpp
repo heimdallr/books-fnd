@@ -9,7 +9,9 @@ namespace HomeCompa::Log
 
 namespace
 {
+
 std::unique_ptr<plog::DynamicAppender> g_dynamicAppender;
+
 }
 
 LogAppender::LogAppender(plog::IAppender* appender)

@@ -63,7 +63,8 @@ predefined macros defined in "Common.h".
 				#pragma warning(disable : 5027) // move assignment operator was implicitly defined as deleted
 			#endif
 			#if _MSC_VER >= 1912
-				#pragma warning(disable : 5039 \
+				#pragma warning(   \
+					disable : 5039 \
 				) // pointer or reference to potentially throwing function passed to 'extern "C"' function under - EHc.Undefined behavior may occur if this function throws an exception.
 			#endif
 			#if _MSC_VER >= 1925

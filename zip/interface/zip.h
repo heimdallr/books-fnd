@@ -8,7 +8,9 @@
 
 namespace HomeCompa
 {
+
 class IZipFileProvider;
+
 }
 
 namespace HomeCompa::ZipDetails

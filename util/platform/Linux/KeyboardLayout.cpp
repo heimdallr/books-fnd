@@ -22,5 +22,4 @@ void SetKeyboardLayout(const std::string& locale)
 
 static_assert(false);
 
-
 }

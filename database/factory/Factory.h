@@ -7,7 +7,9 @@
 
 namespace HomeCompa::DB
 {
+
 class IDatabase;
+
 }
 
 namespace HomeCompa::DB::Factory

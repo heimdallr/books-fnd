@@ -7,7 +7,9 @@
 #define UTIL_EXECUTOR_IMPL(NAME)                                    \
 	namespace HomeCompa::Util::ExecutorPrivate::NAME                \
 	{                                                               \
+                                                                    \
 	std::unique_ptr<IExecutor> CreateExecutor(ExecutorInitializer); \
+                                                                    \
 	}
 UTIL_EXECUTOR_IMPLS_XMACRO
 #undef UTIL_EXECUTOR_IMPL

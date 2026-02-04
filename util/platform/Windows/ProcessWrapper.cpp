@@ -29,4 +29,4 @@ bool ShellExecuteImpl(const std::wstring& file, const std::wstring& parameters, 
 	return true;
 }
 
-}
+} // namespace HomeCompa::Util

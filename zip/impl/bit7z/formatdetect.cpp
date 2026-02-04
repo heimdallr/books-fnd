@@ -41,6 +41,7 @@ auto constexpr str_hash(const bit7z::tchar* input) -> uint64_t
 
 namespace bit7z
 {
+
 /* NOTE: Until v3, a std::unordered_map was used for mapping the extensions and the corresponding
  *       format, but the ifs are faster and have less memory footprint. */
 auto find_format_by_extension(const tstring& extension) -> const BitInFormat*
@@ -504,6 +505,7 @@ auto detect_format_from_extension(const fs::path& inFile) -> const BitInFormat&
 	// The extension did not match any known format extension, delegating the decision to the client.
 	return BitFormat::Auto;
 }
+
 } // namespace bit7z
 
 #endif

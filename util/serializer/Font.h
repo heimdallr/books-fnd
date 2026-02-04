@@ -4,7 +4,9 @@
 
 namespace HomeCompa
 {
+
 class ISettings;
+
 }
 
 class QFont;

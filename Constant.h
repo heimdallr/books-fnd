@@ -11,6 +11,7 @@ constexpr auto PICTURES = "pictures";
 
 namespace HomeCompa::Inpx
 {
+
 constexpr auto STRUCTURE_INFO                     = "structure.info";
 constexpr auto VERSION_INFO                       = L"version.info";
 constexpr auto COLLECTION_INFO                    = L"collection.info";
@@ -35,4 +36,5 @@ constexpr auto COUNT  = "count";
 constexpr auto COMPILATION = "compilation";
 constexpr auto COVERED     = "covered";
 constexpr auto PART        = "part";
+
 } // namespace HomeCompa::Inpx

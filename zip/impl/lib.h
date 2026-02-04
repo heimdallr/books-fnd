@@ -6,6 +6,7 @@ struct _GUID;
 
 namespace HomeCompa::ZipDetails::SevenZip
 {
+
 class Lib
 {
 public:
@@ -18,4 +19,5 @@ private:
 	struct Impl;
 	PropagateConstPtr<Impl> m_impl;
 };
+
 }

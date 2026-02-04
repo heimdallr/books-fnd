@@ -9,6 +9,7 @@ namespace HomeCompa::Util
 
 namespace
 {
+
 constexpr auto FAMILY              = "family";
 constexpr auto POINT_SIZE_F        = "pointSizeF";
 constexpr auto PIXEL_SIZE          = "pixelSize";
@@ -24,6 +25,7 @@ constexpr auto LETTER_SPACING      = "letterSpacing";
 constexpr auto WORD_SPACING        = "wordSpacing";
 constexpr auto STRETCH             = "stretch";
 constexpr auto STYLE_STRATEGY      = "styleStrategy";
+
 }
 
 void Serialize(const QFont& font, ISettings& settings)

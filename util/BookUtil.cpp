@@ -6,6 +6,7 @@
 
 namespace HomeCompa::Util::Remove
 {
+
 AllFiles CollectBookFiles(Books& books, const std::function<std::shared_ptr<Zip::ProgressCallback>()>& progressProvider)
 {
 	AllFiles result;

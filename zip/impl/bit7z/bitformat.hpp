@@ -181,6 +181,7 @@ private:
  */
 namespace BitFormat
 {
+
 #ifdef BIT7Z_AUTO_FORMAT
 /**
  * @brief Automatic Format Detection (available only when compiling bit7z using the `BIT7Z_AUTO_FORMAT` option).
@@ -247,6 +248,7 @@ extern const BitInOutFormat Xz; ///< XZ Archive Format
 extern const BitInOutFormat Wim; ///< WIM Archive Format
 extern const BitInOutFormat Tar; ///< TAR Archive Format
 extern const BitInOutFormat GZip; ///< GZIP Archive Format
+
 } // namespace BitFormat
 
 #ifdef BIT7Z_AUTO_FORMAT

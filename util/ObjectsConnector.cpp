@@ -10,6 +10,7 @@ namespace HomeCompa::Util
 
 namespace
 {
+
 using MetaPair    = std::pair<const QObject*, std::string>;
 using MetaObjects = std::unordered_map<QString, std::list<MetaPair>>;
 MetaObjects g_signals, g_slots; // NOLINT(clang-diagnostic-exit-time-destructors)

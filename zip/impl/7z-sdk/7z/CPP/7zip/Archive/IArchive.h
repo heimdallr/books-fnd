@@ -38,6 +38,7 @@ How the function in 7-Zip returns object for output parameter via pointer
 
 namespace NFileTimeType
 {
+
 enum EEnum
 {
 	kNotDefined = -1,
@@ -46,10 +47,12 @@ enum EEnum
 	kDOS,
 	k1ns
 };
+
 }
 
 namespace NArcInfoFlags
 {
+
 const UInt32 kKeepName        = 1 << 0; // keep name of file in archive name
 const UInt32 kAltStreams      = 1 << 1; // the handler supports alt streams
 const UInt32 kNtSecure        = 1 << 2; // the handler supports NT security
@@ -72,15 +75,18 @@ const UInt32 kMTime           = 1 << 18;
 const UInt32 kMTime_Default   = 1 << 19;
 // const UInt32 kTTime_Reserved         = 1 << 20;
 // const UInt32 kTTime_Reserved_Default = 1 << 21;
+
 } // namespace NArcInfoFlags
 
 namespace NArcInfoTimeFlags
 {
+
 const unsigned kTime_Prec_Mask_bit_index = 0;
 const unsigned kTime_Prec_Mask_num_bits  = 26;
 
 const unsigned kTime_Prec_Default_bit_index = 27;
 const unsigned kTime_Prec_Default_num_bits  = 5;
+
 }
 
 #define TIME_PREC_TO_ARC_FLAGS_MASK(v) ((UInt32)1 << (NArcInfoTimeFlags::kTime_Prec_Mask_bit_index + (v)))
@@ -91,6 +97,7 @@ namespace NArchive
 {
 namespace NHandlerPropID
 {
+
 enum
 {
 	kName = 0, // VT_BSTR
@@ -107,12 +114,14 @@ enum
 	kFlags, // VT_UI4
 	kTimeFlags // VT_UI4
 };
+
 }
 
 namespace NExtract
 {
 namespace NAskMode
 {
+
 enum
 {
 	kExtract = 0,
@@ -120,10 +129,12 @@ enum
 	kSkip,
 	kReadExternal
 };
+
 }
 
 namespace NOperationResult
 {
+
 enum
 {
 	kOK = 0,
@@ -138,11 +149,13 @@ enum
 	kWrongPassword
 	// , kMemError
 };
+
 }
 }
 
 namespace NEventIndexType
 {
+
 enum
 {
 	kNoIndex = 0,
@@ -151,18 +164,21 @@ enum
 	kOutArcIndex
 	// kArcProp
 };
+
 }
 
 namespace NUpdate
 {
 namespace NOperationResult
 {
+
 enum
 {
 	kOK = 0
 	// kError = 1,
 	// kError_FileChanged
 };
+
 }
 }
 } // namespace NArchive
@@ -302,15 +318,18 @@ Z7_IFACE_CONSTR_ARCHIVE(IInArchive, 0x60)
 
 namespace NParentType
 {
+
 enum
 {
 	kDir = 0,
 	kAltStream
 };
+
 }
 
 namespace NPropDataType
 {
+
 const UInt32 kMask_ZeroEnd = 1 << 4;
 // const UInt32 kMask_BigEndian = 1 << 5;
 const UInt32 kMask_Utf   = 1 << 6;
@@ -323,6 +342,7 @@ const UInt32 kRaw        = 1;
 
 const UInt32 kUtf8z  = kMask_Utf8 | kMask_ZeroEnd;
 const UInt32 kUtf16z = kMask_Utf16 | kMask_ZeroEnd;
+
 }
 
 // UTF string (pointer to wchar_t) with zero end and little-endian.
@@ -422,6 +442,7 @@ Z7_IFACE_CONSTR_ARCHIVE_SUB(IArchiveUpdateCallback2, IArchiveUpdateCallback, 0x8
 
 namespace NUpdateNotifyOp
 {
+
 enum
 {
 	kAdd = 0,
@@ -437,6 +458,7 @@ enum
 	// , kOpFinished
 	// , kNumDefined
 };
+
 }
 
 /*
@@ -518,6 +540,7 @@ Z7_IFACE_CONSTR_ARCHIVE(IArchiveAllowTail, 0x05)
 
 namespace NRequestMemoryUseFlags
 {
+
 const UInt32 k_AllowedSize_WasForced = 1 << 0; // (*allowedSize) was forced by -mmemx or -smemx
 const UInt32 k_DefaultLimit_Exceeded = 1 << 1; // default limit of archive format was exceeded
 const UInt32 k_MLimit_Exceeded       = 1 << 2; // -mmemx value was exceeded
@@ -534,16 +557,19 @@ const UInt32 k_Report_SkipArc     = 1 << 13; // report about SkipArc operation
 
 // const UInt32 k_SkipBigFiles_IsExpected  = 1 << 16; // NRequestMemoryAnswerFlags::k_SkipBigFiles flag answer is expected (unused)
 // const UInt32 k_Report_SkipBigFiles      = 1 << 17; // report that all big files will be skipped (unused)
+
 }
 
 namespace NRequestMemoryAnswerFlags
 {
+
 const UInt32 k_Allow   = 1 << 0; // allow further archive extraction
 const UInt32 k_Stop    = 1 << 1; // for exit (and return_code == E_ABORT is used)
 const UInt32 k_SkipArc = 1 << 2; // skip current archive extraction
 // const UInt32 k_SkipBigFile    = 1 << 4;  // skip extracting of files that exceed limit (unused)
 // const UInt32 k_SkipBigFiles   = 1 << 5;  // skip extracting of files that exceed limit (unused)
 const UInt32 k_Limit_Exceeded = 1 << 10; // limit was exceeded
+
 }
 
 /*
@@ -575,8 +601,10 @@ namespace NWindows
 {
 namespace NCOM
 {
+
 // PropVariant.cpp
 BSTR AllocBstrFromAscii(const char* s) throw();
+
 }
 }
 

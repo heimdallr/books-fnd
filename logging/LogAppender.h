@@ -6,7 +6,9 @@
 
 namespace plog
 {
+
 class IAppender;
+
 }
 
 namespace HomeCompa::Log
