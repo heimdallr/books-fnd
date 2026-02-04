@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QString>
+#include <QStringList>
 
 class QJsonValue;
 
@@ -25,11 +25,12 @@ struct Asset
 
 struct Release
 {
-	int64_t id { -1 };
-	QString name;
-	QString tag_name;
-	QString html_url;
-	Assets  assets;
+	int64_t     id { -1 };
+	QString     name;
+	QString     tag_name;
+	QString     html_url;
+	Assets      assets;
+	QStringList whatsNew;
 
 	static void ParseGetLatestRelease(IClient& client, const QJsonValue& data);
 

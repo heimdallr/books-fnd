@@ -1,5 +1,7 @@
 #include "Release.h"
 
+#include <ranges>
+
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QJsonValue>
@@ -15,6 +17,25 @@ template <typename T>
 T deserialize(const QJsonObject& data, const QString& key)
 {
 	return data[key].toVariant().value<T>();
+}
+
+QStringList ParseBody(const QJsonValue& data)
+{
+	if (!data.isString())
+		return {};
+
+	QRegularExpression rx(R"(^.*?\[(.*?)\].*?\(.*?\)(.*?)$)");
+
+	return data.toString().split("\r\n") | std::views::transform([&](const QString& item) {
+			   return rx.match(item);
+		   })
+	     | std::views::filter([](const QRegularExpressionMatch& item) {
+			   return item.hasMatch();
+		   })
+	     | std::views::transform([](const QRegularExpressionMatch& item) {
+			   return QString("%1%2").arg(item.captured(1), item.captured(2));
+		   })
+	     | std::ranges::to<QStringList>();
 }
 
 }
@@ -53,6 +74,7 @@ Release::Release(const QJsonValue& data)
 	, ITEM(tag_name)
 	, ITEM(html_url)
 #undef ITEM
-	, assets(Asset::ParseAssets(data["assets"]))
+	, assets { Asset::ParseAssets(data["assets"]) }
+	, whatsNew { ParseBody(data["body"]) }
 {
 }
