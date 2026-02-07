@@ -141,6 +141,12 @@ inline QString ToQString<std::wstring>(const std::wstring& str)
 }
 
 template <>
+inline QString ToQString<std::wstring_view>(const std::wstring_view& str)
+{
+	return QString::fromStdWString(std::wstring(str));
+}
+
+template <>
 inline QString ToQString<std::pair<std::wstring, std::wstring>>(const std::pair<std::wstring, std::wstring>& str)
 {
 	return QString("%1/%2").arg(QString::fromStdWString(str.first), QString::fromStdWString(str.second));
