@@ -64,5 +64,6 @@ UTIL_EXPORT BookHashItem GetHash(const QString& path, const QString& file);
 UTIL_EXPORT std::ostream& operator<<(std::ostream& stream, const BookHashItem& bookHashItem);
 UTIL_EXPORT QByteArray    Serialize(const BookHashItem& bookHashItem);
 UTIL_EXPORT BookHashItem  Deserialize(const QByteArray& bytes);
+UTIL_EXPORT QStringList   Compare(const BookHashItem& lhs, const BookHashItem& rhs);
 
 } // namespace HomeCompa::Util
