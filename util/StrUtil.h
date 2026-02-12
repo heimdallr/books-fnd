@@ -1,9 +1,15 @@
 #pragma once
 
+#include <filesystem>
+#include <format>
 #include <iterator>
 #include <string>
 
+#include <QString>
+
 #include "export/util.h"
+
+class QString;
 
 namespace HomeCompa::Util
 {
@@ -11,6 +17,9 @@ namespace HomeCompa::Util
 UTIL_EXPORT int MultiByteToWideCharImpl(const char* lpMultiByteStr, int cbMultiByte, wchar_t* lpWideCharStr, int cchWideChar);
 UTIL_EXPORT int WideCharToMultiByteImpl(const wchar_t* lpWideCharStr, int cchWideChar, char* lpMultiByteStr, int cbMultiByte);
 UTIL_EXPORT int CompareStringImpl(const wchar_t* lpString1, int cchCount1, const wchar_t* lpString2, int cchCount2);
+
+UTIL_EXPORT QString& SimplifyTitle(QString& value);
+UTIL_EXPORT QString& PrepareTitle(QString& value);
 
 template <typename SizeType, typename StringType>
 SizeType StrSize(const StringType& str)
@@ -132,3 +141,21 @@ std::wstring_view Next(It& beg, const It end, const wchar_t separator)
 }
 
 } // namespace HomeCompa::Util
+
+template <>
+struct std::formatter<QString> : std::formatter<std::string>
+{
+	auto format(const QString& obj, std::format_context& ctx) const
+	{
+		return std::formatter<std::string>::format(obj.toStdString(), ctx);
+	}
+};
+
+template <>
+struct std::formatter<std::filesystem::path> : std::formatter<std::string>
+{
+	auto format(const std::filesystem::path& obj, std::format_context& ctx) const
+	{
+		return std::formatter<std::string>::format(obj.string(), ctx);
+	}
+};
