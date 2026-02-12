@@ -4,10 +4,12 @@
 
 #include <ranges>
 #include <set>
+#include <unordered_set>
 
 #include <QDir>
 #include <QFileInfo>
 #include <QJsonArray>
+#include <QJsonDocument>
 #include <QJsonObject>
 
 #include "fnd/FindPair.h"
