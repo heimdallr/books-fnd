@@ -15,6 +15,7 @@
 #include "Constant.h"
 #include "hashfb2.h"
 #include "hashxml.h"
+#include "log.h"
 #include "zip.h"
 
 using namespace HomeCompa::Util;
@@ -25,6 +26,7 @@ namespace
 
 constexpr auto KEY_FOLDER    = "folder";
 constexpr auto KEY_FILE      = "file";
+constexpr auto KEY_TITLE     = "title";
 constexpr auto KEY_ID        = "id";
 constexpr auto KEY_HASH      = "hash";
 constexpr auto KEY_PHASH     = "phash";
@@ -151,9 +153,9 @@ QByteArray Serialize(const BookHashItem& bookHashItem)
 	for (const auto& image : bookHashItem.images)
 		images.append(
 			QJsonObject {
-				{    KEY_ID,                   image.file },
-				{  KEY_HASH,                   image.hash },
-				{ KEY_PHASH, QString::number(image.pHash) },
+				{ KEY_ID, image.file },
+				{ KEY_HASH, image.hash },
+				{ KEY_PHASH, QString("%1").arg(image.pHash, 16, 16, QChar { '0' }) },
         }
 		);
 
@@ -170,14 +172,15 @@ QByteArray Serialize(const BookHashItem& bookHashItem)
         {      KEY_FILE,                 bookHashItem.file },
         {        KEY_ID,       bookHashItem.parseResult.id },
         {      KEY_HASH, bookHashItem.parseResult.hashText },
+		{     KEY_TITLE,    bookHashItem.parseResult.title },
         { KEY_HISTOGRAM,              std::move(histogram) },
 	};
 	if (!bookHashItem.cover.hash.isEmpty())
 		obj.insert(
 			KEY_COVER,
 			QJsonObject {
-				{  KEY_HASH,                   bookHashItem.cover.hash },
-				{ KEY_PHASH, QString::number(bookHashItem.cover.pHash) },
+				{ KEY_HASH, bookHashItem.cover.hash },
+				{ KEY_PHASH, QString("%1").arg(bookHashItem.cover.pHash, 16, 16, QChar { '0' }) },
         }
 		);
 	if (!images.isEmpty())
@@ -186,4 +189,61 @@ QByteArray Serialize(const BookHashItem& bookHashItem)
 	return QJsonDocument(obj).toJson(QJsonDocument::Compact);
 }
 
+BookHashItem Deserialize(const QByteArray& bytes)
+{
+	QJsonParseError jsonParseError;
+	auto            doc = QJsonDocument::fromJson(bytes, &jsonParseError);
+	if (jsonParseError.error != QJsonParseError::NoError)
+	{
+		PLOGE << jsonParseError.errorString() << ":\n" << QString::fromUtf8(bytes);
+		return {};
+	}
+
+	if (!doc.isObject())
+	{
+		PLOGE << "doc must be an object:\n" << QString::fromUtf8(bytes);
+		return {};
+	}
+
+	const auto obj = doc.object();
+
+	return {
+		.folder = obj.value(KEY_FOLDER).toString(),
+		.file   = obj.value(KEY_FILE).toString(),
+		.cover  = [&]() -> ImageHashItem {
+			const auto value = obj.value(KEY_COVER);
+			if (value.isNull() || !value.isObject())
+				return {};
+
+			const auto object = value.toObject();
+			return ImageHashItem { .hash = object.value(KEY_HASH).toString(), .pHash = object.value(KEY_PHASH).toString().toULongLong(nullptr, 16) };
+										  }
+			  (),
+		.images = [&]() -> ImageHashItems {
+			const auto value = obj.value(KEY_IMAGES);
+			if (value.isNull() || !value.isArray())
+				return {};
+
+			return value.toArray() | std::views::transform([](const auto& item) {
+					   const auto imageObj = item.toObject();
+					   return ImageHashItem { .file = imageObj.value(KEY_ID).toString(), .hash = imageObj.value(KEY_HASH).toString(), .pHash = imageObj.value(KEY_PHASH).toString().toULongLong(nullptr, 16) };
+				   })
+		         | std::ranges::to<ImageHashItems>();
+										  }
+			  (),
+		.parseResult = { .id         = obj.value(KEY_ID).toString(),
+		                                  .title      = obj.value(KEY_TITLE).toString(),
+		                                  .hashText   = obj.value(KEY_HASH).toString(),
+		                                  .hashValues = [&]() -> TextHistogram {
+							 const auto histogramValue = obj.value(KEY_HISTOGRAM);
+							 if (histogramValue.isNull() || !histogramValue.isArray())
+								 return {};
+							 return histogramValue.toArray() | std::views::transform([](const auto& item) {
+										const auto word = item.toObject();
+										return std::make_pair(word.value(KEY_COUNT).toInt(), word.value(KEY_WORD).toString());
+									})
+		                          | std::ranges::to<TextHistogram>();
+						 }() }
+	};
+}
 } // namespace HomeCompa::Util
