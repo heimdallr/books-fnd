@@ -383,7 +383,7 @@ void ParseFb2Hash(BookHashItem& bookHashItem, QCryptographicHash& cryptographicH
 		SetHash(item, cryptographicHash);
 	});
 	std::ranges::sort(bookHashItem.images, {}, [](const auto& item) {
-		auto ok = false;
+		auto       ok     = false;
 		const auto number = item.file.toLongLong(&ok);
 		return ok ? QString("%1").arg(number, 16, 10, QChar { '0' }) : item.file;
 	});
