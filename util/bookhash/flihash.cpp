@@ -7,6 +7,8 @@
 
 #include <QDir>
 #include <QFileInfo>
+#include <QJsonArray>
+#include <QJsonObject>
 
 #include "fnd/FindPair.h"
 
@@ -20,6 +22,17 @@ using namespace HomeCompa;
 
 namespace
 {
+
+constexpr auto KEY_FOLDER    = "folder";
+constexpr auto KEY_FILE      = "file";
+constexpr auto KEY_ID        = "id";
+constexpr auto KEY_HASH      = "hash";
+constexpr auto KEY_PHASH     = "phash";
+constexpr auto KEY_COVER     = "cover";
+constexpr auto KEY_IMAGES    = "images";
+constexpr auto KEY_HISTOGRAM = "histogram";
+constexpr auto KEY_WORD      = "word";
+constexpr auto KEY_COUNT     = "count";
 
 BookHashItem GetHash_7z(const QString& path, const QString& file)
 {
@@ -99,7 +112,7 @@ BookHashItem BookHashItemProvider::Get(const QString& file) const
 	return bookHashItem;
 }
 
-namespace HomeCompa::FliLib
+namespace HomeCompa::Util
 {
 
 BookHashItem GetHash(const QString& path, const QString& file)
@@ -111,7 +124,67 @@ BookHashItem GetHash(const QString& path, const QString& file)
 #undef ITEM
 	};
 
-	return FindSecond(parsers, QFileInfo(path).suffix().toLower().toStdString().data(), PszComparer {})(path, file);
+	auto bookHashItem = FindSecond(parsers, QFileInfo(path).suffix().toLower().toStdString().data(), PszComparer {})(path, file);
+	bookHashItem.body.clear();
+
+	return bookHashItem;
 }
 
+std::ostream& operator<<(std::ostream& stream, const BookHashItem& bookHashItem)
+{
+	auto result = QStringList() << QString("%1/%2, %3").arg(bookHashItem.folder, bookHashItem.file, bookHashItem.parseResult.title) << QString("full hash: %1").arg(bookHashItem.parseResult.id)
+	                            << QString("top-10 hash: %1").arg(bookHashItem.parseResult.hashText);
+	std::ranges::transform(bookHashItem.parseResult.hashValues, std::back_inserter(result), [](const auto& item) {
+		return QString("%1: %2").arg(item.first).arg(item.second);
+	});
+	result << QString("cover%1").arg(
+		bookHashItem.cover.hash.isEmpty() ? QString { " not found" } : QString(" hash: %1, pHash: %2").arg(bookHashItem.cover.hash).arg(bookHashItem.cover.pHash, 16, 16, QChar { '0' })
+	);
+	std::ranges::transform(bookHashItem.images, std::back_inserter(result), [](const auto& item) {
+		return QString("image %1 hash: %2, pHash: %3").arg(item.file, item.hash).arg(item.pHash, 16, 16, QChar { '0' });
+	});
+	return stream << result.join('\n').toStdString();
 }
+
+QByteArray Serialize(const BookHashItem& bookHashItem)
+{
+	QJsonArray images;
+	for (const auto& image : bookHashItem.images)
+		images.append(
+			QJsonObject {
+				{    KEY_ID,                   image.file },
+				{  KEY_HASH,                   image.hash },
+				{ KEY_PHASH, QString::number(image.pHash) },
+        }
+		);
+
+	QJsonArray histogram;
+	for (const auto& [count, word] : bookHashItem.parseResult.hashValues)
+		histogram.append(
+			QJsonObject {
+				{ KEY_COUNT, static_cast<int>(count) },
+				{  KEY_WORD,                    word },
+        }
+		);
+	QJsonObject obj {
+		{    KEY_FOLDER,               bookHashItem.folder },
+        {      KEY_FILE,                 bookHashItem.file },
+        {        KEY_ID,       bookHashItem.parseResult.id },
+        {      KEY_HASH, bookHashItem.parseResult.hashText },
+        { KEY_HISTOGRAM,              std::move(histogram) },
+	};
+	if (!bookHashItem.cover.hash.isEmpty())
+		obj.insert(
+			KEY_COVER,
+			QJsonObject {
+				{  KEY_HASH,                   bookHashItem.cover.hash },
+				{ KEY_PHASH, QString::number(bookHashItem.cover.pHash) },
+        }
+		);
+	if (!images.isEmpty())
+		obj.insert(KEY_IMAGES, std::move(images));
+
+	return QJsonDocument(obj).toJson(QJsonDocument::Compact);
+}
+
+} // namespace HomeCompa::Util

@@ -61,5 +61,7 @@ private:
 };
 
 UTIL_EXPORT BookHashItem GetHash(const QString& path, const QString& file);
+UTIL_EXPORT std::ostream& operator<<(std::ostream& stream, const BookHashItem& bookHashItem);
+UTIL_EXPORT QByteArray    Serialize(const BookHashItem& bookHashItem);
 
 } // namespace HomeCompa::Util
