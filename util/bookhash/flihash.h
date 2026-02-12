@@ -62,4 +62,4 @@ private:
 
 UTIL_EXPORT BookHashItem GetHash(const QString& path, const QString& file);
 
-} // namespace HomeCompa::FliLib
+} // namespace HomeCompa::Util

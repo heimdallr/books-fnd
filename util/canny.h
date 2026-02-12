@@ -35,4 +35,4 @@ private:
 	const std::vector<std::vector<double>> m_gaussianFilter;
 };
 
-} // namespace HomeCompa::FliLib
+} // namespace HomeCompa::Util
