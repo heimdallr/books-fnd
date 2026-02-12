@@ -6,6 +6,7 @@ AddTarget(util	shared_lib
 		Qt${QT_MAJOR_VERSION}::Core
 		Qt${QT_MAJOR_VERSION}::Gui
 		XercesC::XercesC
+		cimg::cimg
 	LINK_TARGETS
 		fljxl
 		logging

@@ -4,6 +4,38 @@
 
 #include "export/util.h"
 
+namespace HomeCompa::Util
+{
+
+struct ExtractedBook
+{
+	long long   id;
+	QString     folder;
+	QString     file;
+	int64_t     size;
+	QString     author;
+	QString     series;
+	int         seqNumber;
+	QString     title;
+	QString     genre;
+	QStringList genreTree;
+	long long   libId;
+	QString     lang;
+
+	struct Author
+	{
+		QString firstName;
+		QString middleName;
+		QString lastName;
+	};
+
+	Author authorFull;
+};
+
+using ExtractedBooks = std::vector<ExtractedBook>;
+
+} // namespace HomeCompa::Util
+
 namespace HomeCompa::Util::Remove
 {
 
