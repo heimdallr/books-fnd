@@ -119,12 +119,11 @@ BookHashItem GetHash(const QString& path, const QString& file)
 {
 	static constexpr std::pair<const char*, BookHashItem (*)(const QString&, const QString&)> parsers[] {
 #define ITEM(NAME) { #NAME, &GetHash_##NAME }
-		ITEM(7z),
 		ITEM(xml),
 #undef ITEM
 	};
 
-	auto bookHashItem = FindSecond(parsers, QFileInfo(path).suffix().toLower().toStdString().data(), PszComparer {})(path, file);
+	auto bookHashItem = FindSecond(parsers, QFileInfo(path).suffix().toLower().toStdString().data(), &GetHash_7z, PszComparer {})(path, file);
 	bookHashItem.body.clear();
 
 	return bookHashItem;

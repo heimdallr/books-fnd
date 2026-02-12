@@ -9,9 +9,11 @@
 #include <QBuffer>
 #include <QPixmap>
 
+#include "fnd/IsOneOf.h"
 #include "fnd/ScopedCall.h"
 
 #include "xml/SaxParser.h"
+#include "xml/XmlAttributes.h"
 
 #include "ImageUtil.h"
 #include "StrUtil.h"
@@ -42,7 +44,7 @@ const CImg<float> MEAN_FILTER(7, 7, 1, 1, 1);
 
 uint64_t GetPHash(const ImageHashItem& item)
 {
-	auto pixmap = Util::Decode(item.body);
+	auto pixmap = Decode(item.body);
 	if (pixmap.isNull())
 		return 0;
 
@@ -110,10 +112,15 @@ void SetHash(ImageHashItem& item, QCryptographicHash& cryptographicHash)
 	item.body.clear();
 }
 
-class Fb2Parser final : public Util::SaxParser
+class Fb2Parser final : public SaxParser
 {
-	static constexpr auto BODY    = "FictionBook/body";
-	static constexpr auto TITLE   = "FictionBook/description/title-info/book-title";
+	static constexpr auto BODY            = "FictionBook/body";
+	static constexpr auto BINARY          = "FictionBook/binary";
+	static constexpr auto BODY_BINARY     = "FictionBook/body/binary";
+	static constexpr auto TITLE           = "FictionBook/description/title-info/book-title";
+	static constexpr auto COVERPAGE_IMAGE = "FictionBook/description/title-info/coverpage/image";
+
+	static constexpr auto ID      = "id";
 	static constexpr auto SECTION = "section";
 
 	struct HistComparer
@@ -200,18 +207,73 @@ public:
 			     .hashValues   = std::move(hashValues) };
 	}
 
+	ImageHashItem GetCover()
+	{
+		auto result = std::move(m_cover);
+		return result;
+	}
+
+	ImageHashItems GetImages()
+	{
+		auto result = std::move(m_images);
+		return result;
+	}
+
 private: // Util::SaxParser
-	bool OnStartElement(const QString& name, const QString& /*path*/, const Util::XmlAttributes& /*attributes*/) override
+	bool OnStartElement(const QString& name, const QString& path, const XmlAttributes& attributes) override
 	{
 		if (name == SECTION)
+		{
 			m_currentSection = m_currentSection->children.emplace_back(std::make_unique<Section>(m_currentSection, m_currentSection->depth + 1)).get();
+			return true;
+		}
 
+		if (IsOneOf(path, BINARY, BODY_BINARY))
+		{
+			m_isBinary = true;
+			m_picId    = attributes.GetAttribute(ID).trimmed();
+			if (const auto it = std::ranges::find_if(
+					m_picId,
+					[](const auto ch) {
+						return ch != '#';
+					}
+				);
+			    it != m_picId.end())
+				m_picId = m_picId.last(std::distance(it, m_picId.end())).trimmed();
+			return true;
+		}
+
+		if (path == COVERPAGE_IMAGE)
+		{
+			for (size_t i = 0, sz = attributes.GetCount(); i < sz; ++i)
+			{
+				auto attributeName  = attributes.GetName(i);
+				auto attributeValue = attributes.GetValue(i);
+				if (attributeName.endsWith(":href"))
+				{
+					if (const auto it = std::ranges::find_if(
+							attributeValue,
+							[](const auto ch) {
+								return ch != '#';
+							}
+						);
+					    it != attributeValue.end())
+						m_coverPage = attributeValue.last(std::distance(it, attributeValue.end())).trimmed();
+					break;
+				}
+			}
+			return true;
+		}
 		return true;
 	}
 
-	bool OnEndElement(const QString& name, const QString& /*path*/) override
+	bool OnEndElement(const QString& name, const QString& path) override
 	{
-		if (name == SECTION)
+		if (IsOneOf(path, BINARY, BODY_BINARY))
+		{
+			m_isBinary = false;
+		}
+		else if (name == SECTION)
 		{
 			m_currentSection->CalculateHash();
 			m_currentSection = m_currentSection->parent;
@@ -223,6 +285,23 @@ private: // Util::SaxParser
 
 	bool OnCharacters(const QString& path, const QString& value) override
 	{
+		if (!m_picId.isEmpty())
+		{
+			if (!m_isBinary || !IsOneOf(path, BINARY, BODY_BINARY))
+			{
+				PLOGW << "bad binary";
+				m_picId = {};
+				return true;
+			}
+
+			const auto isCover       = m_picId == m_coverPage;
+			auto&      imageItemHash = isCover ? m_cover : m_images.emplace_back();
+			imageItemHash            = { .file = std::move(m_picId), .body = QByteArray::fromBase64(value.toUtf8()) };
+			m_picId                  = {};
+
+			return true;
+		}
+
 		UpdateHash(value.toLower());
 
 		auto valueCopy = value;
@@ -270,6 +349,13 @@ private:
 	Section            m_section;
 	Section*           m_currentSection { &m_section };
 	QCryptographicHash m_md5 { QCryptographicHash::Md5 };
+
+	ImageHashItem  m_cover;
+	ImageHashItems m_images;
+
+	bool    m_isBinary { false };
+	QString m_coverPage;
+	QString m_picId;
 };
 
 } // namespace
@@ -284,14 +370,23 @@ void ParseFb2Hash(BookHashItem& bookHashItem, QCryptographicHash& cryptographicH
 	Fb2Parser parser(buffer);
 	bookHashItem.parseResult = parser.GetResult();
 
+	if (auto cover = parser.GetCover(); !cover.file.isEmpty())
+		bookHashItem.cover = std::move(cover);
+
+	if (auto images = parser.GetImages(); !images.empty())
+		bookHashItem.images = std::move(images);
+
 	if (!bookHashItem.cover.body.isEmpty())
 		SetHash(bookHashItem.cover, cryptographicHash);
+
 	std::ranges::for_each(bookHashItem.images, [&](auto& item) {
 		SetHash(item, cryptographicHash);
 	});
-	std::ranges::sort(bookHashItem.images, std::greater {}, [](const auto& item) {
-		return -item.file.toInt();
+	std::ranges::sort(bookHashItem.images, {}, [](const auto& item) {
+		auto ok = false;
+		const auto number = item.file.toLongLong(&ok);
+		return ok ? QString("%1").arg(number, 16, 10, QChar { '0' }) : item.file;
 	});
 }
 
-}
+} // namespace HomeCompa::Util
