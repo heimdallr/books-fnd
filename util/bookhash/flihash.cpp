@@ -12,6 +12,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
+#include "fnd/EnumBitmask.h"
 #include "fnd/FindPair.h"
 
 #include "Constant.h"
@@ -22,6 +23,22 @@
 
 using namespace HomeCompa::Util;
 using namespace HomeCompa;
+
+namespace
+{
+
+enum class CompareResult
+{
+	None   = 0,
+	Left   = 1 << 0,
+	Right  = 1 << 1,
+	Images = 1 << 2,
+	All    = Left | Right
+};
+
+}
+
+ENABLE_BITMASK_OPERATORS(CompareResult);
 
 namespace
 {
@@ -60,10 +77,10 @@ std::unique_ptr<Zip> GetZip(const QFileInfo& fileInfo, const char* type)
 	return QFile::exists(zipPath) ? std::make_unique<Zip>(zipPath) : std::unique_ptr<Zip> {};
 }
 
-void CompareImpl(QStringList& result, const HashParseResult& lhs, const HashParseResult& rhs)
+CompareResult CompareTexts(QStringList& result, const HashParseResult& lhs, const HashParseResult& rhs)
 {
 	if (lhs.hashText == rhs.hashText)
-		return (void)(result << "texts are equal");
+		return (result << "texts are equal"), CompareResult::None;
 
 	result << QString("texts are different: %1 vs %2").arg(lhs.hashText, rhs.hashText);
 	std::ranges::transform(std::views::zip(lhs.hashValues, rhs.hashValues), std::back_inserter(result), [](const auto& item) {
@@ -71,21 +88,31 @@ void CompareImpl(QStringList& result, const HashParseResult& lhs, const HashPars
 		const auto& rhsItem = std::get<1>(item);
 		return QString("%1 %2 \t %3 %4").arg(lhsItem.first).arg(lhsItem.second).arg(rhsItem.first).arg(rhsItem.second);
 	});
+
+	return CompareResult::All;
 }
 
-void CompareImpl(QStringList& result, const ImageHashItem& lhs, const ImageHashItem& rhs)
+CompareResult FromHammingDistance(const int hammingDistance) noexcept
+{
+	static constexpr auto HAMMING_DISTANCE_THRESHOLD = 16;
+	return hammingDistance == 0 ? CompareResult::None : hammingDistance <= HAMMING_DISTANCE_THRESHOLD ? CompareResult::Images : CompareResult::All;
+}
+
+CompareResult CompareCovers(QStringList& result, const ImageHashItem& lhs, const ImageHashItem& rhs)
 {
 	if (lhs.hash == rhs.hash)
-		return (void)(result << "covers are equal");
+		return (result << (lhs.hash.isEmpty() ? "no covers" : "covers are equal")), CompareResult::None;
 
 	if (lhs.hash.isEmpty())
-		return (void)(result << QString("%1: no cover").arg(lhs.file));
+		return (result << QString("left: no cover")), CompareResult::Right;
 
 	if (rhs.hash.isEmpty())
-		return (void)(result << QString("%1: no cover").arg(rhs.file));
+		return (result << QString("right: no cover")), CompareResult::Left;
 
 	const auto hammingDistance = std::popcount(lhs.pHash ^ rhs.pHash);
 	result << QString("covers are different: %1 vs %2, Hamming distance: %3").arg(lhs.pHash, 16, 16, QChar { '0' }).arg(rhs.pHash, 16, 16, QChar { '0' }).arg(hammingDistance);
+
+	return FromHammingDistance(hammingDistance);
 }
 
 QString GetComparable(const QString& str)
@@ -95,8 +122,10 @@ QString GetComparable(const QString& str)
 	return ok ? QString("%1").arg(result, 16, 10, QChar { '0' }) : str;
 }
 
-void CompareImpl(std::multimap<QString, QString>& fileItems, const ImageHashes& lhs, const ImageHashes& rhs)
+CompareResult CompareImageHashes(std::multimap<QString, QString>& fileItems, const ImageHashes& lhs, const ImageHashes& rhs)
 {
+	CompareResult compareResult = CompareResult::None;
+
 	auto lIds = lhs | std::views::values | std::ranges::to<std::unordered_set<QString>>();
 	auto rIds = rhs | std::views::values | std::ranges::to<std::unordered_set<QString>>();
 
@@ -115,27 +144,31 @@ void CompareImpl(std::multimap<QString, QString>& fileItems, const ImageHashes& 
 			lIds.erase(l.second);
 			rIds.erase(r.second);
 
+			const auto hammingDistance  = std::popcount(l.first ^ r.first);
+			compareResult              |= FromHammingDistance(hammingDistance);
 			fileItems.emplace(
 				GetComparable(l.second),
-				QString("images are different: %1: %4 vs %2: %5, Hamming distance: %3")
-					.arg(l.second, r.second)
-					.arg(std::popcount(l.first ^ r.first))
-					.arg(l.first, 16, 16, QChar { '0' })
-					.arg(r.first, 16, 16, QChar { '0' })
+				QString("images are different: %1: %4 vs %2: %5, Hamming distance: %3").arg(l.second, r.second).arg(hammingDistance).arg(l.first, 16, 16, QChar { '0' }).arg(r.first, 16, 16, QChar { '0' })
 			);
 		}
 	}
 
-	const auto notFound = [](const bool reverse, const QString& id) {
+	const auto notFound = [&](const bool reverse, const QString& id) {
+		compareResult |= reverse ? CompareResult::Right : CompareResult::Left;
 		return std::make_pair(GetComparable(id), QString("pair not found for %1 %2").arg(reverse ? "right" : "left", id));
 	};
 
 	std::ranges::transform(lIds, std::inserter(fileItems, fileItems.end()), std::bind_front(notFound, false));
 	std::ranges::transform(rIds, std::inserter(fileItems, fileItems.end()), std::bind_front(notFound, true));
+
+	return compareResult;
 }
 
-void CompareImpl(QStringList& result, const ImageHashItems& lhs, const ImageHashItems& rhs)
+CompareResult CompareImages(QStringList& result, const ImageHashItems& lhs, const ImageHashItems& rhs)
 {
+	if (lhs.empty() && rhs.empty())
+		return (result << "no images"), CompareResult::None;
+
 	std::multimap<QString, QString> fileItems;
 	ImageHashes                     lpHashes, rpHashes;
 
@@ -167,10 +200,12 @@ void CompareImpl(QStringList& result, const ImageHashItems& lhs, const ImageHash
 	std::transform(rIt, rhs.cend(), std::inserter(rpHashes, rpHashes.end()), transform);
 
 	if (lpHashes.empty() && rpHashes.empty())
-		return (void)(result << "images are equal");
+		return (result << "images are equal"), CompareResult::None;
 
-	CompareImpl(fileItems, lpHashes, rpHashes);
+	const auto compareResult = CompareImageHashes(fileItems, lpHashes, rpHashes);
 	std::ranges::move(std::move(fileItems) | std::views::values, std::back_inserter(result));
+
+	return compareResult;
 }
 
 } // namespace
@@ -369,9 +404,17 @@ QStringList Compare(const BookHashItem& lhs, const BookHashItem& rhs)
 {
 	QStringList result { QString("%1/%2 vs %3/%4:").arg(lhs.folder, lhs.file, rhs.folder, rhs.file) };
 
-	CompareImpl(result, lhs.parseResult, rhs.parseResult);
-	CompareImpl(result, lhs.cover, rhs.cover);
-	CompareImpl(result, lhs.images, rhs.images);
+	auto compareResult  = CompareTexts(result, lhs.parseResult, rhs.parseResult);
+	compareResult      |= CompareCovers(result, lhs.cover, rhs.cover);
+	compareResult      |= CompareImages(result, lhs.images, rhs.images);
+
+	result
+		<< (compareResult == CompareResult::None       ? "books are the same"
+	        : compareResult == CompareResult::Images   ? "books are probably the same"
+	        : compareResult == CompareResult::All      ? "books are different"
+	        : !!(compareResult | CompareResult::Left)  ? QString("left%1 includes right").arg(!!(compareResult | CompareResult::Images) ? " probably" : "")
+	        : !!(compareResult | CompareResult::Right) ? QString("right%1 includes left").arg(!!(compareResult | CompareResult::Images) ? " probably" : "")
+	                                                   : (assert(false && "bad logic"), "wtf"));
 
 	return result;
 }
