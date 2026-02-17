@@ -101,7 +101,11 @@ CompareResult FromHammingDistance(const int hammingDistance) noexcept
 CompareResult CompareCovers(QStringList& result, const ImageHashItem& lhs, const ImageHashItem& rhs)
 {
 	if (lhs.hash == rhs.hash)
-		return (result << (lhs.hash.isEmpty() ? "no covers" : "covers are equal")), CompareResult::None;
+	{
+		if (!lhs.hash.isEmpty())
+			result << "covers are equal";
+		return CompareResult::None;
+	}
 
 	if (lhs.hash.isEmpty())
 		return (result << QString("left: no cover")), CompareResult::Right;
