@@ -413,12 +413,12 @@ QStringList Compare(const BookHashItem& lhs, const BookHashItem& rhs)
 	compareResult      |= CompareImages(result, lhs.images, rhs.images);
 
 	result
-		<< (compareResult == CompareResult::None       ? "books are the same"
-	        : compareResult == CompareResult::Images   ? "books are probably the same"
-	        : compareResult == CompareResult::All      ? "books are different"
-	        : !!(compareResult | CompareResult::Left)  ? QString("left%1 includes right").arg(!!(compareResult | CompareResult::Images) ? " probably" : "")
-	        : !!(compareResult | CompareResult::Right) ? QString("right%1 includes left").arg(!!(compareResult | CompareResult::Images) ? " probably" : "")
-	                                                   : (assert(false && "bad logic"), "wtf"));
+		<< (compareResult == CompareResult::None                         ? "books are the same"
+	        : compareResult == CompareResult::Images                     ? "books are probably the same"
+	        : (compareResult & CompareResult::All) == CompareResult::All ? "books are different"
+	        : !!(compareResult | CompareResult::Left)                    ? QString("left%1 includes right").arg(!!(compareResult | CompareResult::Images) ? " probably" : "")
+	        : !!(compareResult | CompareResult::Right)                   ? QString("right%1 includes left").arg(!!(compareResult | CompareResult::Images) ? " probably" : "")
+	                                                                     : (assert(false && "bad logic"), "wtf"));
 
 	return result;
 }
