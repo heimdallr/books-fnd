@@ -114,9 +114,14 @@ CompareResult CompareCovers(QStringList& result, const ImageHashItem& lhs, const
 		return (result << QString("right: no cover")), CompareResult::Left;
 
 	const auto hammingDistance = std::popcount(lhs.pHash ^ rhs.pHash);
-	result << QString("covers are different: %1 vs %2, Hamming distance: %3").arg(lhs.pHash, 16, 16, QChar { '0' }).arg(rhs.pHash, 16, 16, QChar { '0' }).arg(hammingDistance);
+	const auto imageCompareResult = FromHammingDistance(hammingDistance);
+	result << QString("covers are %4: %1 vs %2, Hamming distance: %3")
+				  .arg(lhs.pHash, 16, 16, QChar { '0' })
+				  .arg(rhs.pHash, 16, 16, QChar { '0' })
+				  .arg(hammingDistance)
+				  .arg(imageCompareResult == CompareResult::All ? "different" : "probably the same");
 
-	return FromHammingDistance(hammingDistance);
+	return imageCompareResult;
 }
 
 QString GetComparable(const QString& str)
@@ -149,10 +154,16 @@ CompareResult CompareImageHashes(std::multimap<QString, QString>& fileItems, con
 			rIds.erase(r.second);
 
 			const auto hammingDistance  = std::popcount(l.first ^ r.first);
-			compareResult              |= FromHammingDistance(hammingDistance);
+			const auto imageCompareResult = FromHammingDistance(hammingDistance);
+			compareResult                 |= imageCompareResult;
 			fileItems.emplace(
 				GetComparable(l.second),
-				QString("images are different: %1: %4 vs %2: %5, Hamming distance: %3").arg(l.second, r.second).arg(hammingDistance).arg(l.first, 16, 16, QChar { '0' }).arg(r.first, 16, 16, QChar { '0' })
+				QString("images are %6: %1: %4 vs %2: %5, Hamming distance: %3")
+					.arg(l.second, r.second)
+					.arg(hammingDistance)
+					.arg(l.first, 16, 16, QChar { '0' })
+					.arg(r.first, 16, 16, QChar { '0' })
+					.arg(imageCompareResult == CompareResult::All ? "different" : "probably the same")
 			);
 		}
 	}
