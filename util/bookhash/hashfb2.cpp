@@ -302,8 +302,6 @@ private: // Util::SaxParser
 			return true;
 		}
 
-		UpdateHash(value.toLower());
-
 		auto valueCopy = value;
 
 		PrepareTitle(valueCopy);
@@ -315,6 +313,8 @@ private: // Util::SaxParser
 		{
 			for (auto&& word : valueCopy.split(' ', Qt::SkipEmptyParts))
 			{
+				UpdateHash(word);
+
 				word.removeIf([](const QChar ch) {
 					const auto category = ch.category();
 					return category < QChar::Letter_Lowercase || category > QChar::Letter_Other;
