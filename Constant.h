@@ -7,8 +7,8 @@ constexpr auto COVERS   = "covers";
 constexpr auto IMAGES   = "images";
 constexpr auto PICTURES = "pictures";
 
-constexpr int    APP_FAILED   = 1;
-constexpr int    RESTART_APP  = 1234;
+constexpr int APP_FAILED  = 1;
+constexpr int RESTART_APP = 1234;
 
 }
 

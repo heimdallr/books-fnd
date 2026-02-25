@@ -113,7 +113,7 @@ CompareResult CompareCovers(QStringList& result, const ImageHashItem& lhs, const
 	if (rhs.hash.isEmpty())
 		return (result << QString("right: no cover")), CompareResult::Left;
 
-	const auto hammingDistance = std::popcount(lhs.pHash ^ rhs.pHash);
+	const auto hammingDistance    = std::popcount(lhs.pHash ^ rhs.pHash);
 	const auto imageCompareResult = FromHammingDistance(hammingDistance);
 	result << QString("covers are %4: %1 vs %2, Hamming distance: %3")
 				  .arg(lhs.pHash, 16, 16, QChar { '0' })
@@ -153,8 +153,8 @@ CompareResult CompareImageHashes(std::multimap<QString, QString>& fileItems, con
 			lIds.erase(l.second);
 			rIds.erase(r.second);
 
-			const auto hammingDistance  = std::popcount(l.first ^ r.first);
-			const auto imageCompareResult = FromHammingDistance(hammingDistance);
+			const auto hammingDistance     = std::popcount(l.first ^ r.first);
+			const auto imageCompareResult  = FromHammingDistance(hammingDistance);
 			compareResult                 |= imageCompareResult;
 			fileItems.emplace(
 				GetComparable(l.second),
