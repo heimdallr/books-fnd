@@ -30,6 +30,8 @@ struct ExtractedBook
 	};
 
 	Author authorFull;
+
+	QString dstFileName;
 };
 
 using ExtractedBooks = std::vector<ExtractedBook>;
