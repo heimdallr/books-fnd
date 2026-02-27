@@ -179,20 +179,24 @@ private:
 
 	void WriteImage(const QString& imageFileName)
 	{
-		const auto data = [&] {
+		const auto data = [&]() -> QByteArray {
 			try
 			{
 				const auto it = m_covers.find(imageFileName);
-				assert(it != m_covers.end());
+				if (it == m_covers.end())
+					return assert(false), QByteArray {};
+
 				auto result = std::move(it->second);
 				m_covers.erase(it);
+
 				return result;
 			}
 			catch (const std::exception& ex)
 			{
 				PLOGE << ex.what();
 			}
-			return QByteArray {};
+
+			return {};
 		}();
 
 		if (data.isEmpty())
