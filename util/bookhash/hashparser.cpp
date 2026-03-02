@@ -13,13 +13,14 @@ namespace
 
 class HashParserImpl final : public SaxParser
 {
-	static constexpr auto BOOKS     = "books";
-	static constexpr auto BOOK      = "books/book";
-	static constexpr auto COVER     = "books/book/cover";
-	static constexpr auto IMAGE     = "books/book/image";
-	static constexpr auto ORIGIN    = "books/book/origin";
-	static constexpr auto HISTOGRAM = "books/book/histogram/item";
-	static constexpr auto SECTION   = "section";
+	static constexpr auto BOOKS      = "books";
+	static constexpr auto BOOK       = "books/book";
+	static constexpr auto COVER      = "books/book/cover";
+	static constexpr auto IMAGE      = "books/book/image";
+	static constexpr auto ORIGIN     = "books/book/origin";
+	static constexpr auto HISTOGRAM  = "books/book/histogram/item";
+	static constexpr auto SECTION    = "section";
+	static constexpr auto ANNOTATION = "books/book/annotation/p";
 
 public:
 	HashParserImpl(QIODevice& input, HashParser::IObserver& observer)
@@ -84,7 +85,8 @@ private: // Util::SaxParser
 						std::move(m_cover),
 					std::move(m_images),
 					std::move(m_section),
-					std::move(m_textHistogram)
+					std::move(m_textHistogram),
+					std::move(m_annotation)
 				))
 				return false;
 
@@ -96,6 +98,7 @@ private: // Util::SaxParser
 			m_images         = {};
 			m_section        = {};
 			m_textHistogram  = {};
+			m_annotation     = {};
 			m_currentSection = nullptr;
 		}
 		else if (name == SECTION)
@@ -112,6 +115,8 @@ private: // Util::SaxParser
 			m_cover.hash = value;
 		else if (path == IMAGE)
 			m_images.back().hash = value;
+		else if (path == ANNOTATION)
+			m_annotation << value;
 		return true;
 	}
 
@@ -126,6 +131,7 @@ private:
 	HashParser::Section::Ptr               m_section;
 	HashParser::Section*                   m_currentSection { nullptr };
 	TextHistogram                          m_textHistogram;
+	QStringList                            m_annotation;
 };
 
 } // namespace

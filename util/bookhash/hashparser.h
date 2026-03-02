@@ -49,7 +49,8 @@ struct HashParser
 				HashImageItem cover,
 			HashImageItems    images,
 			Section::Ptr      section,
-			TextHistogram     textHistogram
+			TextHistogram     textHistogram,
+			QStringList       annotation
 		) = 0;
 	};
 

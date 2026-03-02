@@ -20,6 +20,7 @@ struct HashParseResult
 	QString       title;
 	QString       hashText;
 	QStringList   hashSections;
+	QStringList   annotation;
 	TextHistogram hashValues;
 };
 

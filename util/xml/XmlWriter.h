@@ -27,27 +27,46 @@ public:
 
 	class XmlNodeGuard
 	{
-		NON_COPY_MOVABLE(XmlNodeGuard)
+		NON_COPYABLE(XmlNodeGuard)
 
 	public:
-		XmlNodeGuard(XmlWriter& writer, const QString& name)
-			: m_writer(writer)
+		XmlNodeGuard(XmlNodeGuard&& rhs) noexcept
+			: m_writer { rhs.m_writer }
 		{
-			(void)m_writer.WriteStartElement(name);
+			rhs.m_writer = nullptr;
+		}
+
+		XmlNodeGuard& operator=(XmlNodeGuard&& rhs) noexcept
+		{
+			if (this != &rhs)
+			{
+				m_writer = rhs.m_writer;
+				rhs.m_writer = nullptr;
+			}
+			return *this;
+		}
+
+		XmlNodeGuard(XmlWriter& writer, const QString& name)
+			: m_writer(&writer)
+		{
+			assert(m_writer);
+			(void)m_writer->WriteStartElement(name);
 		}
 
 		~XmlNodeGuard()
 		{
-			(void)m_writer.WriteEndElement();
+			if (m_writer)
+				(void)m_writer->WriteEndElement();
 		}
 
 		XmlWriter* operator->() const noexcept
 		{
-			return &m_writer;
+			assert(m_writer);
+			return m_writer;
 		}
 
 	private:
-		XmlWriter& m_writer;
+		XmlWriter* m_writer;
 	};
 
 public:

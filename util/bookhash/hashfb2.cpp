@@ -119,6 +119,7 @@ class Fb2Parser final : public SaxParser
 	static constexpr auto BODY_BINARY     = "FictionBook/body/binary";
 	static constexpr auto TITLE           = "FictionBook/description/title-info/book-title";
 	static constexpr auto COVERPAGE_IMAGE = "FictionBook/description/title-info/coverpage/image";
+	static constexpr auto ANNOTATION      = "FictionBook/description/title-info/annotation";
 
 	static constexpr auto ID      = "id";
 	static constexpr auto SECTION = "section";
@@ -204,6 +205,7 @@ public:
 			     .title        = std::move(m_title),
 			     .hashText     = std::move(m_section.hash),
 			     .hashSections = std::move(sections),
+			     .annotation   = std::move(m_annotation),
 			     .hashValues   = std::move(hashValues) };
 	}
 
@@ -243,6 +245,12 @@ private: // Util::SaxParser
 			return true;
 		}
 
+		if (path == ANNOTATION)
+		{
+			m_isAnnotation = true;
+			return true;
+		}
+
 		if (path == COVERPAGE_IMAGE)
 		{
 			for (size_t i = 0, sz = attributes.GetCount(); i < sz; ++i)
@@ -279,6 +287,10 @@ private: // Util::SaxParser
 			m_currentSection = m_currentSection->parent;
 			assert(m_currentSection);
 		}
+		else if (path == ANNOTATION)
+		{
+			m_isAnnotation = false;
+		}
 
 		return true;
 	}
@@ -301,6 +313,9 @@ private: // Util::SaxParser
 
 			return true;
 		}
+
+		if (m_isAnnotation)
+			m_annotation << value;
 
 		auto valueCopy = value;
 
@@ -352,7 +367,9 @@ private:
 
 	ImageHashItem  m_cover;
 	ImageHashItems m_images;
+	QStringList    m_annotation;
 
+	bool    m_isAnnotation { false };
 	bool    m_isBinary { false };
 	QString m_coverPage;
 	QString m_picId;

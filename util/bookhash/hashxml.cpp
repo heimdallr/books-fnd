@@ -37,7 +37,8 @@ private: // HashParser::IObserver
 			HashParser::HashImageItem cover,
 		HashParser::HashImageItems    images,
 		HashParser::Section::Ptr,
-		TextHistogram textHistogram
+		TextHistogram textHistogram,
+		QStringList annotation
 	) override
 	{
 		if (file != m_file)
@@ -48,6 +49,7 @@ private: // HashParser::IObserver
 
 		m_bookHashItem.parseResult.hashText   = std::move(id);
 		m_bookHashItem.parseResult.hashValues = std::move(textHistogram);
+		m_bookHashItem.parseResult.annotation = std::move(annotation);
 
 		const auto toImageHashItem = [](HashParser::HashImageItem&& image) {
 			return ImageHashItem { .file = std::move(image.id), .hash = std::move(image.hash), .pHash = image.pHash.toULongLong(nullptr, 16) };
