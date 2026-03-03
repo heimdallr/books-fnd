@@ -24,6 +24,7 @@ constexpr auto AUTHOR                 = "FictionBook/description/title-info/auth
 constexpr auto AUTHOR_FIRST_NAME      = "FictionBook/description/title-info/author/first-name";
 constexpr auto AUTHOR_LAST_NAME       = "FictionBook/description/title-info/author/last-name";
 constexpr auto AUTHOR_MIDDLE_NAME     = "FictionBook/description/title-info/author/middle-name";
+constexpr auto ANNOTATION             = "FictionBook/description/title-info/annotation";
 constexpr auto AUTHOR_DOC             = "FictionBook/description/document-info/author";
 constexpr auto AUTHOR_FIRST_NAME_DOC  = "FictionBook/description/document-info/author/first-name";
 constexpr auto AUTHOR_LAST_NAME_DOC   = "FictionBook/description/document-info/author/last-name";
@@ -75,9 +76,10 @@ private: // SaxParser
 		using ParseElementFunction = bool (Impl::*)(const XmlAttributes&);
 		using ParseElementItem     = std::pair<const char*, ParseElementFunction>;
 		static constexpr ParseElementItem PARSERS[] {
-			{     AUTHOR,    &Impl::OnStartElementAuthor },
-			{ AUTHOR_DOC, &Impl::OnStartElementAuthorDoc },
-			{   SEQUENCE,  &Impl::OnStartElementSequence },
+			{     AUTHOR,     &Impl::OnStartElementAuthor },
+			{ AUTHOR_DOC,  &Impl::OnStartElementAuthorDoc },
+			{   SEQUENCE,   &Impl::OnStartElementSequence },
+			{ ANNOTATION, &Impl::OnStartElementAnnotation },
 		};
 
 		return Parse(*this, PARSERS, path, attributes);
@@ -91,6 +93,7 @@ private: // SaxParser
 			{ DESCRIPTION, &Impl::OnEndElementDescription },
 			{      AUTHOR,      &Impl::OnEndElementAuthor },
 			{  AUTHOR_DOC,      &Impl::OnEndElementAuthor },
+			{  ANNOTATION,  &Impl::OnEndElementAnnotation },
 		};
 
 		return Parse(*this, PARSERS, path);
@@ -113,6 +116,9 @@ private: // SaxParser
 			{			   KEYWORDS,         &Impl::ParseKeywords },
 			{      PUBLISH_INFO_YEAR,      &Impl::ParsePublishYear },
 		};
+
+		if (m_annotationMode)
+			m_data.annotation << value;
 
 		return Parse(*this, PARSERS, path, value);
 	}
@@ -155,6 +161,12 @@ private:
 		return true;
 	}
 
+	bool OnStartElementAnnotation(const XmlAttributes&)
+	{
+		m_annotationMode = true;
+		return true;
+	}
+
 	bool OnEndElementDescription()
 	{
 		return false;
@@ -171,6 +183,12 @@ private:
 		}
 
 		m_insertAuthorMode = false;
+		return true;
+	}
+
+	bool OnEndElementAnnotation()
+	{
+		m_annotationMode = false;
 		return true;
 	}
 
@@ -229,6 +247,7 @@ private:
 	const QString& m_fileName;
 	Data           m_data {};
 	bool           m_insertAuthorMode { false };
+	bool           m_annotationMode { false };
 };
 
 Fb2InpxParser::Fb2InpxParser(QIODevice& stream, const QString& fileName)
@@ -238,14 +257,14 @@ Fb2InpxParser::Fb2InpxParser(QIODevice& stream, const QString& fileName)
 
 Fb2InpxParser::~Fb2InpxParser() = default;
 
-QString Fb2InpxParser::Parse(const QString& folder, const Zip& zip, const QString& fileName, const QDateTime& zipDateTime, const bool isDeleted)
+Fb2InpxParser::ParseResult Fb2InpxParser::Parse(const QString& folder, const Zip& zip, const QString& fileName, const QDateTime& zipDateTime, const bool isDeleted)
 {
 	try
 	{
 		QFileInfo     fileInfo(fileName);
 		const auto    stream = zip.Read(fileName);
 		Fb2InpxParser parser(stream->GetStream(), fileName);
-		const auto    parserData = parser.m_impl->GetData();
+		auto          parserData = parser.m_impl->GetData();
 
 		if (!parserData.error.isEmpty())
 		{
@@ -269,7 +288,7 @@ QString Fb2InpxParser::Parse(const QString& folder, const Zip& zip, const QStrin
 		                                  << fileInfo.completeBaseName() << QString::number(zip.GetFileSize(fileName)) << fileInfo.completeBaseName() << (isDeleted ? "1" : "0") << fileInfo.suffix()
 		                                  << std::move(dateTime) << parserData.lang << "0" << parserData.keywords << parserData.year;
 
-		return values.join(FIELDS_SEPARATOR);
+		return { .line = values.join(FIELDS_SEPARATOR), .annotation = std::move(parserData.annotation) };
 	}
 	catch (const std::exception& ex)
 	{
