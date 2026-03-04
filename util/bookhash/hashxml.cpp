@@ -38,7 +38,7 @@ private: // HashParser::IObserver
 		HashParser::HashImageItems    images,
 		HashParser::Section::Ptr,
 		TextHistogram textHistogram,
-		QStringList annotation
+		QStringList   annotation
 	) override
 	{
 		if (file != m_file)

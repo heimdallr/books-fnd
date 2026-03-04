@@ -57,13 +57,13 @@ public:
 
 	struct ParseResult
 	{
-		QString line;
+		QString     line;
 		QStringList annotation;
 	};
 
 public:
 	UTIL_EXPORT static ParseResult Parse(const QString& folder, const Zip& zip, const QString& fileName, const QDateTime& zipDateTime, bool isDeleted);
-	UTIL_EXPORT static QString GetSeqNumber(QString seqNumber);
+	UTIL_EXPORT static QString     GetSeqNumber(QString seqNumber);
 
 private:
 	Fb2InpxParser(QIODevice& stream, const QString& fileName);

@@ -40,7 +40,7 @@ public:
 		{
 			if (this != &rhs)
 			{
-				m_writer = rhs.m_writer;
+				m_writer     = rhs.m_writer;
 				rhs.m_writer = nullptr;
 			}
 			return *this;
