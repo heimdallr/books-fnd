@@ -12,6 +12,8 @@ using namespace HomeCompa::Network;
 
 class Downloader::Impl
 {
+	NON_COPY_MOVABLE(Impl)
+
 public:
 	Impl()
 	{
@@ -28,6 +30,11 @@ public:
 		});
 	}
 
+	~Impl()
+	{
+		m_replies.clear();
+	}
+
 public:
 	size_t Download(const QString& url, QIODevice& io, OnFinish callback, OnProgress progress, const QHttpHeaders& headers)
 	{
@@ -41,7 +48,9 @@ public:
 
 		QObject::connect(reply, &QObject::destroyed, &m_manager, [&, callback = std::move(callback)](const QObject* obj) {
 			const auto it = m_replies.find(obj);
-			assert(it != m_replies.end());
+			if (it == m_replies.end())
+				return;
+
 			const auto& [idMessage, code, message] = it->second;
 			callback(idMessage, code, message);
 			m_replies.erase(obj);
