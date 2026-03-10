@@ -118,9 +118,9 @@ private: // SaxParser
 		};
 
 		if (m_annotationMode)
-			m_data.annotation << value;
+			m_data.annotation << value.trimmed();
 
-		return Parse(*this, PARSERS, path, value);
+		return Parse(*this, PARSERS, path, value.trimmed());
 	}
 
 	bool OnWarning(const size_t line, const size_t column, const QString& text) override
@@ -156,7 +156,7 @@ private:
 
 	bool OnStartElementSequence(const XmlAttributes& attributes)
 	{
-		m_data.series    = attributes.GetAttribute(NAME);
+		m_data.series    = attributes.GetAttribute(NAME).trimmed();
 		m_data.seqNumber = GetSeqNumber(attributes.GetAttribute(NUMBER));
 		return true;
 	}
