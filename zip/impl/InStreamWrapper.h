@@ -14,10 +14,10 @@ class InStreamWrapper final
 	ADD_RELEASE_REF_IMPL
 
 public:
-	static CMyComPtr<InStreamWrapper> Create(CMyComPtr<IInStream> baseStream);
+	static CMyComPtr<InStreamWrapper> Create(CMyComPtr<IInStream> baseStream, UInt64 size);
 
 private:
-	explicit InStreamWrapper(CMyComPtr<IInStream> baseStream);
+	InStreamWrapper(CMyComPtr<IInStream> baseStream, UInt64 size);
 
 public:
 	STDMETHOD(QueryInterface)(REFIID iid, void** ppvObject) override;
@@ -34,6 +34,7 @@ private:
 
 private:
 	CMyComPtr<IInStream> m_baseStream;
+	const UInt64         m_size;
 };
 
 } // namespace HomeCompa::ZipDetails::SevenZip

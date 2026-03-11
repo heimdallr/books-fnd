@@ -2,13 +2,14 @@
 
 using namespace HomeCompa::ZipDetails::SevenZip;
 
-CMyComPtr<InStreamWrapper> InStreamWrapper::Create(CMyComPtr<IInStream> baseStream)
+CMyComPtr<InStreamWrapper> InStreamWrapper::Create(CMyComPtr<IInStream> baseStream, const UInt64 size)
 {
-	return new InStreamWrapper(std::move(baseStream));
+	return new InStreamWrapper(baseStream, size);
 }
 
-InStreamWrapper::InStreamWrapper(CMyComPtr<IInStream> baseStream)
-	: m_baseStream(std::move(baseStream))
+InStreamWrapper::InStreamWrapper(CMyComPtr<IInStream> baseStream, const UInt64 size)
+	: m_baseStream { baseStream }
+	, m_size { size }
 {
 }
 
@@ -67,12 +68,6 @@ STDMETHODIMP InStreamWrapper::Seek(const Int64 offset, const UInt32 seekOrigin, 
 
 STDMETHODIMP InStreamWrapper::GetSize(UInt64* size)
 {
-	*size = 0;
-	//	STATSTG       statInfo;
-	//	const HRESULT hr = m_baseStream->Stat(&statInfo, STATFLAG_NONAME);
-	//	if (SUCCEEDED(hr))
-	//		*size = statInfo.cbSize.QuadPart;
-
-	//	return hr;
+	*size = m_size;
 	return S_OK;
 }

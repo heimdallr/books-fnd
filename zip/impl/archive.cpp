@@ -58,14 +58,14 @@ CMyComPtr<IInArchive> GetArchiveReader(const Lib& lib, const bit7z::BitInFormat&
 	return archive;
 }
 
-CMyComPtr<IInArchive> CreateInputArchiveImpl(const Lib& lib, CMyComPtr<IInStream> stream, const bit7z::BitInFormat& format)
+CMyComPtr<IInArchive> CreateInputArchiveImpl(const Lib& lib, CMyComPtr<IInStream> stream, const UInt64 size, const bit7z::BitInFormat& format)
 {
 	auto archive = GetArchiveReader(lib, format);
 	if (!archive)
 		return {};
 
 	stream->Seek({}, STREAM_SEEK_SET, nullptr);
-	const auto file         = InStreamWrapper::Create(std::move(stream));
+	const auto file         = InStreamWrapper::Create(stream, size);
 	const auto openCallback = ArchiveOpenCallback::Create();
 
 	if (const auto hr = archive->Open(file, nullptr, openCallback); hr == S_OK)
@@ -179,16 +179,17 @@ struct ArchiveWrapper
 
 std::unique_ptr<ArchiveWrapper> CreateInputArchive(const Lib& lib, const QString& filename)
 {
-	auto stream = CreateStream(filename);
+	const auto size   = static_cast<UInt64>(QFileInfo(filename).size());
+	auto       stream = CreateStream(filename);
 	if (!stream)
 		return std::make_unique<ArchiveWrapper>();
 
 	if (auto archive = std::make_unique<ArchiveWrapper>(bit7z::detect_format_from_extension(filename.toStdWString())); !IsOneOf(archive->format, bit7z::BitFormat::Auto, bit7z::BitFormat::Rar))
-		if ((archive->archive = CreateInputArchiveImpl(lib, stream, archive->format)))
+		if ((archive->archive = CreateInputArchiveImpl(lib, stream, size, archive->format)))
 			return archive;
 
 	if (auto archive = std::make_unique<ArchiveWrapper>(bit7z::detect_format_from_signature(stream)); archive->format != bit7z::BitFormat::Auto)
-		if ((archive->archive = CreateInputArchiveImpl(lib, stream, archive->format)))
+		if ((archive->archive = CreateInputArchiveImpl(lib, stream, size, archive->format)))
 			return archive;
 
 	Error::CannotOpenArchive(filename);
@@ -204,7 +205,7 @@ std::unique_ptr<ArchiveWrapper> CreateInputArchive(const Lib& lib, const std::ve
 		return std::make_unique<ArchiveWrapper>();
 
 	if (auto archive = std::make_unique<ArchiveWrapper>(bit7z::detect_format_from_signature(stream)); archive->format != bit7z::BitFormat::Auto)
-		if ((archive->archive = CreateInputArchiveImpl(lib, stream, archive->format)))
+		if ((archive->archive = CreateInputArchiveImpl(lib, stream, inBuffer.size(), archive->format)))
 			return archive;
 
 	Error::CannotCreateObject();
