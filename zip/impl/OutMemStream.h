@@ -3,9 +3,9 @@
 #include <memory>
 #include <vector>
 
-#include "fnd/unknown_impl.h"
+#include <7zip/IStream.h>
 
-#include "7z-sdk/7z/CPP/7zip/IStream.h"
+#include "unknown_impl.h"
 
 class QIODevice;
 
@@ -24,7 +24,7 @@ class OutMemStream final : public IOutStream
 	ADD_RELEASE_REF_IMPL
 
 public:
-	static CComPtr<ISequentialOutStream> Create(QIODevice& stream, ProgressCallback& progress);
+	static CMyComPtr<ISequentialOutStream> Create(QIODevice& stream, ProgressCallback& progress);
 
 private:
 	explicit OutMemStream(QIODevice& stream, ProgressCallback& progress);

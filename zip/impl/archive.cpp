@@ -1,24 +1,19 @@
 #include "archive.h"
 
-#include "win.h"
-
-#include <InitGuid.h>
-#include <Shlwapi.h>
-
 #include <ranges>
 
-#include <QDir>
-
-#include <interface/types.h>
+#include <7zip/Archive/IArchive.h>
 
 #include "fnd/FindPair.h"
 #include "fnd/IsOneOf.h"
-#include "fnd/ScopedCall.h"
 
-#include "7z-sdk/7z/CPP/7zip/Archive/IArchive.h"
-#include "bit7z/bitcompressionlevel.hpp"
-#include "bit7z/formatdetect.hpp"
-#include "bit7z/guiddef.hpp"
+#include "interface/types.h"
+
+#include "internal/cbufferinstream.hpp"
+#include "internal/cfileinstream.hpp"
+#include "src/ext/bit7z/src/internal/formatdetect.hpp"
+#include "src/ext/bit7z/src/internal/guiddef.hpp"
+#include "src/ext/bit7z/src/internal/guids.hpp"
 #include "zip/interface/error.h"
 #include "zip/interface/file.h"
 #include "zip/interface/format.h"
@@ -27,7 +22,8 @@
 #include "ArchiveOpenCallback.h"
 #include "FileItem.h"
 #include "InStreamWrapper.h"
-#include "PropVariant.h"
+#include "bitformat.hpp"
+#include "bitpropvariant.hpp"
 #include "lib.h"
 #include "log.h"
 #include "reader.h"
@@ -40,32 +36,29 @@ namespace HomeCompa::ZipDetails::SevenZip
 namespace
 {
 
-CComPtr<IStream> CreateStream(const QString& filename)
+CMyComPtr<IInStream> CreateStream(const QString& filename)
 {
 	if (!QFile::exists(filename))
 		return {};
 
-	CComPtr<IStream> fileStream;
-	if (FAILED(SHCreateStreamOnFileEx(filename.toStdWString().data(), STGM_READ, FILE_ATTRIBUTE_READONLY, FALSE, NULL, &fileStream)))
-		Error::CannotOpenFile(filename);
-	return fileStream;
+	return new bit7z::CFileInStream(filename.toStdWString());
 }
 
-CComPtr<IStream> CreateStream(const BYTE* pInit, const UINT cbInit)
+CMyComPtr<IInStream> CreateStream(const std::vector<bit7z::byte_t>& inBuffer)
 {
-	return SHCreateMemStream(pInit, cbInit);
+	return new bit7z::CBufferInStream(inBuffer);
 }
 
-CComPtr<IInArchive> GetArchiveReader(const Lib& lib, const bit7z::BitInFormat& format)
+CMyComPtr<IInArchive> GetArchiveReader(const Lib& lib, const bit7z::BitInFormat& format)
 {
-	const auto guid = bit7z::format_guid(format);
+	const auto guid = format_guid(format);
 
-	CComPtr<IInArchive> archive;
-	lib.CreateObject(guid, IID_IInArchive, reinterpret_cast<void**>(&archive));
+	CMyComPtr<IInArchive> archive;
+	lib.CreateObject(guid, bit7z::IID_IInArchive, reinterpret_cast<void**>(&archive));
 	return archive;
 }
 
-CComPtr<IInArchive> CreateInputArchiveImpl(const Lib& lib, CComPtr<IStream> stream, const bit7z::BitInFormat& format)
+CMyComPtr<IInArchive> CreateInputArchiveImpl(const Lib& lib, CMyComPtr<IInStream> stream, const bit7z::BitInFormat& format)
 {
 	auto archive = GetArchiveReader(lib, format);
 	if (!archive)
@@ -93,21 +86,21 @@ const bit7z::BitInOutFormat& GetInOutFormat(const Format format)
 	return FindSecond(formats, format);
 }
 
-CComPtr<IOutArchive> CreateOutputArchive(IInArchive* inArchive)
+CMyComPtr<IOutArchive> CreateOutputArchive(IInArchive* inArchive)
 {
 	assert(inArchive);
-	CComPtr<IOutArchive> archive;
-	if (inArchive->QueryInterface(IID_IOutArchive, reinterpret_cast<void**>(&archive)) == S_OK)
+	CMyComPtr<IOutArchive> archive;
+	if (inArchive->QueryInterface(bit7z::IID_IOutArchive, reinterpret_cast<void**>(&archive)) == S_OK)
 		return archive;
 	return {};
 }
 
-CComPtr<IOutArchive> CreateOutputArchive(const Lib& lib, const Format format)
+CMyComPtr<IOutArchive> CreateOutputArchive(const Lib& lib, const Format format)
 {
-	CComPtr<IOutArchive> archive;
-	const auto           guid = bit7z::format_guid(GetInOutFormat(format));
+	CMyComPtr<IOutArchive> archive;
+	const auto             guid = bit7z::format_guid(GetInOutFormat(format));
 
-	lib.CreateObject(guid, IID_IOutArchive, reinterpret_cast<void**>(&archive));
+	lib.CreateObject(guid, bit7z::IID_IOutArchive, reinterpret_cast<void**>(&archive));
 	return archive;
 }
 
@@ -134,7 +127,7 @@ constexpr auto ThreadCountName               = L"mt";
 
 void SetArchiveProperties(IOutArchive& archive, const bit7z::BitInOutFormat& format, const std::unordered_map<PropertyId, QVariant>& properties)
 {
-	CComPtr<ISetProperties> setProperties;
+	CMyComPtr<ISetProperties> setProperties;
 	if (archive.QueryInterface(IID_ISetProperties, reinterpret_cast<void**>(&setProperties)) != S_OK)
 		return;
 
@@ -142,8 +135,8 @@ void SetArchiveProperties(IOutArchive& archive, const bit7z::BitInOutFormat& for
 		const auto it = properties.find(id);
 		return it != properties.end() ? it->second : QVariant {};
 	};
-	std::vector<const wchar_t*> names;
-	std::vector<CPropVariant>   values;
+	std::vector<const wchar_t*>        names;
+	std::vector<bit7z::BitPropVariant> values;
 
 	if (const auto value = getProperty(PropertyId::CompressionLevel); value.isValid() && format.hasFeature(bit7z::FormatFeatures::CompressionLevel))
 	{
@@ -176,7 +169,7 @@ void SetArchiveProperties(IOutArchive& archive, const bit7z::BitInOutFormat& for
 struct ArchiveWrapper
 {
 	const bit7z::BitInFormat& format;
-	CComPtr<IInArchive>       archive;
+	CMyComPtr<IInArchive>     archive;
 
 	ArchiveWrapper(const bit7z::BitInFormat& f = bit7z::BitFormat::Auto)
 		: format { f }
@@ -195,29 +188,29 @@ std::unique_ptr<ArchiveWrapper> CreateInputArchive(const Lib& lib, const QString
 			return archive;
 
 	if (auto archive = std::make_unique<ArchiveWrapper>(bit7z::detect_format_from_signature(stream)); archive->format != bit7z::BitFormat::Auto)
-		if ((archive->archive = CreateInputArchiveImpl(lib, std::move(stream), archive->format)))
+		if ((archive->archive = CreateInputArchiveImpl(lib, stream, archive->format)))
 			return archive;
 
 	Error::CannotOpenArchive(filename);
 }
 
-std::unique_ptr<ArchiveWrapper> CreateInputArchive(const Lib& lib, const BYTE* pInit, const UINT cbInit)
+std::unique_ptr<ArchiveWrapper> CreateInputArchive(const Lib& lib, const std::vector<bit7z::byte_t>& inBuffer)
 {
-	if (!cbInit)
+	if (inBuffer.empty())
 		return std::make_unique<ArchiveWrapper>();
 
-	auto stream = CreateStream(pInit, cbInit);
+	auto stream = CreateStream(inBuffer);
 	if (!stream)
 		return std::make_unique<ArchiveWrapper>();
 
 	if (auto archive = std::make_unique<ArchiveWrapper>(bit7z::detect_format_from_signature(stream)); archive->format != bit7z::BitFormat::Auto)
-		if ((archive->archive = CreateInputArchiveImpl(lib, std::move(stream), archive->format)))
+		if ((archive->archive = CreateInputArchiveImpl(lib, stream, archive->format)))
 			return archive;
 
 	Error::CannotCreateObject();
 }
 
-FileStorage CreateFileList(CComPtr<IInArchive> archive)
+FileStorage CreateFileList(CMyComPtr<IInArchive> archive)
 {
 	FileStorage result;
 
@@ -229,8 +222,8 @@ FileStorage CreateFileList(CComPtr<IInArchive> archive)
 	result.files.reserve(static_cast<size_t>(numItems));
 	for (UInt32 i = 0; i < numItems; i++)
 	{
-		CPropVariant prop;
-		const bool   isDir = [&] {
+		bit7z::BitPropVariant prop;
+		const bool            isDir = [&] {
             archive->GetProperty(i, kpidIsDir, &prop);
             return prop.boolVal != VARIANT_FALSE;
 		}();
@@ -239,7 +232,7 @@ FileStorage CreateFileList(CComPtr<IInArchive> archive)
 		const auto size = prop.uhVal.QuadPart;
 
 		auto time = [&] {
-			prop    = CPropVariant {};
+			prop    = bit7z::BitPropVariant {};
 			auto hr = archive->GetProperty(i, kpidCTime, &prop);
 			if (FAILED(hr) || prop.vt == VT_EMPTY || (prop.filetime.dwHighDateTime == 0 && prop.filetime.dwLowDateTime == 0))
 			{
@@ -363,14 +356,18 @@ class ReaderStream : public Reader
 public:
 	ReaderStream(QIODevice& stream, std::shared_ptr<ProgressCallback> progress)
 		: Reader(std::move(progress))
-		, m_bytes { stream.isReadable() ? stream.readAll() : QByteArray {} }
 	{
-		m_archive = CreateInputArchive(m_lib, reinterpret_cast<const BYTE*>(m_bytes.constData()), static_cast<UINT>(m_bytes.size()));
+		if (stream.isReadable())
+		{
+			m_bytes.resize(stream.size());
+			stream.read(reinterpret_cast<char*>(m_bytes.data()), static_cast<qint64>(m_bytes.size()));
+		}
+		m_archive = CreateInputArchive(m_lib, m_bytes);
 		m_files   = CreateFileList(m_archive->archive);
 	}
 
 protected:
-	QByteArray m_bytes;
+	std::vector<bit7z::byte_t> m_bytes;
 };
 
 class WriterFile final : public ReaderFile
@@ -409,7 +406,7 @@ private: // IZip
 private:
 	const Format               m_format;
 	std::unique_ptr<QIODevice> m_ioDevice;
-	CComPtr<IOutArchive>       m_outArchive;
+	CMyComPtr<IOutArchive>     m_outArchive;
 };
 
 class WriterStream final : public ReaderStream
@@ -447,9 +444,9 @@ private: // IZip
 	}
 
 private:
-	const Format         m_format;
-	QIODevice&           m_ioDevice;
-	CComPtr<IOutArchive> m_outArchive;
+	const Format           m_format;
+	QIODevice&             m_ioDevice;
+	CMyComPtr<IOutArchive> m_outArchive;
 };
 
 } // namespace

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "fnd/unknown_impl.h"
+#include <7zip/IStream.h>
 
-#include "7z-sdk/7z/CPP/7zip/IStream.h"
+#include "unknown_impl.h"
 
 namespace HomeCompa::ZipDetails::SevenZip
 {
@@ -14,10 +14,10 @@ class InStreamWrapper final
 	ADD_RELEASE_REF_IMPL
 
 public:
-	static CComPtr<InStreamWrapper> Create(CComPtr<IStream> baseStream);
+	static CMyComPtr<InStreamWrapper> Create(CMyComPtr<IInStream> baseStream);
 
 private:
-	explicit InStreamWrapper(CComPtr<IStream> baseStream);
+	explicit InStreamWrapper(CMyComPtr<IInStream> baseStream);
 
 public:
 	STDMETHOD(QueryInterface)(REFIID iid, void** ppvObject) override;
@@ -33,7 +33,7 @@ private:
 	STDMETHOD(GetSize)(UInt64* size) override;
 
 private:
-	CComPtr<IStream> m_baseStream;
+	CMyComPtr<IInStream> m_baseStream;
 };
 
 } // namespace HomeCompa::ZipDetails::SevenZip

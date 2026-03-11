@@ -6,9 +6,10 @@ AddTarget(zip	shared_lib
 		"${CMAKE_CURRENT_LIST_DIR}"
     INCLUDE_DIRECTORIES
         "${EXT_ROOT}/bit7z/include/bit7z"
+        "${EXT_ROOT}/bit7z/src"
+        "${CMAKE_BINARY_DIR}/_deps/7-zip-src/CPP"
 	LINK_LIBRARIES
 		Qt${QT_MAJOR_VERSION}::Gui
-		Shlwapi.lib
 		7zip::7zip
         bit7z
 	LINK_TARGETS

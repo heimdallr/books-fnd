@@ -3,8 +3,6 @@
 #include <QFileDevice>
 #include <QIODevice>
 
-#include "fnd/unknown_impl.h"
-
 #include "zip/interface/ProgressCallback.h"
 
 using namespace HomeCompa::ZipDetails::SevenZip;
@@ -14,13 +12,13 @@ class StreamSetRestriction : public IStreamSetRestriction
 	UNKNOWN_IMPL(IStreamSetRestriction) //-V835
 
 public:
-	static CComPtr<IStreamSetRestriction> Create()
+	static CMyComPtr<IStreamSetRestriction> Create()
 	{
 		return new StreamSetRestriction();
 	}
 
 private:
-	HRESULT SetRestriction(UInt64 begin, UInt64 end) noexcept override
+	HRESULT SetRestriction(const UInt64 begin, const UInt64 end) noexcept override
 	{
 		if (begin > end)
 			return E_FAIL;
@@ -29,7 +27,7 @@ private:
 	}
 };
 
-CComPtr<ISequentialOutStream> OutMemStream::Create(QIODevice& stream, ProgressCallback& progress)
+CMyComPtr<ISequentialOutStream> OutMemStream::Create(QIODevice& stream, ProgressCallback& progress)
 {
 	return new OutMemStream(stream, progress);
 }

@@ -1,23 +1,19 @@
 #include "reader.h"
 
-#include "win.h"
-
-#include <comdef.h>
-
 #include <QBuffer>
 
-#include "fnd/ScopedCall.h"
-#include "fnd/unknown_impl.h"
+#include <7zip/IPassword.h>
 
-#include "7z-sdk/7z/CPP/7zip/Archive/IArchive.h"
-#include "7z-sdk/7z/CPP/7zip/IPassword.h"
+#include "fnd/ScopedCall.h"
+
 #include "zip/interface/ProgressCallback.h"
 #include "zip/interface/file.h"
 #include "zip/interface/stream.h"
 
+#include "ArchiveOpenCallback.h"
 #include "FileItem.h"
 #include "OutMemStream.h"
-#include "PropVariant.h"
+#include "bitpropvariant.hpp"
 
 namespace HomeCompa::ZipDetails::SevenZip
 {
@@ -32,7 +28,7 @@ class CryptoGetTextPasswordImpl final : public ICryptoGetTextPassword
 	UNKNOWN_IMPL(ICryptoGetTextPassword) //-V835
 
 public:
-	static CComPtr<ICryptoGetTextPassword> Create(QString password = {})
+	static CMyComPtr<ICryptoGetTextPassword> Create(QString password = {})
 	{
 		return new CryptoGetTextPasswordImpl(std::move(password));
 	}
@@ -61,7 +57,7 @@ class ArchiveExtractCallback final : public IArchiveExtractCallback
 	ADD_RELEASE_REF_IMPL
 
 public:
-	static CComPtr<IArchiveExtractCallback> Create(IInArchive& zip, QIODevice& outStream, ProgressCallback& progress)
+	static CMyComPtr<IArchiveExtractCallback> Create(IInArchive& zip, QIODevice& outStream, ProgressCallback& progress)
 	{
 		return new ArchiveExtractCallback(zip, outStream, progress);
 	}
@@ -131,9 +127,9 @@ private: // IArchiveExtractCallback
 
 			GetPropertyIsDir(index);
 		}
-		catch (_com_error& ex)
+		catch (...)
 		{
-			return ex.Error();
+			return {};
 		}
 
 		if (!m_isDir)
@@ -167,30 +163,30 @@ private:
 
 	void GetPropertyFilePath(const UInt32 index)
 	{
-		CPropVariant  prop;
-		const HRESULT hr = m_zip.GetProperty(index, kpidPath, &prop);
+		bit7z::BitPropVariant prop;
+		const HRESULT         hr = m_zip.GetProperty(index, kpidPath, &prop);
 		if (hr != S_OK)
-			_com_issue_error(hr);
+			throw std::runtime_error(std::format("com error {}", hr));
 
 		if (prop.vt == VT_EMPTY)
 			m_filePath = EMPTY_FILE_ALIAS;
 		else if (prop.vt != VT_BSTR)
-			_com_issue_error(E_FAIL);
+			throw std::runtime_error(std::format("com error {}", E_FAIL));
 		else
 			m_filePath = QString::fromStdWString(prop.bstrVal);
 	}
 
 	void GetPropertyIsDir(const UInt32 index)
 	{
-		CPropVariant  prop;
-		const HRESULT hr = m_zip.GetProperty(index, kpidIsDir, &prop);
+		bit7z::BitPropVariant prop;
+		const HRESULT         hr = m_zip.GetProperty(index, kpidIsDir, &prop);
 		if (hr != S_OK)
-			_com_issue_error(hr);
+			throw std::runtime_error(std::format("com error {}", hr));
 
 		if (prop.vt == VT_EMPTY)
 			m_isDir = false;
 		else if (prop.vt != VT_BOOL)
-			_com_issue_error(E_FAIL);
+			throw std::runtime_error(std::format("com error {}", E_FAIL));
 		else
 			m_isDir = prop.boolVal != VARIANT_FALSE;
 	}
