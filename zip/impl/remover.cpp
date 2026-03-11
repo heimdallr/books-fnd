@@ -1,23 +1,15 @@
-#include "win.h"
-
-#include <comdef.h>
-
 #include <QRegularExpression>
 
-#include "fnd/unknown_impl.h"
-
-#include "7z-sdk/7z/CPP/7zip/Archive/IArchive.h"
-#include "7z-sdk/7z/CPP/7zip/IPassword.h"
 #include "bit7z/bitformat.hpp"
 #include "zip/interface/ProgressCallback.h"
 
 #include "FileItem.h"
 #include "OutMemStream.h"
-#include "PropVariant.h"
+#include "bitpropvariant.hpp"
 #include "log.h"
-#include "writer.h"
 
-using namespace bit7z;
+#include <7zip/Archive/IArchive.h>
+#include <7zip/IPassword.h>
 
 namespace HomeCompa::ZipDetails::SevenZip
 {
@@ -29,7 +21,7 @@ class CryptoGetTextPassword final : public ICryptoGetTextPassword2
 {
 	UNKNOWN_IMPL(ICryptoGetTextPassword2) //-V835
 public:
-	static CComPtr<ICryptoGetTextPassword2> Create()
+	static CMyComPtr<ICryptoGetTextPassword2> Create()
 	{
 		return new CryptoGetTextPassword();
 	}
@@ -48,7 +40,7 @@ class ArchiveExtractCallbackMessage final : public IArchiveExtractCallbackMessag
 	UNKNOWN_IMPL(IArchiveExtractCallbackMessage2) //-V835
 
 public:
-	static CComPtr<IArchiveExtractCallbackMessage2> Create()
+	static CMyComPtr<IArchiveExtractCallbackMessage2> Create()
 	{
 		return new ArchiveExtractCallbackMessage();
 	}
@@ -64,7 +56,7 @@ class ArchiveUpdateCallback : public IArchiveUpdateCallback
 {
 	ADD_RELEASE_REF_IMPL
 public:
-	static CComPtr<IArchiveUpdateCallback> Create(FileStorage& files, ProgressCallback& progress)
+	static CMyComPtr<IArchiveUpdateCallback> Create(FileStorage& files, ProgressCallback& progress)
 	{
 		return new ArchiveUpdateCallback(files, progress);
 	}
@@ -147,16 +139,16 @@ private: // IArchiveUpdateCallback
 	HRESULT GetProperty(UInt32 /*index*/, PROPID propId, PROPVARIANT* value) noexcept override
 	try
 	{
-		CPropVariant prop = [&, propId]() -> CPropVariant {
+		bit7z::BitPropVariant prop = [&, propId]() -> bit7z::BitPropVariant {
 			switch (propId)
 			{
 				case kpidIsAnti:
 				case kpidIsDir:
-					return false;
+					return bit7z::BitPropVariant { false };
 				case kpidAttrib:
-					return uint32_t { 128 };
+					return bit7z::BitPropVariant { uint32_t { 128 } };
 				case kpidMTime:
-					return FILETIME {};
+					return bit7z::BitPropVariant { FILETIME {} };
 				case kpidPath: // return m_fileNames[index - m_files.files.size()].toStdWString();
 				case kpidSize: // return m_sizeGetter(index - m_files.files.size());
 				case kpidComment:

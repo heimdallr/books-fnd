@@ -2,7 +2,7 @@
 
 using namespace HomeCompa::ZipDetails::SevenZip;
 
-CComPtr<ArchiveOpenCallback> ArchiveOpenCallback::Create(QString password)
+CMyComPtr<ArchiveOpenCallback> ArchiveOpenCallback::Create(QString password)
 {
 	return new ArchiveOpenCallback(std::move(password));
 }

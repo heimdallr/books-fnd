@@ -1,6 +1,6 @@
 #pragma once
 
-#include "win.h"
+#include <Common/MyCom.h>
 
 namespace UnknownImplDetail
 {

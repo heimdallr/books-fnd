@@ -1,22 +1,15 @@
 #include "writer.h"
 
-#include "win.h"
+#include <7zip/IPassword.h>
 
-#include <comdef.h>
-
-#include "fnd/unknown_impl.h"
-
-#include "7z-sdk/7z/CPP/7zip/Archive/IArchive.h"
-#include "7z-sdk/7z/CPP/7zip/IPassword.h"
 #include "bit7z/bitformat.hpp"
 #include "zip/interface/ProgressCallback.h"
 
+#include "ArchiveOpenCallback.h"
 #include "FileItem.h"
 #include "OutMemStream.h"
-#include "PropVariant.h"
+#include "bitpropvariant.hpp"
 #include "log.h"
-
-using namespace bit7z;
 
 namespace HomeCompa::ZipDetails::SevenZip
 {
@@ -28,7 +21,7 @@ class CryptoGetTextPassword final : public ICryptoGetTextPassword2
 {
 	UNKNOWN_IMPL(ICryptoGetTextPassword2) //-V835
 public:
-	static CComPtr<ICryptoGetTextPassword2> Create()
+	static CMyComPtr<ICryptoGetTextPassword2> Create()
 	{
 		return new CryptoGetTextPassword();
 	}
@@ -47,7 +40,7 @@ class ArchiveExtractCallbackMessage final : public IArchiveExtractCallbackMessag
 	UNKNOWN_IMPL(IArchiveExtractCallbackMessage2) //-V835
 
 public:
-	static CComPtr<IArchiveExtractCallbackMessage2> Create()
+	static CMyComPtr<IArchiveExtractCallbackMessage2> Create()
 	{
 		return new ArchiveExtractCallbackMessage();
 	}
@@ -64,7 +57,7 @@ class SequentialInStream final : public ISequentialInStream
 	UNKNOWN_IMPL(ISequentialInStream) //-V835
 
 public:
-	static CComPtr<ISequentialInStream> Create(QIODevice& stream)
+	static CMyComPtr<ISequentialInStream> Create(QIODevice& stream)
 	{
 		return new SequentialInStream(stream);
 	}
@@ -100,7 +93,7 @@ class ArchiveUpdateCallback : public IArchiveUpdateCallback
 {
 	ADD_RELEASE_REF_IMPL
 public:
-	static CComPtr<IArchiveUpdateCallback> Create(FileStorage& files, std::shared_ptr<IZipFileProvider> zipFileProvider, ProgressCallback& progress)
+	static CMyComPtr<IArchiveUpdateCallback> Create(FileStorage& files, std::shared_ptr<IZipFileProvider> zipFileProvider, ProgressCallback& progress)
 	{
 		return new ArchiveUpdateCallback(files, std::move(zipFileProvider), progress);
 	}
@@ -181,17 +174,17 @@ private: // IArchiveUpdateCallback
 	HRESULT GetProperty(UInt32 indexSrc, PROPID propId, PROPVARIANT* value) noexcept override
 	try
 	{
-		const auto   index = static_cast<size_t>(indexSrc);
-		CPropVariant prop  = [&, propId]() -> CPropVariant {
+		const auto            index = static_cast<size_t>(indexSrc);
+		bit7z::BitPropVariant prop  = [&, propId]() -> bit7z::BitPropVariant {
             switch (propId)
             {
                 case kpidIsAnti:
                 case kpidIsDir:
-                    return false;
+                    return bit7z::BitPropVariant { false };
                 case kpidAttrib:
-                    return uint32_t { 128 };
+                    return bit7z::BitPropVariant { uint32_t { 128 } };
                 case kpidPath:
-                    return m_zipFileProvider->GetFileName(index - m_files.files.size()).toStdWString();
+                    return bit7z::BitPropVariant { m_zipFileProvider->GetFileName(index - m_files.files.size()).toStdWString() };
                 case kpidATime:
                 case kpidCTime:
                 case kpidMTime:
@@ -207,12 +200,12 @@ private: // IArchiveUpdateCallback
                     SYSTEMTIME sysTime { static_cast<WORD>(date.year()), static_cast<WORD>(date.month()),  static_cast<WORD>(date.dayOfWeek()), static_cast<WORD>(date.day()),
                                          static_cast<WORD>(time.hour()), static_cast<WORD>(time.minute()), static_cast<WORD>(time.second()),    static_cast<WORD>(time.msec()) };
                     SystemTimeToFileTime(&sysTime, &fileTime);
-                    return fileTime;
+                    return bit7z::BitPropVariant { fileTime };
                 }
                 case kpidComment:
                     return {};
                 case kpidSize:
-                    return m_zipFileProvider->GetFileSize(index - m_files.files.size());
+                    return bit7z::BitPropVariant { m_zipFileProvider->GetFileSize(index - m_files.files.size()) };
                 default:
                     return {};
             }

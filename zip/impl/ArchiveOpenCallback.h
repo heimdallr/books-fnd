@@ -1,11 +1,10 @@
 #pragma once
 
-#include "win.h"
-
 #include <QString>
 
-#include "7z-sdk/7z/CPP/7zip/Archive/IArchive.h"
-#include "7z-sdk/7z/CPP/7zip/IPassword.h"
+#include <7zip/Archive/IArchive.h>
+#include <7zip/IPassword.h>
+#include <Common/MyCom.h>
 
 namespace HomeCompa::ZipDetails::SevenZip
 {
@@ -15,7 +14,7 @@ class ArchiveOpenCallback final
 	, public ICryptoGetTextPassword
 {
 public:
-	static CComPtr<ArchiveOpenCallback> Create(QString password = {});
+	static CMyComPtr<ArchiveOpenCallback> Create(QString password = {});
 
 private:
 	explicit ArchiveOpenCallback(QString password);
