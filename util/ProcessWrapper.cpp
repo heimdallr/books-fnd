@@ -26,13 +26,16 @@ QStringList SplitStringWithQuotes(const QString& str)
 	return result;
 }
 
-bool RunProcess(const QString& file, const QString& parameters, const QString& cwd)
+bool RunProcess(const QString& file, const QString& parameters, const QString& cwd, const bool wait)
 {
-	QProcess   process;
+	const auto args = SplitStringWithQuotes(parameters);
+	if (!wait)
+		return QProcess::startDetached(file, args, QDir::toNativeSeparators(cwd));
+
 	QEventLoop eventLoop;
+	QProcess   process;
 	if (!cwd.isEmpty())
 		process.setWorkingDirectory(QDir::toNativeSeparators(cwd));
-	const auto args = SplitStringWithQuotes(parameters);
 
 	QByteArray fixed;
 	int        errorCode = 0;
