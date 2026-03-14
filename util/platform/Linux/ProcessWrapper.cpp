@@ -3,7 +3,7 @@
 namespace HomeCompa::Util
 {
 
-bool ShellExecuteImpl(const std::wstring& file, const std::wstring& parameters, const std::wstring& cwd, const bool show, const bool wait)
+bool RunSystem(const QString& command, const QString& parameters, const QString& cwd, const bool wait)
 {
 }
 

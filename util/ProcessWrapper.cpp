@@ -26,11 +26,11 @@ QStringList SplitStringWithQuotes(const QString& str)
 	return result;
 }
 
-bool RunProcess(const QString& file, const QString& parameters, const QString& cwd, const bool wait)
+bool RunProcess(const QString& command, const QString& parameters, const QString& cwd, const bool wait)
 {
 	const auto args = SplitStringWithQuotes(parameters);
 	if (!wait)
-		return QProcess::startDetached(file, args, QDir::toNativeSeparators(cwd));
+		return QProcess::startDetached(command, args, QDir::toNativeSeparators(cwd));
 
 	QEventLoop eventLoop;
 	QProcess   process;
@@ -40,11 +40,11 @@ bool RunProcess(const QString& file, const QString& parameters, const QString& c
 	QByteArray fixed;
 	int        errorCode = 0;
 	QObject::connect(&process, &QProcess::started, [&] {
-		PLOGV << QString("%1 %2 launched").arg(file, args.join(" "));
+		PLOGV << QString("%1 %2 launched").arg(command, args.join(" "));
 	});
 	QObject::connect(&process, &QProcess::errorOccurred, [&](const auto error) {
 		errorCode = static_cast<int>(error) + 1;
-		PLOGE << QString("%1 %2 error: %3").arg(file, args.join(" ")).arg(errorCode);
+		PLOGE << QString("%1 %2 error: %3").arg(command, args.join(" ")).arg(errorCode);
 		eventLoop.exit(errorCode);
 	});
 	QObject::connect(&process, &QProcess::finished, [&](const int code, const QProcess::ExitStatus) {
@@ -57,7 +57,7 @@ bool RunProcess(const QString& file, const QString& parameters, const QString& c
 		PLOGV << process.readAllStandardOutput();
 	});
 
-	process.start(QDir::toNativeSeparators(file), args, QIODevice::ReadWrite);
+	process.start(QDir::toNativeSeparators(command), args, QIODevice::ReadWrite);
 	if (errorCode)
 		return errorCode;
 
