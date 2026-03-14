@@ -10,12 +10,17 @@ AddTarget(zip	shared_lib
         "${CMAKE_BINARY_DIR}/_deps/7-zip-src/CPP"
 	LINK_LIBRARIES
 		Qt${QT_MAJOR_VERSION}::Gui
-		7zip::7zip
         bit7z
 	LINK_TARGETS
 		logging
 )
 
-string(TOUPPER ${CMAKE_BUILD_TYPE} CBTUP)
-file(COPY "${7zip_BIN_DIRS_${CBTUP}}/7z.dll" DESTINATION ${CMAKE_BINARY_DIR}/bin)
-install(FILES "${7zip_BIN_DIRS_${CBTUP}}/7z.dll" DESTINATION .)
+set(7zip_BIN_FILENAME)
+if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL Windows)
+	set(7zip_BIN_FILENAME 7z.dll)
+else()
+	message(FATAL_ERROR "Unsupported host system: ${CMAKE_HOST_SYSTEM_NAME}")
+endif()
+
+file(COPY "${7zip_BIN_DIR}/${7zip_BIN_FILENAME}" DESTINATION ${CMAKE_BINARY_DIR}/bin)
+install(FILES "${7zip_BIN_DIR}/${7zip_BIN_FILENAME}" DESTINATION .)
