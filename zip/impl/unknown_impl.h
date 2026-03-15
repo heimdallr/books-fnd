@@ -7,13 +7,13 @@ namespace UnknownImplDetail
 
 inline ULONG AddRefImpl(LONG& refCount)
 {
-	return static_cast<ULONG>(InterlockedIncrement(&refCount));
+	return ++refCount;
 }
 
 template <typename T>
 ULONG ReleaseRefImpl(LONG& refCount, T* obj)
 {
-	const auto res = static_cast<ULONG>(InterlockedDecrement(&refCount));
+	const auto res = --refCount;
 	if (res == 0)
 		delete obj;
 
@@ -23,7 +23,7 @@ ULONG ReleaseRefImpl(LONG& refCount, T* obj)
 template <typename T>
 HRESULT QueryInterface(REFIID iid, void** ppvObject, REFIID iidObj, T* obj) //-V835
 {
-	if (iid == __uuidof(IUnknown)) // NOLINT(clang-diagnostic-language-extension-token)
+	if (iid == IID_IUnknown) // NOLINT(clang-diagnostic-language-extension-token)
 	{
 		*ppvObject = reinterpret_cast<IUnknown*>(obj);
 		return S_OK;

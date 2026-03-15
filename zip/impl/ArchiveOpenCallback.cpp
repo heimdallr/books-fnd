@@ -14,7 +14,7 @@ ArchiveOpenCallback::ArchiveOpenCallback(QString password)
 
 STDMETHODIMP ArchiveOpenCallback::QueryInterface(REFIID iid, void** ppvObject) //-V835
 {
-	if (iid == __uuidof(IUnknown))
+	if (iid == IID_IUnknown)
 	{
 		*ppvObject = reinterpret_cast<IUnknown*>(this);
 		AddRef();
@@ -40,29 +40,29 @@ STDMETHODIMP ArchiveOpenCallback::QueryInterface(REFIID iid, void** ppvObject) /
 
 STDMETHODIMP_(ULONG) ArchiveOpenCallback::AddRef()
 {
-	return static_cast<ULONG>(InterlockedIncrement(&m_refCount));
+	return ++m_refCount;
 }
 
 STDMETHODIMP_(ULONG) ArchiveOpenCallback::Release()
 {
-	const auto res = static_cast<ULONG>(InterlockedDecrement(&m_refCount));
-	if (res == 0)
-		delete this;
+	if (--m_refCount != 0)
+		return m_refCount;
 
-	return res;
+	delete this;
+	return 0;
 }
 
-STDMETHODIMP ArchiveOpenCallback::SetTotal(const UInt64* /*files*/, const UInt64* /*bytes*/)
+STDMETHODIMP ArchiveOpenCallback::SetTotal(const UInt64* /*files*/, const UInt64* /*bytes*/) noexcept
 {
 	return S_OK;
 }
 
-STDMETHODIMP ArchiveOpenCallback::SetCompleted(const UInt64* /*files*/, const UInt64* /*bytes*/)
+STDMETHODIMP ArchiveOpenCallback::SetCompleted(const UInt64* /*files*/, const UInt64* /*bytes*/) noexcept
 {
 	return S_OK;
 }
 
-STDMETHODIMP ArchiveOpenCallback::CryptoGetTextPassword(BSTR* password)
+STDMETHODIMP ArchiveOpenCallback::CryptoGetTextPassword(BSTR* password) noexcept
 {
 	if (!m_password.isEmpty())
 		*password = SysAllocString(m_password.toStdWString().data());

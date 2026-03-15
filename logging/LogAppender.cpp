@@ -1,5 +1,7 @@
 #include "LogAppender.h"
 
+#include <memory>
+
 #include <plog/Appenders/DynamicAppender.h>
 #include <plog/Appenders/IAppender.h>
 #include <plog/Init.h>

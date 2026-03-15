@@ -1,5 +1,8 @@
 #include <QRegularExpression>
 
+#include <7zip/Archive/IArchive.h>
+#include <7zip/IPassword.h>
+
 #include "bit7z/bitformat.hpp"
 #include "zip/interface/ProgressCallback.h"
 
@@ -7,9 +10,6 @@
 #include "OutMemStream.h"
 #include "bitpropvariant.hpp"
 #include "log.h"
-
-#include <7zip/Archive/IArchive.h>
-#include <7zip/IPassword.h>
 
 namespace HomeCompa::ZipDetails::SevenZip
 {

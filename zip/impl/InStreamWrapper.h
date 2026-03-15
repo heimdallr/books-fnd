@@ -24,13 +24,13 @@ public:
 
 private:
 	// ISequentialInStream
-	STDMETHOD(Read)(void* data, UInt32 size, UInt32* processedSize) override;
+	STDMETHOD(Read)(void* data, UInt32 size, UInt32* processedSize) noexcept override;
 
 	// IInStream
-	STDMETHOD(Seek)(Int64 offset, UInt32 seekOrigin, UInt64* newPosition) override;
+	STDMETHOD(Seek)(Int64 offset, UInt32 seekOrigin, UInt64* newPosition) noexcept override;
 
 	// IStreamGetSize
-	STDMETHOD(GetSize)(UInt64* size) override;
+	STDMETHOD(GetSize)(UInt64* size) noexcept override;
 
 private:
 	CMyComPtr<IInStream> m_baseStream;

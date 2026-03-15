@@ -26,11 +26,11 @@ public:
 
 private:
 	// IArchiveOpenCallback
-	STDMETHOD(SetTotal)(const UInt64* files, const UInt64* bytes) override;
-	STDMETHOD(SetCompleted)(const UInt64* files, const UInt64* bytes) override;
+	STDMETHOD(SetTotal)(const UInt64* files, const UInt64* bytes) noexcept override;
+	STDMETHOD(SetCompleted)(const UInt64* files, const UInt64* bytes) noexcept override;
 
 	// ICryptoGetTextPassword
-	STDMETHOD(CryptoGetTextPassword)(BSTR* password) override;
+	STDMETHOD(CryptoGetTextPassword)(BSTR* password) noexcept override;
 
 private:
 	LONG    m_refCount { 0 };

@@ -18,6 +18,8 @@ AddTarget(zip	shared_lib
 set(7zip_BIN_FILENAME)
 if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL Windows)
 	set(7zip_BIN_FILENAME 7z.dll)
+elseif (${CMAKE_HOST_SYSTEM_NAME} STREQUAL Linux)
+	set(7zip_BIN_FILENAME 7z.so)
 else()
 	message(FATAL_ERROR "Unsupported host system: ${CMAKE_HOST_SYSTEM_NAME}")
 endif()

@@ -1,3 +1,8 @@
+set(PLOG_SHARED_EXPORT PLOG_GLOBAL)
+if(WIN32)
+	set(PLOG_SHARED_EXPORT PLOG_EXPORT)
+endif()
+
 AddTarget(logging	shared_lib
 	SOURCE_DIRECTORY
 		${CMAKE_CURRENT_LIST_DIR}
@@ -6,5 +11,5 @@ AddTarget(logging	shared_lib
 		Qt${QT_MAJOR_VERSION}::Core
 		LINK_PUBLIC plog::plog
 	COMPILE_DEFINITIONS
-		PLOG_EXPORT
+		${PLOG_SHARED_EXPORT}
 )

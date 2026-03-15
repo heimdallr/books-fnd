@@ -46,7 +46,7 @@ OutMemStream::~OutMemStream()
 
 HRESULT OutMemStream::QueryInterface(REFIID iid, void** ppvObject) //-V835
 {
-	if (iid == __uuidof(IUnknown)) // NOLINT(clang-diagnostic-language-extension-token)
+	if (iid == IID_IUnknown) // NOLINT(clang-diagnostic-language-extension-token)
 	{
 		*ppvObject = reinterpret_cast<IUnknown*>(this); // NOLINT(clang-diagnostic-reinterpret-base-class)
 		AddRef();
@@ -94,7 +94,7 @@ HRESULT OutMemStream::Write(const void* data, const UInt32 size, UInt32* process
 
 	m_progress.OnIncrement(size);
 
-	m_maxPos = std::max(m_maxPos, m_stream.pos());
+	m_maxPos = std::max(m_maxPos, static_cast<decltype(m_maxPos)>(m_stream.pos()));
 
 	return S_OK;
 }

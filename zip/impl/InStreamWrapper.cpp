@@ -15,7 +15,7 @@ InStreamWrapper::InStreamWrapper(CMyComPtr<IInStream> baseStream, const UInt64 s
 
 HRESULT STDMETHODCALLTYPE InStreamWrapper::QueryInterface(REFIID iid, void** ppvObject) //-V835
 {
-	if (iid == __uuidof(IUnknown)) // NOLINT(clang-diagnostic-language-extension-token)
+	if (iid == IID_IUnknown) // NOLINT(clang-diagnostic-language-extension-token)
 	{
 		*ppvObject = reinterpret_cast<IUnknown*>(this);
 		AddRef();
@@ -46,7 +46,7 @@ HRESULT STDMETHODCALLTYPE InStreamWrapper::QueryInterface(REFIID iid, void** ppv
 	return E_NOINTERFACE;
 }
 
-STDMETHODIMP InStreamWrapper::Read(void* data, const UInt32 size, UInt32* processedSize)
+STDMETHODIMP InStreamWrapper::Read(void* data, const UInt32 size, UInt32* processedSize) noexcept
 {
 	UInt32        read = 0;
 	const HRESULT hr   = m_baseStream->Read(data, size, &read);
@@ -56,7 +56,7 @@ STDMETHODIMP InStreamWrapper::Read(void* data, const UInt32 size, UInt32* proces
 	return SUCCEEDED(hr) ? S_OK : hr;
 }
 
-STDMETHODIMP InStreamWrapper::Seek(const Int64 offset, const UInt32 seekOrigin, UInt64* newPosition)
+STDMETHODIMP InStreamWrapper::Seek(const Int64 offset, const UInt32 seekOrigin, UInt64* newPosition) noexcept
 {
 	UInt64        newPos;
 	const HRESULT hr = m_baseStream->Seek(offset, seekOrigin, &newPos);
@@ -66,7 +66,7 @@ STDMETHODIMP InStreamWrapper::Seek(const Int64 offset, const UInt32 seekOrigin, 
 	return hr;
 }
 
-STDMETHODIMP InStreamWrapper::GetSize(UInt64* size)
+STDMETHODIMP InStreamWrapper::GetSize(UInt64* size) noexcept
 {
 	*size = m_size;
 	return S_OK;
