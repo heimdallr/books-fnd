@@ -20,6 +20,7 @@ public:
 		QObject::connect(&m_manager, &QNetworkAccessManager::finished, &m_manager, [](QNetworkReply* reply) {
 			reply->deleteLater();
 		});
+#if QT_CONFIG(ssl)
 		QObject::connect(&m_manager, &QNetworkAccessManager::sslErrors, &m_manager, [this](QNetworkReply* reply, const QList<QSslError>& errors) {
 			QStringList list;
 			std::ranges::transform(errors, std::back_inserter(list), [](const auto& item) {
@@ -28,6 +29,7 @@ public:
 			PLOGW << list.join(", ");
 			reply->ignoreSslErrors(errors);
 		});
+#endif
 	}
 
 	~Impl()

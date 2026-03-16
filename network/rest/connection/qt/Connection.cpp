@@ -82,13 +82,14 @@ IConnection::Headers Connection::GetPage(const std::string& page)
 		PLOGE << QString("Error (%1 - %2) occurred when processing request %3").arg(code).arg(reply->errorString()).arg(page.c_str());
 	});
 
+#if QT_CONFIG(ssl)
 	QObject::connect(reply, &QNetworkReply::sslErrors, [&page](const QList<QSslError>& errors) {
 		PLOGE << QString("Ssl errors occurred when processing request %1:").arg(page.c_str());
 
 		for (const auto& error : std::as_const(errors))
 			PLOGE << error.errorString();
 	});
-
+#endif
 	eventLoop.exec();
 
 	return headers;
