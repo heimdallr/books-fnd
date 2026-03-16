@@ -87,10 +87,10 @@ HRESULT OutMemStream::Write(const void* data, const UInt32 size, UInt32* process
 	if (m_progress.OnCheckBreak())
 		return E_ABORT;
 
-	const auto* byte_data = static_cast<const char*>(data);
-	const auto  realSize  = m_stream.write(byte_data, size);
+	const auto* byteData = static_cast<const char*>(data);
+	const auto  realSize = m_stream.write(byteData, size);
 	if (processedSize)
-		*processedSize = realSize;
+		*processedSize = static_cast<UInt32>(realSize);
 
 	m_progress.OnIncrement(size);
 
@@ -103,7 +103,8 @@ HRESULT OutMemStream::Seek(Int64 offset, const UInt32 seekOrigin, UInt64* newPos
 {
 	offset = seekOrigin == 1 ? m_stream.pos() + offset : seekOrigin == 2 ? m_stream.size() - offset : (assert(seekOrigin == 0), offset);
 	if (offset < 0)
-		return __HRESULT_FROM_WIN32(ERROR_NEGATIVE_SEEK);
+		return HRESULT_WIN32_ERROR_NEGATIVE_SEEK;
+
 	if (offset > m_stream.size())
 		SetSize(offset);
 
