@@ -44,9 +44,9 @@ OutMemStream::~OutMemStream()
 		file->resize(m_maxPos);
 }
 
-HRESULT OutMemStream::QueryInterface(REFIID iid, void** ppvObject) //-V835
+HRESULT OutMemStream::QueryInterface(REFIID iid, void** ppvObject)
 {
-	if (iid == IID_IUnknown) // NOLINT(clang-diagnostic-language-extension-token)
+	if (iid == IID_IUnknown)
 	{
 		*ppvObject = reinterpret_cast<IUnknown*>(this); // NOLINT(clang-diagnostic-reinterpret-base-class)
 		AddRef();

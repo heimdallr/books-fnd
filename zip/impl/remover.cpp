@@ -69,9 +69,9 @@ private:
 	}
 
 private: // IUnknown
-	HRESULT QueryInterface(REFIID iid, void** ppvObject) override //-V835
+	HRESULT QueryInterface(REFIID iid, void** ppvObject) override
 	{
-		if (iid == __uuidof(IUnknown)) // NOLINT(clang-diagnostic-language-extension-token)
+		if (iid == IID_IUnknown)
 		{
 			*ppvObject = reinterpret_cast<IUnknown*>(this); // NOLINT(clang-diagnostic-reinterpret-base-class)
 			AddRef();

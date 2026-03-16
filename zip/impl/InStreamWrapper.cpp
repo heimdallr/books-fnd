@@ -13,9 +13,9 @@ InStreamWrapper::InStreamWrapper(CMyComPtr<IInStream> baseStream, const UInt64 s
 {
 }
 
-HRESULT STDMETHODCALLTYPE InStreamWrapper::QueryInterface(REFIID iid, void** ppvObject) //-V835
+HRESULT STDMETHODCALLTYPE InStreamWrapper::QueryInterface(REFIID iid, void** ppvObject)
 {
-	if (iid == IID_IUnknown) // NOLINT(clang-diagnostic-language-extension-token)
+	if (iid == IID_IUnknown)
 	{
 		*ppvObject = reinterpret_cast<IUnknown*>(this);
 		AddRef();

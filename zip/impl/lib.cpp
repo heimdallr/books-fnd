@@ -1,12 +1,22 @@
 #include "lib.h"
 
-#include <Windows.h>
-
 #include <QCoreApplication>
 
 #include "fnd/NonCopyMovable.h"
 
 #include "zip/interface/error.h"
+
+#ifdef _WIN32
+	#include <Windows.h>
+constexpr auto LIBRARY_NAME = L"7z.dll";
+#else
+	#include <dlfcn.h>
+
+	#define LoadLibrary(lib_name) dlopen( (lib_name).c_str(), RTLD_LAZY )
+	#define GetProcAddress dlsym
+	#define FreeLibrary dlclose
+constexpr auto LIBRARY_NAME = "./7z.so";
+#endif
 
 namespace HomeCompa::ZipDetails::SevenZip
 {
@@ -14,8 +24,7 @@ namespace HomeCompa::ZipDetails::SevenZip
 namespace
 {
 
-constexpr auto LIBRARY_NAME = L"7z.dll";
-constexpr auto ENTRY_POINT  = "CreateObject";
+constexpr auto ENTRY_POINT = "CreateObject";
 
 using ObjectCreator = UINT32(WINAPI*)(const GUID* clsID, const GUID* interfaceID, void** outObject);
 
