@@ -11,8 +11,8 @@ AddTarget(dbsqlite	shared_lib
 		Qt${QT_MAJOR_VERSION}::Core
 	LINK_TARGETS
 		logging
-		sqlite
 		sqlite3pp
+		SQLite::SQLite3
 	COMPILE_DEFINITIONS
 		_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING
 )
