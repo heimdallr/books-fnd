@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "ICommand.h"
 
 namespace HomeCompa::DB
