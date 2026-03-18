@@ -125,7 +125,7 @@ struct StringLess<void>
 template <typename T>
 T To(const std::wstring_view value, T defaultValue = 0)
 {
-	return value.empty() ? defaultValue : static_cast<T>(_wtoi64(value.data()));
+    return value.empty() ? defaultValue : static_cast<T>(std::stoi(value.data()));
 }
 
 template <typename It>

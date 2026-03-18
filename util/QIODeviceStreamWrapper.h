@@ -1,10 +1,11 @@
 #pragma once
 
 #include <iostream>
+#include <memory>
 
 class QIODevice;
 
-#include "export/Util.h"
+#include "export/util.h"
 
 namespace HomeCompa
 {

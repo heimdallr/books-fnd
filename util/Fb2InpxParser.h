@@ -5,7 +5,7 @@
 #include "fnd/NonCopyMovable.h"
 #include "fnd/memory.h"
 
-#include "export/Util.h"
+#include "export/util.h"
 
 namespace HomeCompa
 {
@@ -25,9 +25,9 @@ class Fb2InpxParser
 	NON_COPY_MOVABLE(Fb2InpxParser)
 
 public:
-	static constexpr wchar_t LIST_SEPARATOR   = ':';
-	static constexpr wchar_t NAMES_SEPARATOR  = ',';
-	static constexpr wchar_t FIELDS_SEPARATOR = '\x04';
+    static constexpr char LIST_SEPARATOR   = ':';
+    static constexpr char NAMES_SEPARATOR  = ',';
+    static constexpr char FIELDS_SEPARATOR = '\x04';
 
 public:
 	struct Data

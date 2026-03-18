@@ -1,6 +1,6 @@
 #include "KeyboardLayout.h"
 
-#include "fnd/FindPair.h"
+#include <cassert>
 
 namespace HomeCompa
 {
@@ -18,8 +18,7 @@ constexpr std::pair<const char*, const wchar_t*> LOCALES[] {
 
 void SetKeyboardLayout(const std::string& locale)
 {
+    assert(false);
 }
-
-static_assert(false);
 
 }

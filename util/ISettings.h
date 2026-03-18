@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 #include <QVariant>
 
 #include "fnd/NonCopyMovable.h"

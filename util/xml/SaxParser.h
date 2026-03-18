@@ -6,7 +6,7 @@
 #include "fnd/NonCopyMovable.h"
 #include "fnd/memory.h"
 
-#include "export/Util.h"
+#include "export/util.h"
 
 class QIODevice;
 

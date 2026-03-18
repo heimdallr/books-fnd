@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "export/Util.h"
+#include "export/util.h"
 
 namespace HomeCompa
 {

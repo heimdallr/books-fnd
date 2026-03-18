@@ -5,7 +5,7 @@ namespace HomeCompa::Util
 
 QString RemoveIllegalPathCharacters(QString str)
 {
-	static_assert(false);
+    assert(false);
 }
 
 }

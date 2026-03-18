@@ -2,11 +2,12 @@
 
 #include <qttranslation.h>
 
+#include <limits>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 
-#include "export/Util.h"
+#include "export/util.h"
 
 namespace HomeCompa
 {
