@@ -172,15 +172,29 @@ protected:
 
 class Reader : public ZipImpl
 {
+	NON_COPY_MOVABLE(Reader)
+
 protected:
 	explicit Reader(std::shared_ptr<ProgressCallback> progress)
 		: ZipImpl(std::move(progress))
 	{
 	}
 
+	~Reader() override
+	{
+		m_progress->OnDone();
+	}
+
 private: // IZip
 	std::unique_ptr<IFile> Read(const QString& filename) const override
 	{
+		m_archive->setTotalCallback([this](const uint64_t total) {
+			m_progress->OnStartWithTotal(static_cast<int64_t>(total));
+		});
+		m_archive->setProgressCallback([this](const uint64_t progress) {
+			m_progress->OnSetCompleted(static_cast<int64_t>(progress));
+			return !m_progress->OnCheckBreak();
+		});
 		return File::Read(*m_archive, m_files.GetFile(filename));
 	}
 
