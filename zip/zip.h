@@ -39,7 +39,7 @@ public:
 	explicit Zip(const QString& filename, std::shared_ptr<ProgressCallback> progress = {});
 	explicit Zip(QIODevice& stream, std::shared_ptr<ProgressCallback> progress = {});
 	Zip(const QString& filename, Format format, bool appendMode = false, std::shared_ptr<ProgressCallback> progress = {});
-	Zip(QIODevice& stream, Format format, bool appendMode = false, std::shared_ptr<ProgressCallback> progress = {});
+	Zip(QIODevice& stream, Format format, std::shared_ptr<ProgressCallback> progress = {});
 	~Zip();
 
 	[[nodiscard]] QStringList      GetFileNameList() const;
@@ -49,7 +49,7 @@ public:
 	[[nodiscard]] std::unique_ptr<Stream> Read(const QString& filename) const;
 
 	void SetProperty(PropertyId id, QVariant value);
-	bool Write(std::shared_ptr<IZipFileProvider> zipFileProvider);
+	bool Write(const IZipFileProvider& zipFileProvider);
 
 	bool Remove(const std::vector<QString>& fileNames);
 

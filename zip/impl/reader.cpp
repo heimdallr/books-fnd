@@ -30,9 +30,9 @@ public:
 				m_outStream.close();
 			}
 		);
-		std::vector<bit7z::byte_t> buffer;
+		std::vector<std::byte> buffer;
 		zip.extractTo(buffer, fileItem.index);
-		m_bytes.assign(buffer.cbegin(), buffer.cend());
+		m_bytes = QByteArray { reinterpret_cast<char*>(buffer.data()), static_cast<qsizetype>(buffer.size()) };
 	}
 
 private: // Stream

@@ -15,18 +15,18 @@ class IZipFileProvider // NOLINT(cppcoreguidelines-special-member-functions)
 public:
 	virtual ~IZipFileProvider() = default;
 
-	virtual size_t                     GetCount() const noexcept                = 0;
-	virtual size_t                     GetFileSize(size_t index) const noexcept = 0;
-	virtual QString                    GetFileName(size_t index) const          = 0;
-	virtual QDateTime                  GetFileTime(size_t index) const          = 0;
-	virtual std::unique_ptr<QIODevice> GetStream(size_t index)                  = 0;
+	virtual size_t                        GetCount() const noexcept                = 0;
+	virtual size_t                        GetFileSize(size_t index) const noexcept = 0;
+	virtual QString                       GetFileName(size_t index) const          = 0;
+	virtual QDateTime                     GetFileTime(size_t index) const          = 0;
+	virtual const std::vector<std::byte>& GetFileData(size_t index) const noexcept = 0;
 };
 
 class IZipFileController : virtual public IZipFileProvider
 {
 public:
-	virtual void AddFile(QString name, QByteArray body, QDateTime time = {}) = 0;
-	virtual void AddFile(const QString& path)                                = 0;
+	virtual void AddFile(QString name, const QByteArray& body, QDateTime time = {}) = 0;
+	virtual void AddFile(const QString& path)                                       = 0;
 };
 
 }

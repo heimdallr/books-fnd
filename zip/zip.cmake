@@ -10,7 +10,9 @@ AddTarget(zip	shared_lib
 		Qt${QT_MAJOR_VERSION}::Gui
         bit7z
 	LINK_TARGETS
+		fnd
 		logging
+		platform
 )
 
 set(7zip_BIN_FILENAME)

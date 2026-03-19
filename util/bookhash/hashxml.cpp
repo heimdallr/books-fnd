@@ -4,7 +4,8 @@
 
 #include <QFile>
 
-#include "StrUtil.h"
+#include "fnd/StrUtil.h"
+
 #include "hashparser.h"
 
 using namespace HomeCompa::Util;

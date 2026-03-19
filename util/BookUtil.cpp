@@ -29,8 +29,8 @@ auto GetFolderPath(const QString& collectionFolder, const QString& name)
 AllFiles CollectImageFiles(const AllFiles& bookFiles, const QString& collectionFolder, const std::function<std::shared_ptr<Zip::ProgressCallback>()>& progressProvider)
 {
 	static constexpr std::pair<const char*, const char*> imageTypes[] {
-		{ Global::COVERS,   "" },
-		{ Global::IMAGES, "/*" },
+		{ Global::COVERS,  "" },
+		{ Global::IMAGES, "/" },
 	};
 
 	AllFiles result;
