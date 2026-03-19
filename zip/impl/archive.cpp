@@ -322,16 +322,21 @@ private: // IZip
 							})
 		                  | std::ranges::to<std::multimap>();
 
+		size_t count = 0;
 		for (const auto& fileName : fileNames)
 		{
 			for (auto [it, end] = sorted.equal_range(fileName); it != end; ++it)
 			{
 				const auto& file = m_files.GetFile(it->second);
 				editor->deleteItem(file.index, bit7z::DeletePolicy::RecurseDirs);
+				++count;
 			}
 		}
+
 		editor->applyChanges();
 		UpdateFileList();
+
+		PLOGI << m_filename << ", files removed: " << count;
 
 		return true;
 	}
