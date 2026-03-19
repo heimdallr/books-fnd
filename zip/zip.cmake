@@ -5,14 +5,14 @@ AddTarget(zip	shared_lib
 	SOURCE_DIRECTORY
 		"${CMAKE_CURRENT_LIST_DIR}"
     INCLUDE_DIRECTORIES
-        "${EXT_ROOT}/bit7z/include/bit7z"
-        "${EXT_ROOT}/bit7z/src"
-        "${CMAKE_BINARY_DIR}/_deps/7-zip-src/CPP"
+        "${EXT_ROOT}/bit7z/include"
 	LINK_LIBRARIES
 		Qt${QT_MAJOR_VERSION}::Gui
         bit7z
 	LINK_TARGETS
+		fnd
 		logging
+		platform
 )
 
 set(7zip_BIN_FILENAME)

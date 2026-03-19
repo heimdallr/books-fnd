@@ -18,7 +18,7 @@ namespace HomeCompa::ZipDetails
 
 class IFile;
 
-class IZip
+class IZip // NOLINT(cppcoreguidelines-special-member-functions)
 {
 public:
 	virtual ~IZip()                                                                   = default;
@@ -28,8 +28,8 @@ public:
 
 	[[nodiscard]] virtual std::unique_ptr<IFile> Read(const QString& filename) const = 0;
 
-	virtual void SetProperty(PropertyId id, QVariant value)               = 0;
-	virtual bool Write(std::shared_ptr<IZipFileProvider> zipFileProvider) = 0;
+	virtual void SetProperty(PropertyId id, QVariant value)     = 0;
+	virtual bool Write(const IZipFileProvider& zipFileProvider) = 0;
 
 	virtual bool Remove(const std::vector<QString>& fileNames) = 0;
 };

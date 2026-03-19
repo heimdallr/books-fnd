@@ -1,34 +1,29 @@
 #include "archive.h"
 
+#include <fstream>
 #include <ranges>
-
-#include <7zip/Archive/IArchive.h>
+#include <thread>
 
 #include "fnd/FindPair.h"
-#include "fnd/IsOneOf.h"
+#include "fnd/QIODeviceStreamWrapper.h"
+#include "fnd/StrUtil.h"
 
 #include "interface/types.h"
 
-#include "internal/cbufferinstream.hpp"
-#include "internal/cfileinstream.hpp"
-#include "src/ext/bit7z/src/internal/formatdetect.hpp"
-#include "src/ext/bit7z/src/internal/guiddef.hpp"
-#include "src/ext/bit7z/src/internal/guids.hpp"
-#include "zip/interface/error.h"
+#include "bit7z/bit7zlibrary.hpp"
+#include "bit7z/bitarchiveeditor.hpp"
+#include "bit7z/bitarchivereader.hpp"
+#include "bit7z/bitarchivewriter.hpp"
+#include "bit7z/bitformat.hpp"
+#include "bit7z/bitpropvariant.hpp"
+#include "platform/StrUtil.h"
 #include "zip/interface/file.h"
 #include "zip/interface/format.h"
 #include "zip/interface/zip.h"
 
-#include "ArchiveOpenCallback.h"
 #include "FileItem.h"
-#include "InStreamWrapper.h"
-#include "bitformat.hpp"
-#include "bitpropvariant.hpp"
-#include "lib.h"
 #include "log.h"
 #include "reader.h"
-#include "remover.h"
-#include "writer.h"
 
 namespace HomeCompa::ZipDetails::SevenZip
 {
@@ -36,44 +31,14 @@ namespace HomeCompa::ZipDetails::SevenZip
 namespace
 {
 
-CMyComPtr<IInStream> CreateStream(const QString& filename)
-{
-	if (!QFile::exists(filename))
-		return {};
-
-	return new bit7z::CFileInStream(filename.toStdWString());
-}
-
-CMyComPtr<IInStream> CreateStream(const std::vector<bit7z::byte_t>& inBuffer)
-{
-	return new bit7z::CBufferInStream(inBuffer);
-}
-
-CMyComPtr<IInArchive> GetArchiveReader(const Lib& lib, const bit7z::BitInFormat& format)
-{
-	const auto guid = format_guid(format);
-
-	CMyComPtr<IInArchive> archive;
-	lib.CreateObject(guid, bit7z::IID_IInArchive, reinterpret_cast<void**>(&archive));
-	return archive;
-}
-
-CMyComPtr<IInArchive> CreateInputArchiveImpl(const Lib& lib, CMyComPtr<IInStream> stream, const UInt64 size, const bit7z::BitInFormat& format)
-{
-	auto archive = GetArchiveReader(lib, format);
-	if (!archive)
-		return {};
-
-	stream->Seek({}, STREAM_SEEK_SET, nullptr);
-	const auto file         = InStreamWrapper::Create(stream, size);
-	const auto openCallback = ArchiveOpenCallback::Create();
-
-	if (const auto hr = archive->Open(file, nullptr, openCallback); hr == S_OK)
-		return archive;
-
-	archive->Close();
-	return {};
-}
+#ifdef _WIN32
+	#define fromBit7zString fromStdWString
+	#define toBit7zString toStdWString
+#else
+	#define fromBit7zString fromStdString
+	#define toBit7zString toStdString
+using FILETIME = bit7z::FILETIME;
+#endif
 
 const bit7z::BitInOutFormat& GetInOutFormat(const Format format)
 {
@@ -86,182 +51,58 @@ const bit7z::BitInOutFormat& GetInOutFormat(const Format format)
 	return FindSecond(formats, format);
 }
 
-CMyComPtr<IOutArchive> CreateOutputArchive(IInArchive* inArchive)
+constexpr auto NANO100_IN_SECOND         = 10000000;
+constexpr auto SECONDS_FROM_1601_TO_1970 = 11644473600LL;
+
+std::optional<qint64> GetTime(const bit7z::BitInputArchive& archive, const uint32_t index, const bit7z::BitProperty property)
 {
-	assert(inArchive);
-	CMyComPtr<IOutArchive> archive;
-	if (inArchive->QueryInterface(bit7z::IID_IOutArchive, reinterpret_cast<void**>(&archive)) == S_OK)
-		return archive;
-	return {};
+	if (const auto prop = archive.itemProperty(index, property); !prop.isEmpty())
+		if (auto fileTime = prop.getFileTime(); fileTime.dwHighDateTime != 0 || fileTime.dwLowDateTime != 0)
+			return ((static_cast<qint64>(fileTime.dwHighDateTime) << 32) | fileTime.dwLowDateTime) / NANO100_IN_SECOND - SECONDS_FROM_1601_TO_1970;
+
+	return std::nullopt;
 }
 
-CMyComPtr<IOutArchive> CreateOutputArchive(const Lib& lib, const Format format)
+void SetTime(bit7z::BitGenericItem& item, const QDateTime& time)
 {
-	CMyComPtr<IOutArchive> archive;
-	const auto             guid = bit7z::format_guid(GetInOutFormat(format));
-
-	lib.CreateObject(guid, bit7z::IID_IOutArchive, reinterpret_cast<void**>(&archive));
-	return archive;
+	const auto nano100 = (time.toSecsSinceEpoch() + SECONDS_FROM_1601_TO_1970) * NANO100_IN_SECOND;
+	FILETIME   fileTime { .dwLowDateTime = static_cast<DWORD>(nano100 & 0xFFFFFFFF), .dwHighDateTime = static_cast<DWORD>(nano100 >> 32) };
+	item.setItemProperty(bit7z::BitProperty::CTime, bit7z::BitPropVariant { fileTime });
+	item.setItemProperty(bit7z::BitProperty::ATime, bit7z::BitPropVariant { fileTime });
+	item.setItemProperty(bit7z::BitProperty::MTime, bit7z::BitPropVariant { fileTime });
 }
 
-std::wstring GetCompressionMethodName(const CompressionMethod method)
-{
-	constexpr std::pair<CompressionMethod, const wchar_t*> methods[] {
-		{      CompressionMethod::Copy,      L"Copy" },
-        {      CompressionMethod::Ppmd,      L"PPMd" },
-        {      CompressionMethod::Lzma,      L"LZMA" },
-        {     CompressionMethod::Lzma2,     L"LZMA2" },
-		{     CompressionMethod::BZip2,     L"BZip2" },
-        {   CompressionMethod::Deflate,   L"Deflate" },
-        { CompressionMethod::Deflate64, L"Deflate64" },
-	};
-
-	return FindSecond(methods, method);
-}
-
-constexpr auto CompressionLevelName          = L"x";
-constexpr auto CompressionMethodName         = L"m";
-constexpr auto CompressionMethodNameSevenZip = L"0";
-constexpr auto SolidModeName                 = L"s";
-constexpr auto ThreadCountName               = L"mt";
-
-void SetArchiveProperties(IOutArchive& archive, const bit7z::BitInOutFormat& format, const std::unordered_map<PropertyId, QVariant>& properties)
-{
-	CMyComPtr<ISetProperties> setProperties;
-	if (archive.QueryInterface(IID_ISetProperties, reinterpret_cast<void**>(&setProperties)) != S_OK)
-		return;
-
-	const auto getProperty = [&](const PropertyId id) {
-		const auto it = properties.find(id);
-		return it != properties.end() ? it->second : QVariant {};
-	};
-	std::vector<const wchar_t*>        names;
-	std::vector<bit7z::BitPropVariant> values;
-
-	if (const auto value = getProperty(PropertyId::CompressionLevel); value.isValid() && format.hasFeature(bit7z::FormatFeatures::CompressionLevel))
-	{
-		names.emplace_back(CompressionLevelName);
-		values.emplace_back(static_cast<uint32_t>(value.value<CompressionLevel>()));
-	}
-
-	if (const auto value = getProperty(PropertyId::CompressionMethod); value.isValid() && format.hasFeature(bit7z::FormatFeatures::MultipleMethods))
-	{
-		names.emplace_back(format == bit7z::BitFormat::SevenZip ? CompressionMethodNameSevenZip : CompressionMethodName);
-		values.emplace_back(GetCompressionMethodName(value.value<CompressionMethod>()));
-	}
-
-	if (const auto value = getProperty(PropertyId::SolidArchive); value.isValid() && format.hasFeature(bit7z::FormatFeatures::SolidArchive))
-	{
-		names.emplace_back(SolidModeName);
-		values.emplace_back(value.toBool());
-	}
-
-	if (const auto value = getProperty(PropertyId::ThreadsCount); value.isValid())
-	{
-		names.emplace_back(ThreadCountName);
-		values.emplace_back(value.toUInt());
-	}
-
-	[[maybe_unused]] const auto res = setProperties->SetProperties(names.data(), values.data(), static_cast<uint32_t>(std::size(names)));
-	assert(res == S_OK);
-}
-
-struct ArchiveWrapper
-{
-	const bit7z::BitInFormat& format;
-	CMyComPtr<IInArchive>     archive;
-
-	ArchiveWrapper(const bit7z::BitInFormat& f = bit7z::BitFormat::Auto)
-		: format { f }
-	{
-	}
-};
-
-std::unique_ptr<ArchiveWrapper> CreateInputArchive(const Lib& lib, const QString& filename)
-{
-	const auto size   = static_cast<UInt64>(QFileInfo(filename).size());
-	auto       stream = CreateStream(filename);
-	if (!stream)
-		return std::make_unique<ArchiveWrapper>();
-
-	if (auto archive = std::make_unique<ArchiveWrapper>(bit7z::detect_format_from_extension(filename.toStdWString())); !IsOneOf(archive->format, bit7z::BitFormat::Auto, bit7z::BitFormat::Rar))
-		if ((archive->archive = CreateInputArchiveImpl(lib, stream, size, archive->format)))
-			return archive;
-
-	if (auto archive = std::make_unique<ArchiveWrapper>(bit7z::detect_format_from_signature(stream)); archive->format != bit7z::BitFormat::Auto)
-		if ((archive->archive = CreateInputArchiveImpl(lib, stream, size, archive->format)))
-			return archive;
-
-	Error::CannotOpenArchive(filename);
-}
-
-std::unique_ptr<ArchiveWrapper> CreateInputArchive(const Lib& lib, const std::vector<bit7z::byte_t>& inBuffer)
-{
-	if (inBuffer.empty())
-		return std::make_unique<ArchiveWrapper>();
-
-	auto stream = CreateStream(inBuffer);
-	if (!stream)
-		return std::make_unique<ArchiveWrapper>();
-
-	if (auto archive = std::make_unique<ArchiveWrapper>(bit7z::detect_format_from_signature(stream)); archive->format != bit7z::BitFormat::Auto)
-		if ((archive->archive = CreateInputArchiveImpl(lib, stream, inBuffer.size(), archive->format)))
-			return archive;
-
-	Error::CannotCreateObject();
-}
-
-FileStorage CreateFileList(CMyComPtr<IInArchive> archive)
+FileStorage CreateFileList(const bit7z::BitInputArchive& archive)
 {
 	FileStorage result;
 
-	if (!archive)
-		return result;
+	const auto numItems = archive.itemsCount();
 
-	UInt32 numItems = 0;
-	archive->GetNumberOfItems(&numItems);
-	result.files.reserve(static_cast<size_t>(numItems));
-	for (UInt32 i = 0; i < numItems; i++)
+	result.files.reserve(numItems);
+
+	for (std::remove_const_t<decltype(numItems)> i = 0; i < numItems; ++i)
 	{
-		bit7z::BitPropVariant prop;
-		const bool            isDir = [&] {
-            archive->GetProperty(i, kpidIsDir, &prop);
-            return prop.boolVal != VARIANT_FALSE;
-		}();
+		const auto size = archive.itemProperty(i, bit7z::BitProperty::Size).getUInt64();
 
-		archive->GetProperty(i, kpidSize, &prop);
-		const auto size = prop.uhVal.QuadPart;
-
-		auto time = [&] {
-			prop    = bit7z::BitPropVariant {};
-			auto hr = archive->GetProperty(i, kpidCTime, &prop);
-			if (FAILED(hr) || prop.vt == VT_EMPTY || (prop.filetime.dwHighDateTime == 0 && prop.filetime.dwLowDateTime == 0))
+		auto time = [&]() -> QDateTime {
+			auto fileTime = GetTime(archive, i, bit7z::BitProperty::CTime);
+			if (!fileTime)
 			{
-				hr = archive->GetProperty(i, kpidATime, &prop);
-				if (FAILED(hr) || prop.vt == VT_EMPTY || (prop.filetime.dwHighDateTime == 0 && prop.filetime.dwLowDateTime == 0))
+				fileTime = GetTime(archive, i, bit7z::BitProperty::MTime);
+				if (!fileTime)
 				{
-					hr = archive->GetProperty(i, kpidMTime, &prop);
-					if (FAILED(hr) || prop.vt == VT_EMPTY || (prop.filetime.dwHighDateTime == 0 && prop.filetime.dwLowDateTime == 0))
-					{
-						return QDateTime {};
-					}
+					fileTime = GetTime(archive, i, bit7z::BitProperty::ATime);
+					if (!fileTime)
+						return {};
 				}
 			}
 
-			SYSTEMTIME systemTime {};
-			if (!FileTimeToSystemTime(&prop.filetime, &systemTime))
-				return QDateTime {};
-
-			return QDateTime(QDate(systemTime.wYear, systemTime.wMonth, systemTime.wDay), QTime(systemTime.wHour, systemTime.wMinute, systemTime.wSecond, systemTime.wMilliseconds), QTimeZone::utc());
+			return QDateTime::fromSecsSinceEpoch(*fileTime);
 		}();
 
-		archive->GetProperty(i, kpidPath, &prop);
-		assert(prop.vt == VT_BSTR);
-
-		auto       fileName = QDir::fromNativeSeparators(QString::fromStdWString(prop.bstrVal));
-		const auto it       = result.index.try_emplace(fileName, result.files.size());
-		if (it.second)
-			result.files.emplace_back(i, std::move(fileName), size, std::move(time), isDir);
+		auto fileName = QDir::fromNativeSeparators(QString::fromBit7zString(archive.itemProperty(i, bit7z::BitProperty::Path).getString()));
+		if (const auto it = result.index.try_emplace(fileName, result.files.size()); it.second)
+			result.files.emplace_back(i, std::move(fileName), size, std::move(time), archive.isItemFolder(i));
 		else
 			PLOGW << "something strange: " << fileName << " duplicates";
 	}
@@ -269,51 +110,30 @@ FileStorage CreateFileList(CMyComPtr<IInArchive> archive)
 	return result;
 }
 
-class Reader : virtual public IZip
+class ZipImpl : virtual public IZip
 {
-public:
-	explicit Reader(std::shared_ptr<ProgressCallback> progress)
-		: m_progress(std::move(progress))
+protected:
+	explicit ZipImpl(std::shared_ptr<ProgressCallback> progress)
+		: m_progress { std::move(progress) }
 	{
 	}
 
 private: // IZip
-	void SetProperty(const PropertyId id, QVariant value) override
+	void SetProperty(const PropertyId /*id*/, QVariant /*value*/) override
 	{
-		m_properties[id] = std::move(value);
+		assert(false && "Cannot set properties with reader");
+		throw std::runtime_error("Cannot set properties with reader");
 	}
 
 	QStringList GetFileNameList() const override
 	{
-		QStringList files;
-		files.reserve(static_cast<int>(m_files.files.size()));
-		std::ranges::transform(
-			m_files.files | std::views::filter([](const auto& item) {
-				return !item.isDir;
-			}),
-			std::back_inserter(files),
-			[](const auto& item) {
-				return item.name;
-			}
-		);
-		return files;
-	}
-
-	std::unique_ptr<IFile> Read(const QString& filename) const override
-	{
-		return File::Read(*m_archive->archive, m_files.GetFile(filename), *m_progress);
-	}
-
-	bool Write(std::shared_ptr<IZipFileProvider> zipFileProvider) override
-	{
-		assert(false && "Cannot write with reader");
-		return false;
-	}
-
-	bool Remove(const std::vector<QString>& /*fileNames*/) override
-	{
-		assert(false && "Cannot remove with reader");
-		return false;
+		return m_files.files | std::views::filter([](const auto& item) {
+				   return !item.isDir;
+			   })
+		     | std::views::transform([](const auto& item) {
+				   return item.name;
+			   })
+		     | std::ranges::to<QStringList>();
 	}
 
 	size_t GetFileSize(const QString& filename) const override
@@ -326,30 +146,61 @@ private: // IZip
 		return m_files.GetFile(filename).time;
 	}
 
+	std::unique_ptr<IFile> Read(const QString& /*filename*/) const override
+	{
+		assert(false && "Cannot read with writer");
+		throw std::runtime_error("Cannot read with writer");
+	}
+
+	bool Write(const IZipFileProvider& /*zipFileProvider*/) override
+	{
+		assert(false && "Cannot write with reader");
+		throw std::runtime_error("Cannot write with reader");
+	}
+
+	bool Remove(const std::vector<QString>& /*fileNames*/) override
+	{
+		assert(false && "Cannot remove with reader");
+		throw std::runtime_error("Cannot remove with reader");
+	}
+
 protected:
-	Lib                                      m_lib;
-	std::unique_ptr<ArchiveWrapper>          m_archive;
-	FileStorage                              m_files;
-	std::shared_ptr<ProgressCallback>        m_progress;
-	std::unordered_map<PropertyId, QVariant> m_properties {
-		{ PropertyId::CompressionLevel,               QVariant::fromValue(CompressionLevel::Ultra) },
-		{     PropertyId::ThreadsCount, static_cast<uint32_t>(std::thread::hardware_concurrency()) },
-	};
+	bit7z::Bit7zLibrary               m_lib;
+	std::shared_ptr<ProgressCallback> m_progress;
+	FileStorage                       m_files;
+};
+
+class Reader : public ZipImpl
+{
+protected:
+	explicit Reader(std::shared_ptr<ProgressCallback> progress)
+		: ZipImpl(std::move(progress))
+	{
+	}
+
+private: // IZip
+	std::unique_ptr<IFile> Read(const QString& filename) const override
+	{
+		return File::Read(*m_archive, m_files.GetFile(filename));
+	}
+
+protected:
+	std::unique_ptr<bit7z::BitArchiveReader> m_archive;
 };
 
 class ReaderFile : public Reader
 {
 public:
-	ReaderFile(QString filename, std::shared_ptr<ProgressCallback> progress)
+	ReaderFile(const QString& filename, std::shared_ptr<ProgressCallback> progress)
 		: Reader(std::move(progress))
-		, m_filename { std::move(filename) }
+		, m_stream(Util::StringToPath(filename), std::ios_base::in | std::ios::binary)
 	{
-		m_archive = CreateInputArchive(m_lib, m_filename);
-		m_files   = CreateFileList(m_archive->archive);
+		m_archive = std::make_unique<bit7z::BitArchiveReader>(m_lib, m_stream);
+		m_files   = CreateFileList(*m_archive);
 	}
 
-protected:
-	const QString m_filename;
+private:
+	std::ifstream m_stream;
 };
 
 class ReaderStream : public Reader
@@ -363,91 +214,190 @@ public:
 			m_bytes.resize(stream.size());
 			stream.read(reinterpret_cast<char*>(m_bytes.data()), static_cast<qint64>(m_bytes.size()));
 		}
-		m_archive = CreateInputArchive(m_lib, m_bytes);
-		m_files   = CreateFileList(m_archive->archive);
+		m_archive = std::make_unique<bit7z::BitArchiveReader>(m_lib, m_bytes);
+		m_files   = CreateFileList(*m_archive);
 	}
 
 protected:
 	std::vector<bit7z::byte_t> m_bytes;
 };
 
-class WriterFile final : public ReaderFile
+class Writer : public ZipImpl
+{
+protected:
+	explicit Writer(std::shared_ptr<ProgressCallback> progress)
+		: ZipImpl(std::move(progress))
+	{
+	}
+
+private: // IZip
+	void SetProperty(const PropertyId id, QVariant value) override
+	{
+		m_properties[id] = std::move(value);
+	}
+
+protected:
+	void AddFiles(const IZipFileProvider& zipFileProvider) const
+	{
+		SetArchiveProperties();
+
+		for (size_t i = 0, sz = zipFileProvider.GetCount(); i < sz; ++i)
+		{
+			auto& item = m_archive->addFile(zipFileProvider.GetFileData(i), zipFileProvider.GetFileName(i).toBit7zString());
+			SetTime(item, zipFileProvider.GetFileTime(i));
+		}
+	}
+
+	void UpdateFileList()
+	{
+		if (const auto* inputArchive = m_archive->toInputArchive())
+			m_files = CreateFileList(*inputArchive);
+	}
+
+private:
+	void SetArchiveProperties() const
+	{
+		const auto& format = m_archive->compressionFormat();
+
+		const auto getProperty = [&](const PropertyId id) {
+			const auto it = m_properties.find(id);
+			return it != m_properties.end() ? it->second : QVariant {};
+		};
+		std::vector<const wchar_t*>        names;
+		std::vector<bit7z::BitPropVariant> values;
+
+		if (const auto value = getProperty(PropertyId::CompressionLevel); value.isValid() && format.hasFeature(bit7z::FormatFeatures::CompressionLevel))
+			m_archive->setCompressionLevel(static_cast<bit7z::BitCompressionLevel>(static_cast<uint32_t>(value.value<CompressionLevel>())));
+
+		if (const auto value = getProperty(PropertyId::CompressionMethod); value.isValid() && format.hasFeature(bit7z::FormatFeatures::MultipleMethods))
+			m_archive->setCompressionMethod(static_cast<bit7z::BitCompressionMethod>(static_cast<uint32_t>(value.value<CompressionMethod>())));
+
+		if (const auto value = getProperty(PropertyId::SolidArchive); value.isValid() && format.hasFeature(bit7z::FormatFeatures::SolidArchive))
+			m_archive->setSolidMode(value.toBool());
+
+		if (const auto value = getProperty(PropertyId::ThreadsCount); value.isValid())
+			m_archive->setThreadsCount(value.toUInt());
+	}
+
+protected:
+	std::unique_ptr<bit7z::BitArchiveWriter> m_archive;
+
+private:
+	std::unordered_map<PropertyId, QVariant> m_properties {
+		{ PropertyId::CompressionLevel,               QVariant::fromValue(CompressionLevel::Ultra) },
+		{     PropertyId::ThreadsCount, static_cast<uint32_t>(std::thread::hardware_concurrency()) },
+	};
+};
+
+class WriterFile final : public Writer
 {
 public:
 	WriterFile(QString filename, const Format format, std::shared_ptr<ProgressCallback> progress, const bool appendMode)
-		: ReaderFile(std::move(filename), std::move(progress))
-		, m_format { format }
-		, m_ioDevice { std::make_unique<QFile>(m_filename) }
+		: Writer(std::move(progress))
+		, m_filename { std::move(filename) }
 	{
-		assert(m_archive->format != bit7z::BitFormat::Auto || format != Format::Auto);
-		if (!appendMode)
-			m_archive = std::make_unique<ArchiveWrapper>();
-		m_ioDevice->open(!appendMode || m_archive->format == bit7z::BitFormat::Auto ? QIODevice::WriteOnly : QIODevice::ReadWrite);
-
-		m_outArchive = m_archive->archive ? CreateOutputArchive(m_archive->archive) : CreateOutputArchive(m_lib, format);
-		assert(m_outArchive);
+		m_archive = CreateArchive(format, appendMode);
+		UpdateFileList();
 	}
 
 private: // IZip
-	bool Write(std::shared_ptr<IZipFileProvider> zipFileProvider) override
+	bool Write(const IZipFileProvider& zipFileProvider) override
 	{
-		if (!m_archive->archive)
-			SetArchiveProperties(*m_outArchive, GetInOutFormat(m_format), m_properties);
-		return File::Write(m_files, *m_outArchive, *m_ioDevice, std::move(zipFileProvider), *m_progress);
+		AddFiles(zipFileProvider);
+		m_archive->compressTo(m_filename.toBit7zString());
+		UpdateFileList();
+
+		return true;
 	}
 
 	bool Remove(const std::vector<QString>& fileNames) override
 	{
-		const auto n      = m_files.files.size();
-		const auto result = File::Remove(m_files, *m_outArchive, *m_ioDevice, fileNames, *m_progress);
-		PLOGI << m_filename << ". Files removed: " << n - m_files.files.size() << " out of " << n;
-		return result;
+		auto* editor = m_archive->toEditor();
+		if (!editor)
+			throw std::runtime_error("Cannot remove with writer");
+
+		const auto sorted = m_files.files | std::views::transform([](const auto& item) {
+								auto list = item.name.split('/');
+								return list.size() < 2 ? std::make_pair(item.name, item.name) : std::make_pair(list.front() + '/', item.name);
+							})
+		                  | std::ranges::to<std::multimap>();
+
+		size_t count = 0;
+		for (const auto& fileName : fileNames)
+		{
+			for (auto [it, end] = sorted.equal_range(fileName); it != end; ++it)
+			{
+				const auto& file = m_files.GetFile(it->second);
+				editor->deleteItem(file.index, bit7z::DeletePolicy::RecurseDirs);
+				++count;
+			}
+		}
+
+		editor->applyChanges();
+		UpdateFileList();
+
+		PLOGI << m_filename << ", files removed: " << count;
+
+		return true;
 	}
 
 private:
-	const Format               m_format;
-	std::unique_ptr<QIODevice> m_ioDevice;
-	CMyComPtr<IOutArchive>     m_outArchive;
+	template <typename T>
+	auto CreateArchive(const Format format) const
+	{
+		return std::make_unique<T>(m_lib, m_filename.toBit7zString(), GetInOutFormat(format));
+	}
+
+	std::unique_ptr<bit7z::BitArchiveWriter> CreateArchive(const Format format, const bool appendMode) const
+	{
+		if (!appendMode && QFile::exists(m_filename))
+			QFile::remove(m_filename);
+
+		if (!QFile::exists(m_filename))
+			return CreateArchive<bit7z::BitArchiveWriter>(format);
+
+		const bit7z::BitInOutFormat* outFormats[] {
+			&bit7z::BitFormat::Zip, &bit7z::BitFormat::BZip2, &bit7z::BitFormat::SevenZip, &bit7z::BitFormat::Xz, &bit7z::BitFormat::Wim, &bit7z::BitFormat::Tar, &bit7z::BitFormat::GZip,
+		};
+
+		const bit7z::BitArchiveReader reader(m_lib, m_filename.toBit7zString());
+		const auto                    it = std::ranges::find(outFormats, reader.detectedFormat().value(), [](const auto* item) {
+            return item->value();
+        });
+		assert(it != std::end(outFormats));
+		if (it == std::end(outFormats))
+			throw std::runtime_error(std::format("Unsupported file format for editing: ", m_filename));
+
+		return std::make_unique<bit7z::BitArchiveEditor>(m_lib, m_filename.toBit7zString(), **it);
+	}
+
+private:
+	const QString m_filename;
 };
 
-class WriterStream final : public ReaderStream
+class WriterStream final : public Writer
 {
 public:
-	WriterStream(QIODevice& stream, const Format format, std::shared_ptr<ProgressCallback> progress, const bool appendMode)
-		: ReaderStream(stream, std::move(progress))
-		, m_format { format }
-		, m_ioDevice { stream }
+	WriterStream(QIODevice& stream, const Format format, std::shared_ptr<ProgressCallback> progress)
+		: Writer(std::move(progress))
+		, m_stream { stream }
 	{
-		assert(m_archive->format != bit7z::BitFormat::Auto || format != Format::Auto);
-		m_ioDevice.close();
-		if (!appendMode)
-			m_archive = std::make_unique<ArchiveWrapper>();
-		m_ioDevice.open(!appendMode || m_archive->format == bit7z::BitFormat::Auto ? QIODevice::WriteOnly : QIODevice::ReadWrite);
-
-		m_outArchive = m_archive->archive ? CreateOutputArchive(m_archive->archive) : CreateOutputArchive(m_lib, format);
-		assert(m_outArchive);
+		m_archive = std::make_unique<bit7z::BitArchiveWriter>(m_lib, std::vector<std::byte> {}, GetInOutFormat(format));
 	}
 
 private: // IZip
-	bool Write(std::shared_ptr<IZipFileProvider> zipFileProvider) override
+	bool Write(const IZipFileProvider& zipFileProvider) override
 	{
-		if (!m_archive->archive)
-			SetArchiveProperties(*m_outArchive, GetInOutFormat(m_format), m_properties);
-		return File::Write(m_files, *m_outArchive, m_ioDevice, std::move(zipFileProvider), *m_progress);
-	}
+		AddFiles(zipFileProvider);
+		const auto stream = QStdOStream::create(m_stream);
+		m_archive->compressTo(*stream);
+		UpdateFileList();
 
-	bool Remove(const std::vector<QString>& fileNames) override
-	{
-		const auto n      = m_files.files.size();
-		const auto result = File::Remove(m_files, *m_outArchive, m_ioDevice, fileNames, *m_progress);
-		PLOGI << "files removed: " << n - m_files.files.size() << " out of " << n;
-		return result;
+		return true;
 	}
 
 private:
-	const Format           m_format;
-	QIODevice&             m_ioDevice;
-	CMyComPtr<IOutArchive> m_outArchive;
+	QIODevice& m_stream;
 };
 
 } // namespace
@@ -467,14 +417,15 @@ std::unique_ptr<IZip> Archive::CreateWriter(const QString& filename, const Forma
 	return std::make_unique<WriterFile>(filename, format, std::move(progress), appendMode);
 }
 
-std::unique_ptr<IZip> Archive::CreateWriterStream(QIODevice& stream, Format format, std::shared_ptr<ProgressCallback> progress, bool appendMode)
+std::unique_ptr<IZip> Archive::CreateWriterStream(QIODevice& stream, Format format, std::shared_ptr<ProgressCallback> progress)
 {
-	return std::make_unique<WriterStream>(stream, format, std::move(progress), appendMode);
+	return std::make_unique<WriterStream>(stream, format, std::move(progress));
 }
 
-bool Archive::IsArchive(const QString& filename)
+bool Archive::IsArchive(const QString& /*filename*/)
 {
-	return bit7z::detect_format_from_extension(filename.toStdWString()) != bit7z::BitFormat::Auto;
+	//	return bit7z::detect_format_from_extension(filename.toStdWString()) != bit7z::BitFormat::Auto;
+	return false;
 }
 
 QStringList Archive::GetTypes()
