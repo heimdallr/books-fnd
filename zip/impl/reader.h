@@ -2,13 +2,15 @@
 
 #include <memory>
 
-struct IInArchive;
+namespace bit7z
+{
+class BitInputArchive;
+}
 
 namespace HomeCompa::ZipDetails
 {
 
 class IFile;
-class ProgressCallback;
 
 }
 
@@ -20,7 +22,7 @@ struct FileItem;
 namespace File
 {
 
-std::unique_ptr<IFile> Read(IInArchive& zip, const FileItem& fileItem, ProgressCallback& progress);
+std::unique_ptr<IFile> Read(const bit7z::BitInputArchive& zip, const FileItem& fileItem);
 
 };
 
