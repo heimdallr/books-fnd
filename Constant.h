@@ -26,16 +26,16 @@ namespace HomeCompa::Inpx
 {
 
 constexpr auto STRUCTURE_INFO                     = "structure.info";
-constexpr auto VERSION_INFO                       = L"version.info";
-constexpr auto COLLECTION_INFO                    = L"collection.info";
-constexpr auto REVIEWS_FOLDER                     = L"reviews";
-constexpr auto REVIEWS_ADDITIONAL_ARCHIVE_NAME    = L"additional.zip";
+constexpr auto VERSION_INFO                       = "version.info";
+constexpr auto COLLECTION_INFO                    = "collection.info";
+constexpr auto REVIEWS_FOLDER                     = "reviews";
+constexpr auto REVIEWS_ADDITIONAL_ARCHIVE_NAME    = "additional.zip";
 constexpr auto REVIEWS_ADDITIONAL_BOOKS_FILE_NAME = "books.json";
-constexpr auto COMPILATIONS                       = L"compilations.7z";
-constexpr auto ANNOTATIONS                        = L"annotations.7z";
-constexpr auto CONTENTS                           = L"contents.7z";
+constexpr auto COMPILATIONS                       = "compilations.7z";
+constexpr auto ANNOTATIONS                        = "annotations.7z";
+constexpr auto CONTENTS                           = "contents.7z";
 constexpr auto COMPILATIONS_JSON                  = "compilations.json";
-constexpr auto AUTHORS_FOLDER                     = L"authors";
+constexpr auto AUTHORS_FOLDER                     = "authors";
 constexpr auto INP_FIELDS_DESCRIPTION             = "AUTHOR;GENRE;TITLE;SERIES;SERNO;FILE;SIZE;LIBID;DEL;EXT;DATE;LANG;LIBRATE;KEYWORDS;YEAR;SOURCELIB";
 
 constexpr auto TIME = "time";

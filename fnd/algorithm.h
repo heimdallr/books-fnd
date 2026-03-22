@@ -6,6 +6,8 @@
 
 #include <QString>
 
+#include "platform/StrUtil.h"
+
 namespace HomeCompa::Util
 {
 
@@ -19,49 +21,25 @@ static bool Set(T& dst, T value)
 	return true;
 }
 
-template <typename T, typename Obj, typename Signal = void (Obj::*)()>
-static bool Set(T& dst, T value, Obj& obj, const Signal signal)
-{
-	if (!Set<T>(dst, std::move(value)))
-		return false;
-
-	if (signal)
-		(obj.*signal)();
-
-	return true;
-}
-
-template <typename T, typename Obj, typename Signal = void (Obj::*)() const>
-static bool Set(T& dst, T value, const Obj& obj, const Signal signal)
-{
-	if (!Set<T>(dst, std::move(value)))
-		return false;
-
-	if (signal)
-		(obj.*signal)();
-
-	return true;
-}
-
 template <typename T, std::invocable F>
-bool Set(T& oldValue, T&& newValue, const F& f)
+bool Set(T& oldValue, T newValue, const F& f)
 {
 	if (oldValue == newValue)
 		return false;
 
-	oldValue = std::forward<T>(newValue);
+	oldValue = std::move(newValue);
 	f();
 	return true;
 }
 
 template <typename T, std::invocable BeforeF, std::invocable AfterF>
-bool Set(T& oldValue, T&& newValue, const BeforeF& before, const AfterF& after)
+bool Set(T& oldValue, T newValue, const BeforeF& before, const AfterF& after)
 {
 	if (oldValue == newValue)
 		return false;
 
 	before();
-	oldValue = std::forward<T>(newValue);
+	oldValue = std::move(newValue);
 	after();
 	return true;
 }
@@ -153,9 +131,15 @@ inline QString ToQString<std::pair<std::wstring, std::wstring>>(const std::pair<
 }
 
 template <>
+inline QString ToQString<std::pair<QString, QString>>(const std::pair<QString, QString>& str)
+{
+	return QString("%1/%2").arg(str.first, str.second);
+}
+
+template <>
 inline QString ToQString<std::filesystem::path>(const std::filesystem::path& str)
 {
-	return QString::fromStdWString(str);
+	return PathToString(str);
 }
 
 template <class T>

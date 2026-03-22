@@ -4,7 +4,9 @@
 
 namespace bit7z
 {
+
 class BitInputArchive;
+
 }
 
 namespace HomeCompa::ZipDetails

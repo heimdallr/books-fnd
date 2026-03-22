@@ -43,31 +43,4 @@ private:
 	std::string           m_errorDescription;
 };
 
-class AutoDetach
-{
-	NON_COPY_MOVABLE(AutoDetach)
-
-public:
-	explicit AutoDetach(DyLib& module, const bool detach = true)
-		: m_detach(detach)
-		, m_module(module)
-	{
-	}
-
-	~AutoDetach()
-	{
-		if (m_detach)
-			m_module.Detach();
-	}
-
-	void SetDetach(const bool detach)
-	{
-		m_detach = detach;
-	}
-
-private:
-	bool   m_detach;
-	DyLib& m_module;
-};
-
 } // namespace HomeCompa::Util

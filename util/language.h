@@ -1,18 +1,18 @@
 #pragma once
 
-#include <qttranslation.h>
+#include <QHash>
 
-#include <limits>
-#include <string>
 #include <unordered_map>
 #include <unordered_set>
+
+#include <QString>
 
 #include "export/util.h"
 
 namespace HomeCompa
 {
 
-constexpr auto DEFAULT_LANGUAGES_MAPPING = L"LanguagesMapping.json";
+constexpr auto DEFAULT_LANGUAGES_MAPPING = "LanguagesMapping.json";
 
 constexpr auto LANGUAGES_CONTEXT = "Language";
 constexpr auto UNDEFINED_KEY     = "un";
@@ -450,18 +450,8 @@ constexpr Language LANGUAGES[] {
 	{ "evn", QT_TRANSLATE_NOOP("Language", "Evenki") },
 };
 
-struct UTIL_EXPORT LanguageMapping
-{
-	static const std::wstring UNDEFINED_LANG;
-
-	std::unordered_set<std::wstring>               langs;
-	std::unordered_map<std::wstring, std::wstring> langMap;
-
-	explicit LanguageMapping(const QString& langMappingFile);
-	const std::wstring& GetLang(const std::wstring& src) const;
-};
-
+UTIL_EXPORT void InitLanguagesMap(const QString& langMappingFile);
 UTIL_EXPORT std::unordered_map<QString, const char*> GetLanguagesMap();
-UTIL_EXPORT const std::wstring& GetLanguage(const std::wstring& src);
+UTIL_EXPORT QStringView                              GetLanguage(QStringView src);
 
 } // namespace HomeCompa

@@ -14,9 +14,9 @@ class Timer
 	NON_COPY_MOVABLE(Timer)
 
 public:
-	explicit Timer(std::wstring process_)
+	explicit Timer(QString process)
 		: m_t { std::chrono::high_resolution_clock::now() }
-		, m_process { std::move(process_) }
+		, m_process { std::move(process) }
 	{
 		PLOGI << m_process << " started";
 	}
@@ -27,8 +27,8 @@ public:
 	}
 
 private:
-	const std::chrono::steady_clock::time_point m_t;
-	const std::wstring                          m_process;
+	const std::chrono::high_resolution_clock::time_point m_t;
+	const QString                                        m_process;
 };
 
 }

@@ -7,7 +7,7 @@ namespace HomeCompa::Util
 
 bool IsRegisteredExtension(const QString& extension)
 {
-    assert(false);
+	assert(false);
 }
 
 }

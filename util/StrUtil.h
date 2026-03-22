@@ -3,6 +3,7 @@
 #include <iterator>
 #include <string>
 
+#include <QHash>
 #include <QString>
 
 #include "export/util.h"
@@ -121,11 +122,17 @@ struct StringLess<void>
 };
 
 template <typename T>
-T To(const std::wstring_view value, T defaultValue = 0)
+T ToInteger(const QStringView value, T defaultValue = 0)
 {
-    return value.empty() ? defaultValue : static_cast<T>(std::stoi(value.data()));
+	if (value.isEmpty())
+		return defaultValue;
+
+	bool       ok     = false;
+	const auto result = value.toLongLong(&ok);
+	return ok ? defaultValue : static_cast<T>(result);
 }
 
+/*
 template <typename It>
 std::wstring_view Next(It& beg, const It end, const wchar_t separator)
 {
@@ -137,5 +144,40 @@ std::wstring_view Next(It& beg, const It end, const wchar_t separator)
 	beg = next != end ? std::next(next) : end;
 	return result;
 }
+*/
+
+struct WStringHash
+{
+	using is_transparent = int;
+
+	[[nodiscard]] size_t operator()(const QString& txt) const
+	{
+		return GetHashImpl(txt);
+	}
+
+	[[nodiscard]] size_t operator()(const QStringView& txt) const
+	{
+		return GetHashImpl(txt);
+	}
+
+private:
+	static size_t GetHashImpl(const QStringView& txt)
+	{
+		const auto txtLower = QString(txt).toLower();
+		const auto result   = std::hash<QString>()(txtLower);
+		return result;
+	}
+};
+
+struct WStringEqualTo
+{
+	template <class U, class V>
+	[[nodiscard]] constexpr auto operator()(const U& lhs, const V& rhs) const
+	{
+		return lhs.compare(rhs, Qt::CaseInsensitive) == 0;
+	}
+
+	using is_transparent = int;
+};
 
 } // namespace HomeCompa::Util

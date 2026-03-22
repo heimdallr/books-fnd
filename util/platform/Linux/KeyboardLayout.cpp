@@ -18,7 +18,7 @@ constexpr std::pair<const char*, const wchar_t*> LOCALES[] {
 
 void SetKeyboardLayout(const std::string& locale)
 {
-    assert(false);
+	assert(false);
 }
 
 }

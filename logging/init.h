@@ -1,7 +1,5 @@
 #pragma once
 
-#include <filesystem>
-
 #include "fnd/NonCopyMovable.h"
 #include "fnd/memory.h"
 
@@ -21,7 +19,7 @@ public:
 	static QString AddLogFileOption(QCommandLineParser& parser, const QString& defaultPath);
 
 public:
-	explicit LoggingInitializer(const std::filesystem::path& path);
+	explicit LoggingInitializer(const QString& path);
 	~LoggingInitializer();
 
 private:

@@ -17,14 +17,14 @@ struct LoggingInitializer::Impl
 	LogAppender                                   logAppender;
 	QtLogHandler                                  qtLogHandler;
 
-	explicit Impl(const std::filesystem::path& path)
-		: rollingFileAppender(path.string().data(), 1024 * 1024 * 1024, 10)
+	explicit Impl(const QString& path)
+		: rollingFileAppender(path.toStdString().data(), 1024ULL * 1024 * 1024, 10)
 		, logAppender(&rollingFileAppender)
 	{
 	}
 };
 
-LoggingInitializer::LoggingInitializer(const std::filesystem::path& path)
+LoggingInitializer::LoggingInitializer(const QString& path)
 	: m_impl(path)
 {
 }

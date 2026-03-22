@@ -38,6 +38,7 @@ namespace
 	#define fromBit7zString fromStdString
 	#define toBit7zString toStdString
 using FILETIME = bit7z::FILETIME;
+using DWORD    = bit7z::DWORD;
 #endif
 
 const bit7z::BitInOutFormat& GetInOutFormat(const Format format)
