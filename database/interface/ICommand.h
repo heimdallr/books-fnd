@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string_view>
+#include <QString>
 
 namespace HomeCompa::DB
 {
@@ -11,7 +11,7 @@ int BindImpl(ICommand& command, size_t index, T value) = delete;
 template <typename T>
 int BindImpl(ICommand& command, std::string_view name, T value) = delete;
 template <typename T>
-concept IsString = std::is_same_v<T, const std::string&> || std::is_same_v<T, std::string> || std::is_same_v<T, const char*>;
+concept IsString = std::is_same_v<T, const std::string&> || std::is_same_v<T, std::string> || std::is_same_v<T, const char*> || std::is_same_v<T, QStringView> || std::is_same_v<T, QString>;
 template <typename T>
 concept NotString = !IsString<T>;
 
@@ -28,6 +28,11 @@ public:
 	virtual int BindLong(size_t index, long long int value)      = 0;
 	virtual int BindDouble(size_t index, double value)           = 0;
 	virtual int BindString(size_t index, std::string_view value) = 0;
+	int BindString(const size_t index, const QStringView value)
+	{
+		const auto str = value.toUtf8();
+		return BindString(index, std::string_view { str.data(), static_cast<size_t>(str.size()) });
+	}
 
 	template <IsString T>
 	int Bind(const size_t index, T value)
@@ -46,6 +51,11 @@ public:
 	virtual int BindLong(std::string_view name, long long int value)      = 0;
 	virtual int BindDouble(std::string_view name, double value)           = 0;
 	virtual int BindString(std::string_view name, std::string_view value) = 0;
+	int BindString(const std::string_view name, const QStringView value)
+	{
+		const auto str = value.toUtf8();
+		return BindString(name, std::string_view { str.data(), static_cast<size_t>(str.size()) });
+	}
 
 	template <IsString T>
 	int Bind(const std::string_view name, T value)
@@ -73,6 +83,12 @@ inline int BindImpl(ICommand& command, const size_t index, const long long int v
 }
 
 template <>
+inline int BindImpl(ICommand& command, const size_t index, const size_t value)
+{
+	return command.BindLong(index, static_cast<long long>(value));
+}
+
+template <>
 inline int BindImpl(ICommand& command, const size_t index, const double value)
 {
 	return command.BindDouble(index, value);
@@ -94,6 +110,12 @@ template <>
 inline int BindImpl(ICommand& command, const std::string_view name, const long long int value)
 {
 	return command.BindLong(name, value);
+}
+
+template <>
+inline int BindImpl(ICommand& command, const std::string_view name, const size_t value)
+{
+	return command.BindLong(name, static_cast<long long>(value));
 }
 
 template <>

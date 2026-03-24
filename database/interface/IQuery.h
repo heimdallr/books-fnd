@@ -26,6 +26,7 @@ public:
 	virtual long long int GetLong(size_t index) const      = 0;
 	virtual double        GetDouble(size_t index) const    = 0;
 	virtual std::string   GetString(size_t index) const    = 0;
+	virtual QString       GetQString(size_t index) const   = 0;
 	virtual const char*   GetRawString(size_t index) const = 0;
 
 	template <typename T>
@@ -48,6 +49,12 @@ inline long long int GetImpl(const IQuery& query, const size_t index)
 }
 
 template <>
+inline size_t GetImpl(const IQuery& query, const size_t index)
+{
+	return static_cast<size_t>(query.GetLong(index));
+}
+
+template <>
 inline double GetImpl(const IQuery& query, const size_t index)
 {
 	return query.GetDouble(index);
@@ -57,6 +64,12 @@ template <>
 inline std::string GetImpl(const IQuery& query, const size_t index)
 {
 	return query.GetString(index);
+}
+
+template <>
+inline QString GetImpl(const IQuery& query, const size_t index)
+{
+	return query.GetQString(index);
 }
 
 template <>

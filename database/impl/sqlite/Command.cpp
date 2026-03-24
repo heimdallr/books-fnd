@@ -17,7 +17,8 @@ class Command final : virtual public ICommand
 {
 public:
 	Command(sqlite3pp::database& db, const std::string_view command)
-		: m_command(db, LogStatement(command).data())
+		: m_db { db }
+		, m_command(db, LogStatement(command).data())
 	{
 	}
 
@@ -26,7 +27,7 @@ private: // DB::Command
 	{
 		const auto res = m_command.execute();
 		if (res != 0)
-			PLOGE << "command failed: " << res;
+			PLOGE << "command failed: " << res << ". " << m_db.error_msg();
 		m_command.reset();
 		return res == 0;
 	}
@@ -82,7 +83,8 @@ private: // DB::Command
 	}
 
 private:
-	sqlite3pp::command m_command;
+	sqlite3pp::database& m_db;
+	sqlite3pp::command   m_command;
 };
 
 } // namespace

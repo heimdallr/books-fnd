@@ -2,15 +2,15 @@
 
 #include <functional>
 #include <memory>
-#include <string_view>
 #include <vector>
 
 #include "fnd/observer.h"
 
+#include "database/interface/IQuery.h"
+
 namespace HomeCompa::DB
 {
 
-class IQuery;
 class ITemporaryTable;
 class ITransaction;
 
@@ -48,6 +48,12 @@ public:
 
 	virtual void RegisterObserver(IDatabaseObserver* observer)   = 0;
 	virtual void UnregisterObserver(IDatabaseObserver* observer) = 0;
+
+	[[nodiscard]] std::unique_ptr<IQuery> CreateQuery(const QStringView query)
+	{
+		const auto str = query.toUtf8();
+		return CreateQuery(std::string_view { str.data(), static_cast<size_t>(str.size()) });
+	}
 };
 
 } // namespace HomeCompa::DB

@@ -85,6 +85,12 @@ private: // Query
 		return Get<std::string>(index);
 	}
 
+	QString GetQString(const size_t index) const override
+	{
+		const auto str = GetString(index);
+		return QString::fromUtf8(str.data(), static_cast<qsizetype>(str.size()));
+	}
+
 	const char* GetRawString(const size_t index) const override
 	{
 		return Get<const char*>(index);
