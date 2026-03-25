@@ -27,23 +27,23 @@ std::string ToMultiByte(const std::wstring& src)
 
 void* InnerOpen(const std::filesystem::path& moduleName)
 {
-	const HMODULE handle = ::LoadLibraryW(moduleName.wstring().data());
-	return reinterpret_cast<void*>(handle);
+	const auto handle = LoadLibraryW(moduleName.wstring().data());
+	return handle;
 }
 
 bool InnerClose(void* handle)
 {
-	return (0 != ::FreeLibrary(reinterpret_cast<HMODULE>(handle)));
+	return !!FreeLibrary(static_cast<HMODULE>(handle));
 }
 
 auto InnerGetProc(void* handle, const std::string& procName)
 {
-	return ::GetProcAddress(reinterpret_cast<HMODULE>(handle), procName.data());
+	return GetProcAddress(static_cast<HMODULE>(handle), procName.data());
 }
 
 std::string InnerGetErrorDescription()
 {
-	const DWORD errCode = ::GetLastError();
+	const DWORD errCode = GetLastError();
 	assert(errCode != 0);
 	if (errCode == 0)
 		return "Undefined";
@@ -51,7 +51,7 @@ std::string InnerGetErrorDescription()
 	LPWSTR lpMsg = nullptr;
 	LPVOID lpBuf = &lpMsg;
 	size_t literalCount =
-		::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, errCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)lpBuf, 0, NULL);
+		FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, errCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), static_cast<LPWSTR>(lpBuf), 0, nullptr);
 	assert(literalCount > 0);
 
 	while (literalCount > 1 && std::iswspace(lpMsg[literalCount - 1]))

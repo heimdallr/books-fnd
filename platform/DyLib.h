@@ -19,11 +19,11 @@ public:
 	explicit DyLib(std::filesystem::path moduleName);
 	~DyLib();
 
-	bool  IsOpen() const; ///< @return true - модуль загружен.
-	void  Detach(); ///< Отсоединиться от модуля. Модуль остается загруженным.
-	bool  Open(std::filesystem::path moduleName); ///< Загрузить модуль. @return true - модуль успешно загружен.
-	void  Close(); ///< Выгрузить модуль.
-	void* GetProc(const std::string& procName); ///< Получить адрес функции
+	bool  IsOpen() const;
+	void  Detach();
+	bool  Open(std::filesystem::path moduleName);
+	void  Close();
+	void* GetProc(const std::string& procName);
 
 	template <typename ProcType>
 	ProcType GetTypedProc(const std::string& procName)

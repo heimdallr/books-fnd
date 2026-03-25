@@ -1,11 +1,11 @@
-#include "files.h"
+#include "FileUtil.h"
 
 namespace HomeCompa::Util
 {
 
 QString RemoveIllegalPathCharacters(QString str)
 {
-	assert(false);
+	return str;
 }
 
 }
