@@ -31,6 +31,13 @@ namespace HomeCompa::ZipDetails::SevenZip
 namespace
 {
 
+constexpr const char* ARCHIVE_EXTENSIONS[] {
+	"7z",   "zip",   "rar",  "bzip2", "bz2",    "tbz2", "tbz",      "gz",  "gzip", "tgz", "tar",  "ova",   "wim",  "swm", "xz",  "txz",  "zipx",   "jar", "xpi",  "odt",    "ods",  "odp",
+	"docx", "xlsx",  "pptx", "epub",  "001",    "ar",   "deb",      "apm", "arj",  "cab", "chm",  "chi",   "msi",  "doc", "xls", "ppt",  "msg",    "obj", "cpio", "cramfs", "dmg",  "dll",
+	"exe",  "dylib", "ext",  "ext2",  "ext3",   "ext4", "fat",      "flv", "gpt",  "hfs", "hfsx", "hxs",   "ihex", "lzh", "lha", "lzma", "lzma86", "mbr", "mslz", "mub",    "nsis", "ntfs",
+	"pmd",  "ppmd",  "qcow", "qcow2", "qcow2c", "rpm",  "squashfs", "swf", "te",   "udf", "scap", "uefif", "vmdk", "vdi", "vhd", "xar",  "pkg",    "z",   "taz",
+};
+
 #ifdef _WIN32
 	#define fromBit7zString fromStdWString
 	#define toBit7zString toStdWString
@@ -437,99 +444,19 @@ std::unique_ptr<IZip> Archive::CreateWriterStream(QIODevice& stream, Format form
 	return std::make_unique<WriterStream>(stream, format, std::move(progress));
 }
 
-bool Archive::IsArchive(const QString& /*filename*/)
+bool Archive::IsArchive(const QString& filename)
 {
-	//	return bit7z::detect_format_from_extension(filename.toStdWString()) != bit7z::BitFormat::Auto;
-	return false;
+	return std::ranges::any_of(ARCHIVE_EXTENSIONS, [arg = filename.toLower()](const char* item) {
+		return arg.endsWith(item);
+	});
 }
 
 QStringList Archive::GetTypes()
 {
-	return QStringList {} << "7z"
-	                      << "zip"
-	                      << "rar"
-	                      << "bzip2"
-	                      << "bz2"
-	                      << "tbz2"
-	                      << "tbz"
-	                      << "gz"
-	                      << "gzip"
-	                      << "tgz"
-	                      << "tar"
-	                      << "ova"
-	                      << "wim"
-	                      << "swm"
-	                      << "xz"
-	                      << "txz"
-	                      << "zipx"
-	                      << "jar"
-	                      << "xpi"
-	                      << "odt"
-	                      << "ods"
-	                      << "odp"
-	                      << "docx"
-	                      << "xlsx"
-	                      << "pptx"
-	                      << "epub"
-	                      << "001"
-	                      << "ar"
-	                      << "deb"
-	                      << "apm"
-	                      << "arj"
-	                      << "cab"
-	                      << "chm"
-	                      << "chi"
-	                      << "msi"
-	                      << "doc"
-	                      << "xls"
-	                      << "ppt"
-	                      << "msg"
-	                      << "obj"
-	                      << "cpio"
-	                      << "cramfs"
-	                      << "dmg"
-	                      << "dll"
-	                      << "exe"
-	                      << "dylib"
-	                      << "ext"
-	                      << "ext2"
-	                      << "ext3"
-	                      << "ext4"
-	                      << "fat"
-	                      << "flv"
-	                      << "gpt"
-	                      << "hfs"
-	                      << "hfsx"
-	                      << "hxs"
-	                      << "ihex"
-	                      << "lzh"
-	                      << "lha"
-	                      << "lzma"
-	                      << "lzma86"
-	                      << "mbr"
-	                      << "mslz"
-	                      << "mub"
-	                      << "nsis"
-	                      << "ntfs"
-	                      << "pmd"
-	                      << "ppmd"
-	                      << "qcow"
-	                      << "qcow2"
-	                      << "qcow2c"
-	                      << "rpm"
-	                      << "squashfs"
-	                      << "swf"
-	                      << "te"
-	                      << "udf"
-	                      << "scap"
-	                      << "uefif"
-	                      << "vmdk"
-	                      << "vdi"
-	                      << "vhd"
-	                      << "xar"
-	                      << "pkg"
-	                      << "z"
-	                      << "taz";
+	return ARCHIVE_EXTENSIONS | std::views::transform([](const char* item) {
+			   return QString(item);
+		   })
+	     | std::ranges::to<QStringList>();
 }
 
 } // namespace HomeCompa::ZipDetails::SevenZip
