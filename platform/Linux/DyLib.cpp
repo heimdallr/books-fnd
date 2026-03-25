@@ -24,6 +24,7 @@ void DyLib::Detach()
 
 bool DyLib::Open(std::filesystem::path moduleName)
 {
+	return false;
 }
 
 void DyLib::Close()

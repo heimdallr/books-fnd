@@ -4,14 +4,14 @@
 #include "fnd/memory.h"
 #include "fnd/observer.h"
 
-#include "export/util.h"
+#include "export/platform.h"
 
 class QCoreApplication;
 
 namespace HomeCompa::Util
 {
 
-class UTIL_EXPORT NativeEventFilter
+class PLATFORM_EXPORT NativeEventFilter
 {
 	NON_COPY_MOVABLE(NativeEventFilter)
 

@@ -6,13 +6,24 @@
 #include <cwctype>
 #include <sstream>
 
-#include "StrUtil.h"
-
 namespace HomeCompa::Util
 {
 
 namespace
 {
+
+int WideCharToMultiByteImpl(const wchar_t* lpWideCharStr, const int cchWideChar, char* lpMultiByteStr, const int cbMultiByte)
+{
+	return WideCharToMultiByte(CP_UTF8, 0, lpWideCharStr, cchWideChar, lpMultiByteStr, cbMultiByte, nullptr, nullptr);
+}
+
+std::string ToMultiByte(const std::wstring& src)
+{
+	const auto  size = static_cast<std::wstring::size_type>(WideCharToMultiByteImpl(src.data(), static_cast<int>(src.size()), nullptr, 0));
+	std::string dst(size, 0);
+	WideCharToMultiByteImpl(src.data(), static_cast<int>(src.size()), dst.data(), static_cast<int>(dst.size()));
+	return dst;
+}
 
 void* InnerOpen(const std::filesystem::path& moduleName)
 {

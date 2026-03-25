@@ -43,6 +43,12 @@ inline int GetImpl(const IQuery& query, const size_t index)
 }
 
 template <>
+inline long GetImpl(const IQuery& query, const size_t index)
+{
+	return static_cast<long>(query.GetLong(index));
+}
+
+template <>
 inline long long int GetImpl(const IQuery& query, const size_t index)
 {
 	return query.GetLong(index);

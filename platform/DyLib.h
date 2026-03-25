@@ -5,12 +5,12 @@
 
 #include "fnd/NonCopyMovable.h"
 
-#include "export/util.h"
+#include "export/platform.h"
 
 namespace HomeCompa::Util
 {
 
-class UTIL_EXPORT DyLib
+class PLATFORM_EXPORT DyLib
 {
 	NON_COPY_MOVABLE(DyLib)
 

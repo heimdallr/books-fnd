@@ -28,6 +28,7 @@ public:
 	virtual int BindLong(size_t index, long long int value)      = 0;
 	virtual int BindDouble(size_t index, double value)           = 0;
 	virtual int BindString(size_t index, std::string_view value) = 0;
+
 	int BindString(const size_t index, const QStringView value)
 	{
 		const auto str = value.toUtf8();
@@ -51,6 +52,7 @@ public:
 	virtual int BindLong(std::string_view name, long long int value)      = 0;
 	virtual int BindDouble(std::string_view name, double value)           = 0;
 	virtual int BindString(std::string_view name, std::string_view value) = 0;
+
 	int BindString(const std::string_view name, const QStringView value)
 	{
 		const auto str = value.toUtf8();

@@ -1,13 +1,15 @@
 #include "hashfb2.h"
 
-#include <CImg.h>
-#include <QCryptographicHash>
-
 #include <ranges>
 #include <set>
 
+// clang-format off
 #include <QBuffer>
+#include <QCryptographicHash>
 #include <QPixmap>
+
+#include <CImg.h> // conflicts with #include <QBuffer>
+// clang-format on
 
 #include "fnd/IsOneOf.h"
 #include "fnd/ScopedCall.h"
