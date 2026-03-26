@@ -71,7 +71,9 @@ Settings::~Settings() = default;
 QVariant Settings::Get(const QString& key, const QVariant& defaultValue) const
 {
 	std::lock_guard lock(m_impl->mutex);
-	return m_impl->settings.value(key, defaultValue);
+	if (auto value = m_impl->settings.value(key); value.isValid())
+		return value;
+	return defaultValue;
 }
 
 void Settings::Set(const QString& key, const QVariant& value, const bool sync)
