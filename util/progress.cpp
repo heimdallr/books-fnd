@@ -57,9 +57,9 @@ void Progress::Increment(const size_t value, const std::string& comment)
 	if (comment.empty())
 	{
 		if (m_currentPct != currentPct)
-        {
-            PLOGV << std::format("{}, {} ({}) {}% - {}", m_name, count, m_total, currentPct, left);
-        }
+		{
+			PLOGV << std::format("{}, {} ({}) {}% - {}", m_name, count, m_total, currentPct, left);
+		}
 		return;
 	}
 

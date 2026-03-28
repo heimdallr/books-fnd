@@ -17,7 +17,7 @@ void SetKeyboardLayout(const QString& /*locale*/)
 
 bool IsAppAddedToAutostart(const QString& /*key*/)
 {
-    return false;
+	return false;
 }
 
 void AddToAutostart(const QString& /*key*/, const QString& /*path*/)
@@ -32,7 +32,7 @@ void RemoveFromAutostart(const QString& /*key*/)
 
 void SetGeometry(QWidget& widget, const QRect& rect)
 {
-    widget.resize(rect.size());
+	widget.resize(rect.size());
 }
 
-} // namespace HomeCompa::Util
+} // namespace HomeCompa::Platform

@@ -5,8 +5,8 @@
 #include <QTimer>
 
 #include "fnd/algorithm.h"
-#include "platform/PlatformUtil.h"
 
+#include "platform/PlatformUtil.h"
 #include "util/ISettingsObserver.h"
 #include "util/UiTimer.h"
 #include "util/serializer/Font.h"
@@ -55,7 +55,7 @@ void SetGeometry(QWidget& widget, QRect rect)
 		}))
 		rect.moveCenter(QGuiApplication::primaryScreen()->availableGeometry().center());
 
-    Platform::SetGeometry(widget, rect);
+	Platform::SetGeometry(widget, rect);
 }
 
 } // namespace

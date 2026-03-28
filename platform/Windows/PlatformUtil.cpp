@@ -71,8 +71,7 @@ void RemoveFromAutostart(const QString& key)
 
 void SetGeometry(QWidget& widget, const QRect& rect)
 {
-    widget.setGeometry(rect);
+	widget.setGeometry(rect);
 }
 
 } // namespace HomeCompa::Util
-

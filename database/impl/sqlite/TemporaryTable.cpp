@@ -33,8 +33,8 @@ public:
 			statement.append(", ").append(field);
 		statement.append(");");
 
-		const auto tr = db.CreateTransaction();
-        [[maybe_unused]] auto ok = tr->CreateCommand(statement)->Execute();
+		const auto            tr = db.CreateTransaction();
+		[[maybe_unused]] auto ok = tr->CreateCommand(statement)->Execute();
 		assert(ok);
 
 		for (const auto add : additional)

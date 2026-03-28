@@ -27,9 +27,9 @@ private: // DB::Command
 	{
 		const auto res = m_command.execute();
 		if (res != 0)
-        {
+		{
 			PLOGE << "command failed: " << res << ". " << m_db.error_msg();
-        }
+		}
 		m_command.reset();
 		return res == 0;
 	}
