@@ -139,7 +139,7 @@ inline QString ToQString<std::pair<QString, QString>>(const std::pair<QString, Q
 template <>
 inline QString ToQString<std::filesystem::path>(const std::filesystem::path& str)
 {
-	return PathToString(str);
+	return Platform::PathToString(str);
 }
 
 template <class T>

@@ -11,7 +11,7 @@
 
 #include "log.h"
 
-using namespace HomeCompa::Util;
+using namespace HomeCompa::Platform;
 
 class NativeEventFilter::Impl final
 	: QAbstractNativeEventFilter

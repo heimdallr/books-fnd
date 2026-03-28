@@ -8,7 +8,7 @@
 
 class QCoreApplication;
 
-namespace HomeCompa::Util
+namespace HomeCompa::Platform
 {
 
 class PLATFORM_EXPORT NativeEventFilter
@@ -34,4 +34,4 @@ private:
 	PropagateConstPtr<Impl> m_impl;
 };
 
-} // namespace HomeCompa::Util
+} // namespace HomeCompa::Platform

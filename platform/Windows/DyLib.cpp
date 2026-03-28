@@ -6,7 +6,7 @@
 #include <cwctype>
 #include <sstream>
 
-namespace HomeCompa::Util
+namespace HomeCompa::Platform
 {
 
 namespace
@@ -155,4 +155,4 @@ void* DyLib::GetProc(const std::string& procName)
 	return nullptr;
 }
 
-} // namespace HomeCompa::Util
+} // namespace HomeCompa::Platform

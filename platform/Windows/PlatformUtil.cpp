@@ -8,7 +8,7 @@
 
 #include "fnd/FindPair.h"
 
-namespace HomeCompa::Util
+namespace HomeCompa::Platform
 {
 
 namespace
@@ -74,4 +74,4 @@ void SetGeometry(QWidget& widget, const QRect& rect)
 	widget.setGeometry(rect);
 }
 
-} // namespace HomeCompa::Util
+} // namespace HomeCompa::Platform

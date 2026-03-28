@@ -11,5 +11,6 @@ AddTarget(util	shared_lib
 	LINK_TARGETS
 		fljxl
 		logging
+		platform
 		zip
 )

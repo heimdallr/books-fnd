@@ -6,7 +6,7 @@
 
 class QString;
 
-namespace HomeCompa::Util
+namespace HomeCompa::Platform
 {
 
 PLATFORM_EXPORT QString PathToString(const std::filesystem::path& path);

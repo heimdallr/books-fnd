@@ -7,7 +7,7 @@
 
 #include "export/platform.h"
 
-namespace HomeCompa::Util
+namespace HomeCompa::Platform
 {
 
 class PLATFORM_EXPORT DyLib
@@ -43,4 +43,4 @@ private:
 	std::string           m_errorDescription;
 };
 
-} // namespace HomeCompa::Util
+} // namespace HomeCompa::Platform

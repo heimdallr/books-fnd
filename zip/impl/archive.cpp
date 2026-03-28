@@ -215,7 +215,7 @@ class ReaderFile : public Reader
 public:
 	ReaderFile(const QString& filename, std::shared_ptr<ProgressCallback> progress)
 		: Reader(std::move(progress))
-		, m_stream(Util::StringToPath(filename), std::ios_base::in | std::ios::binary)
+		, m_stream(Platform::StringToPath(filename), std::ios_base::in | std::ios::binary)
 	{
 		m_archive = std::make_unique<bit7z::BitArchiveReader>(m_lib, m_stream);
 		m_files   = CreateFileList(*m_archive);
