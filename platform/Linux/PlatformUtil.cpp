@@ -17,7 +17,6 @@ void SetKeyboardLayout(const QString& /*locale*/)
 
 bool IsAppAddedToAutostart(const QString& /*key*/)
 {
-	assert(false);
     return false;
 }
 
