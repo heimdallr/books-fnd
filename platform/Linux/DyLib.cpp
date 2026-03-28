@@ -4,7 +4,7 @@
 
 #include <cassert>
 
-namespace HomeCompa::Util
+namespace HomeCompa::Platform
 {
 
 namespace

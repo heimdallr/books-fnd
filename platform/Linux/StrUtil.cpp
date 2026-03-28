@@ -2,7 +2,7 @@
 
 #include <QString>
 
-namespace HomeCompa::Util
+namespace HomeCompa::Platform
 {
 
 QString PathToString(const std::filesystem::path& path)
