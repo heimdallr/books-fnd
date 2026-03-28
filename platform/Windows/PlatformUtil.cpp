@@ -1,9 +1,8 @@
 #include "PlatformUtil.h"
 
-#include <QDir>
-
 #include <Windows.h>
 
+#include <QDir>
 #include <QSettings>
 
 #include "fnd/FindPair.h"

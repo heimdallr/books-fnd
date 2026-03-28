@@ -1,7 +1,8 @@
 #include "DyLib.h"
 
-#include <cassert>
 #include <dlfcn.h>
+
+#include <cassert>
 
 namespace HomeCompa::Util
 {
@@ -11,7 +12,7 @@ namespace
 
 void* InnerOpen(const std::filesystem::path& moduleName)
 {
-    return dlopen(("lib" + moduleName.generic_string() + ".so").c_str(), RTLD_NOW);
+	return dlopen(("lib" + moduleName.generic_string() + ".so").c_str(), RTLD_NOW);
 }
 
 bool InnerClose(void* handle)

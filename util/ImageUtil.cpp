@@ -71,8 +71,8 @@ QPixmap Decode(const QByteArray& bytes)
 {
 	assert(!bytes.isEmpty());
 	const auto it      = std::ranges::find_if(SIGNATURES, [&](const auto& item) {
-        return bytes.startsWith(item.first);
-    });
+		return bytes.startsWith(item.first);
+	});
 	const auto decoder = it != std::end(SIGNATURES) ? it->second.decoder : &QtDecoder;
 	return decoder(bytes);
 }
@@ -81,8 +81,8 @@ std::pair<QByteArray, const char*> Recode(const QByteArray& bytes)
 {
 	assert(!bytes.isEmpty());
 	const auto  it          = std::ranges::find_if(SIGNATURES, [&](const auto& item) {
-        return bytes.startsWith(item.first);
-    });
+		return bytes.startsWith(item.first);
+	});
 	const auto& description = it != std::end(SIGNATURES) ? it->second : DEFAULT_DESCRIPTION;
 	return description.recoder(bytes, description.mediaType);
 }

@@ -194,10 +194,10 @@ public:
 	{
 		QStringList sections;
 		const auto  enumerate = [&](const Section& parent, const auto& r) -> void {
-            sections << QString("%1%2\t%3").arg(QString(parent.depth, '\t')).arg(parent.hash).arg(parent.size);
+			sections << QString("%1%2\t%3").arg(QString(parent.depth, '\t')).arg(parent.hash).arg(parent.size);
 
-            for (const auto& child : parent.children)
-                r(*child, r);
+			for (const auto& child : parent.children)
+				r(*child, r);
 		};
 
 		auto hashValues = m_section.CalculateHash();

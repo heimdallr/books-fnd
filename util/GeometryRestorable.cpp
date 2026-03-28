@@ -182,8 +182,8 @@ private:
 	const QString                                 m_name;
 	bool                                          m_initialized { false };
 	PropagateConstPtr<QTimer>                     m_fontTimer { CreateUiTimer([&] {
-        OnFontChanged();
-    }) };
+		OnFontChanged();
+	}) };
 };
 
 GeometryRestorable::GeometryRestorable(IObserver& observer, std::shared_ptr<ISettings> settings, QString name)

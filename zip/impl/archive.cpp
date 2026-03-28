@@ -384,8 +384,8 @@ private:
 
 		const bit7z::BitArchiveReader reader(m_lib, m_filename.toBit7zString());
 		const auto                    it = std::ranges::find(outFormats, reader.detectedFormat().value(), [](const auto* item) {
-            return item->value();
-        });
+			return item->value();
+		});
 		assert(it != std::end(outFormats));
 		if (it == std::end(outFormats))
 			throw std::runtime_error(std::format("Unsupported file format for editing: ", m_filename));

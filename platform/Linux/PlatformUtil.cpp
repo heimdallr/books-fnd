@@ -28,4 +28,4 @@ void RemoveFromAutostart(const QString& /*key*/)
 	assert(false);
 }
 
-}
+} // namespace HomeCompa::Util
