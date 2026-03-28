@@ -1,6 +1,8 @@
 #include "PlatformUtil.h"
 
-namespace HomeCompa::Util
+#include <QWidget>
+
+namespace HomeCompa::Platform
 {
 
 bool IsRegisteredExtension(const QString& /*extension*/)
@@ -26,6 +28,11 @@ void AddToAutostart(const QString& /*key*/, const QString& /*path*/)
 void RemoveFromAutostart(const QString& /*key*/)
 {
 	assert(false);
+}
+
+void SetGeometry(QWidget& widget, const QRect& rect)
+{
+    widget.resize(rect.size());
 }
 
 } // namespace HomeCompa::Util

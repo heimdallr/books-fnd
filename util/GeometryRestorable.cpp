@@ -4,14 +4,15 @@
 #include <QSplitter>
 #include <QTimer>
 
-#include "fnd/FindPair.h"
 #include "fnd/algorithm.h"
+#include "platform/PlatformUtil.h"
 
 #include "util/ISettingsObserver.h"
 #include "util/UiTimer.h"
 #include "util/serializer/Font.h"
 
 using namespace HomeCompa::Util;
+using namespace HomeCompa;
 
 namespace
 {
@@ -54,7 +55,7 @@ void SetGeometry(QWidget& widget, QRect rect)
 		}))
 		rect.moveCenter(QGuiApplication::primaryScreen()->availableGeometry().center());
 
-	widget.setGeometry(rect);
+    Platform::SetGeometry(widget, rect);
 }
 
 } // namespace
