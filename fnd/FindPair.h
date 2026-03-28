@@ -218,7 +218,7 @@ private:
 			return lhs == static_cast<unsigned char>(rhs);
 		});
 
-		return lit == lhs.end() && rit == rhs.end() || lit == lhs.end() && *rit == 0 || rit == rhs.end() && *lit == 0;
+        return (lit == lhs.end() && rit == rhs.end()) || (lit == lhs.end() && *rit == 0) || (rit == rhs.end() && *lit == 0);
 	}
 };
 

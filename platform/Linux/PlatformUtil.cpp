@@ -18,6 +18,7 @@ void SetKeyboardLayout(const QString& /*locale*/)
 bool IsAppAddedToAutostart(const QString& /*key*/)
 {
 	assert(false);
+    return false;
 }
 
 void AddToAutostart(const QString& /*key*/, const QString& /*path*/)

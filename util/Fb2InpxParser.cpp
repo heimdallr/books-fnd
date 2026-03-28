@@ -273,13 +273,19 @@ Fb2InpxParser::ParseResult Fb2InpxParser::Parse(const QString& folder, const Zip
 		}
 
 		if (parserData.authors.empty())
-			PLOGW << QString("%1/%2: author empty").arg(folder, fileName);
+        {
+            PLOGW << QString("%1/%2: author empty").arg(folder, fileName);
+        }
 
 		if (parserData.title.isEmpty())
-			PLOGW << QString("%1/%2: title empty").arg(folder, fileName);
+        {
+            PLOGW << QString("%1/%2: title empty").arg(folder, fileName);
+        }
 
 		if (zip.GetFileSize(fileName) == 0)
-			PLOGW << QString("%1/%2: file empty").arg(folder, fileName);
+        {
+            PLOGW << QString("%1/%2: file empty").arg(folder, fileName);
+        }
 
 		const auto& fileDateTime = zip.GetFileTime(fileName);
 		auto        dateTime     = (fileDateTime.isValid() ? fileDateTime : zipDateTime).toString("yyyy-MM-dd");

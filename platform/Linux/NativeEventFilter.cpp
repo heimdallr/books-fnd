@@ -6,16 +6,16 @@ class NativeEventFilter::Impl
 {
 };
 
-NativeEventFilter::NativeEventFilter(QCoreApplication& app)
+NativeEventFilter::NativeEventFilter(QCoreApplication& /*app*/)
 {
 }
 
 NativeEventFilter::~NativeEventFilter() = default;
 
-void NativeEventFilter::Register(IObserver* observer)
+void NativeEventFilter::Register(IObserver* /*observer*/)
 {
 }
 
-void NativeEventFilter::Unregister(IObserver* observer)
+void NativeEventFilter::Unregister(IObserver* /*observer*/)
 {
 }

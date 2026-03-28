@@ -34,7 +34,7 @@ public:
 		statement.append(");");
 
 		const auto tr = db.CreateTransaction();
-		auto       ok = tr->CreateCommand(statement)->Execute();
+        [[maybe_unused]] auto ok = tr->CreateCommand(statement)->Execute();
 		assert(ok);
 
 		for (const auto add : additional)
