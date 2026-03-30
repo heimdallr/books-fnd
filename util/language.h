@@ -12,8 +12,6 @@
 namespace HomeCompa
 {
 
-constexpr auto DEFAULT_LANGUAGES_MAPPING = "LanguagesMapping.json";
-
 constexpr auto LANGUAGES_CONTEXT = "Language";
 constexpr auto UNDEFINED_KEY     = "un";
 constexpr auto UNDEFINED         = QT_TRANSLATE_NOOP("Language", "[Undetermined]");
@@ -450,7 +448,6 @@ constexpr Language LANGUAGES[] {
 	{ "evn", QT_TRANSLATE_NOOP("Language", "Evenki") },
 };
 
-UTIL_EXPORT void InitLanguagesMap(const QString& langMappingFile);
 UTIL_EXPORT std::unordered_map<QString, const char*> GetLanguagesMap();
 UTIL_EXPORT QStringView                              GetLanguage(QStringView src);
 
