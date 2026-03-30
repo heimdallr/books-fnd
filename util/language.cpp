@@ -23,6 +23,9 @@ struct Storage
 public:
 	Storage()
 	{
+		std::ranges::transform(LANGUAGES, std::inserter(LANGS, LANGS.end()), &Language::key);
+		assert(std::size(LANGS) == std::size(LANGUAGES));
+
 		QFile file(":/data/LanguagesMapping.json");
 		if (!file.open(QIODevice::ReadOnly))
 			return;
@@ -44,11 +47,6 @@ public:
 			for (const auto key : langValues.toArray())
 				LANG_MAP.try_emplace(key.toString(), lang);
 		}
-
-		std::ranges::transform(LANGUAGES, std::inserter(LANGS, LANGS.end()), [](const auto& item) {
-			return item.key;
-		});
-		assert(std::size(LANGS) == std::size(LANGUAGES));
 	}
 };
 
@@ -65,18 +63,20 @@ std::unordered_map<QString, const char*> GetLanguagesMap()
 
 QStringView GetLanguage(const QStringView src)
 {
-	static const Storage storage;
-	if (src.isEmpty())
-		return storage.UNDEFINED_LANG;
+	static Storage STORAGE;
+	assert(!STORAGE.LANGS.empty());
 
-	if (storage.LANGS.contains(src))
+	if (src.isEmpty())
+		return STORAGE.UNDEFINED_LANG;
+
+	if (STORAGE.LANGS.contains(src))
 		return src;
 
-	if (const auto it = storage.LANG_MAP.find(src); it != storage.LANG_MAP.end())
+	if (const auto it = STORAGE.LANG_MAP.find(src); it != STORAGE.LANG_MAP.end())
 		return it->second;
 
 	PLOGW << "Unknown language: " << src;
-	return storage.UNDEFINED_LANG;
+	return STORAGE.UNDEFINED_LANG;
 }
 
 } // namespace HomeCompa
