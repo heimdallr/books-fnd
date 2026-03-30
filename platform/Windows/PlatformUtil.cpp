@@ -73,5 +73,9 @@ void SetGeometry(QWidget& widget, const QRect& rect)
 {
 	widget.setGeometry(rect);
 }
+QString SetDefaultInstallerSuffix()
+{
+    return "exe";
+}
 
 } // namespace HomeCompa::Platform

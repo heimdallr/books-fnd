@@ -35,4 +35,9 @@ void SetGeometry(QWidget& widget, const QRect& rect)
 	widget.resize(rect.size());
 }
 
+QString SetDefaultInstallerSuffix()
+{
+    return "deb";
+}
+
 } // namespace HomeCompa::Platform

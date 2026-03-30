@@ -17,5 +17,6 @@ PLATFORM_EXPORT void AddToAutostart(const QString& key, const QString& path);
 PLATFORM_EXPORT void RemoveFromAutostart(const QString& key);
 
 PLATFORM_EXPORT void SetGeometry(QWidget& widget, const QRect& rect);
+PLATFORM_EXPORT QString SetDefaultInstallerSuffix();
 
 }
