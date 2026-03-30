@@ -50,7 +50,7 @@ public:
 	}
 };
 
-}
+} // namespace
 
 std::unordered_map<QString, const char*> GetLanguagesMap()
 {

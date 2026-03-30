@@ -23,7 +23,7 @@ struct InstallerDescription
 	InstallerType type;
 	const char*   name;
 	const char*   ext;
-    bool          installable;
+	bool          installable;
 };
 
 UTIL_EXPORT const InstallerDescription& GetInstallerDescription();

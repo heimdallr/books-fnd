@@ -35,7 +35,7 @@ QString GetStartupKey(const QString& key)
 
 PlatformType GetPlatformType() noexcept
 {
-    return PlatformType::Windows;
+	return PlatformType::Windows;
 }
 
 bool IsRegisteredExtension(const QString& extension)
@@ -78,9 +78,10 @@ void SetGeometry(QWidget& widget, const QRect& rect)
 {
 	widget.setGeometry(rect);
 }
+
 QString SetDefaultInstallerSuffix()
 {
-    return "exe";
+	return "exe";
 }
 
 } // namespace HomeCompa::Platform

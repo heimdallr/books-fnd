@@ -7,7 +7,7 @@ namespace HomeCompa::Platform
 
 PlatformType GetPlatformType() noexcept
 {
-    return PlatformType::Linux;
+	return PlatformType::Linux;
 }
 
 bool IsRegisteredExtension(const QString& /*extension*/)
@@ -42,7 +42,7 @@ void SetGeometry(QWidget& widget, const QRect& rect)
 
 QString SetDefaultInstallerSuffix()
 {
-    return "deb";
+	return "deb";
 }
 
 } // namespace HomeCompa::Platform

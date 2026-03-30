@@ -11,8 +11,8 @@ namespace HomeCompa::Platform
 
 enum class PlatformType
 {
-    Windows,
-    Linux,
+	Windows,
+	Linux,
 };
 
 PLATFORM_EXPORT PlatformType GetPlatformType() noexcept;
@@ -24,7 +24,7 @@ PLATFORM_EXPORT bool IsAppAddedToAutostart(const QString& key);
 PLATFORM_EXPORT void AddToAutostart(const QString& key, const QString& path);
 PLATFORM_EXPORT void RemoveFromAutostart(const QString& key);
 
-PLATFORM_EXPORT void SetGeometry(QWidget& widget, const QRect& rect);
+PLATFORM_EXPORT void    SetGeometry(QWidget& widget, const QRect& rect);
 PLATFORM_EXPORT QString SetDefaultInstallerSuffix();
 
 }

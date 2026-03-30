@@ -11,7 +11,8 @@
 namespace HomeCompa::Util
 {
 
-namespace{
+namespace
+{
 
 constexpr InstallerDescription MODES[] {
 #define INSTALLER_MODE_ITEM(NAME, EXT, INSTALLABLE) { InstallerType::NAME, #NAME, EXT, INSTALLABLE },
@@ -21,14 +22,14 @@ constexpr InstallerDescription MODES[] {
 
 const InstallerDescription& GetDefaultInstallerDescription()
 {
-    const auto suffix = Platform::SetDefaultInstallerSuffix();
-    const auto it = std::ranges::find(MODES, Platform::SetDefaultInstallerSuffix(), [&](const auto& item) {
-        return item.ext;
-    });
-    assert(it != std::end(MODES));
-    PLOGD << "Installer mode: " << it->name;
+	const auto suffix = Platform::SetDefaultInstallerSuffix();
+	const auto it     = std::ranges::find(MODES, Platform::SetDefaultInstallerSuffix(), [&](const auto& item) {
+		return item.ext;
+	});
+	assert(it != std::end(MODES));
+	PLOGD << "Installer mode: " << it->name;
 
-    return *it;
+	return *it;
 }
 
 }
@@ -38,14 +39,14 @@ const InstallerDescription& GetInstallerDescription()
 	const auto fileNamePortable = QString("%1/installer_mode").arg(QCoreApplication::applicationDirPath());
 	QFile      file(QString("%1/installer_mode").arg(QCoreApplication::applicationDirPath()));
 	if (!file.open(QIODevice::ReadOnly))
-        return GetDefaultInstallerDescription();
+		return GetDefaultInstallerDescription();
 
-    const auto bytes = QString::fromUtf8(file.readAll());
+	const auto bytes = QString::fromUtf8(file.readAll());
 	PLOGD << "Installer mode: " << bytes;
 	const auto it = std::ranges::find_if(MODES, [&](const auto& item) {
-        return bytes.startsWith(item.name, Qt::CaseInsensitive);
+		return bytes.startsWith(item.name, Qt::CaseInsensitive);
 	});
-    return it != std::end(MODES) ? *it : GetDefaultInstallerDescription();
+	return it != std::end(MODES) ? *it : GetDefaultInstallerDescription();
 }
 
 } // namespace HomeCompa::Util

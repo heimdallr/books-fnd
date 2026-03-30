@@ -116,4 +116,4 @@ void* DyLib::GetProc(const std::string& procName)
 	return nullptr;
 }
 
-} // namespace HomeCompa::Util
+} // namespace HomeCompa::Platform
