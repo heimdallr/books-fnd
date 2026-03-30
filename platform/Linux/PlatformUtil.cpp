@@ -5,6 +5,11 @@
 namespace HomeCompa::Platform
 {
 
+PlatformType GetPlatformType() noexcept
+{
+    return PlatformType::Linux;
+}
+
 bool IsRegisteredExtension(const QString& /*extension*/)
 {
 	return true;

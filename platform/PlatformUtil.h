@@ -9,6 +9,14 @@ class QWidget;
 namespace HomeCompa::Platform
 {
 
+enum class PlatformType
+{
+    Windows,
+    Linux,
+};
+
+PLATFORM_EXPORT PlatformType GetPlatformType() noexcept;
+
 PLATFORM_EXPORT bool IsRegisteredExtension(const QString& extension);
 PLATFORM_EXPORT void SetKeyboardLayout(const QString& locale);
 

@@ -33,6 +33,11 @@ QString GetStartupKey(const QString& key)
 
 }
 
+PlatformType GetPlatformType() noexcept
+{
+    return PlatformType::Windows;
+}
+
 bool IsRegisteredExtension(const QString& extension)
 {
 	QSettings  m("HKEY_CLASSES_ROOT", QSettings::NativeFormat);
