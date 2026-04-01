@@ -22,7 +22,7 @@ T ToInteger(const QStringView value, T defaultValue = 0)
 
 	bool       ok     = false;
 	const auto result = value.toLongLong(&ok);
-	return ok ? defaultValue : static_cast<T>(result);
+	return ok ? static_cast<T>(result) : defaultValue;
 }
 
 struct WStringHash
