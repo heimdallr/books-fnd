@@ -35,7 +35,9 @@ QStringList ParseBody(const QJsonValue& data)
 
 Assets Asset::ParseAssets(const QJsonValue& data)
 {
-	assert(data.isArray());
+	if (data.isNull() || data.isUndefined() || !data.isArray())
+		return {};
+
 	Assets assets;
 	for (const auto dataValue : data.toArray())
 	{
