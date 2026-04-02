@@ -213,3 +213,20 @@ QWidget& GeometryRestorableObserver::GetWidget() noexcept
 {
 	return m_widget;
 }
+
+namespace HomeCompa::Util
+{
+
+void MoveToParentCenter(QWidget& widget)
+{
+	auto* parent = widget.parentWidget();
+	if (!parent)
+		return;
+
+	auto       rect         = widget.geometry();
+	const auto parentCenter = parent->geometry().center();
+	rect.translate(parentCenter - rect.center());
+	Platform::SetGeometry(widget, rect);
+}
+
+}

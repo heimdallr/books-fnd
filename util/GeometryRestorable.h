@@ -53,4 +53,6 @@ private:
 	QWidget& m_widget;
 };
 
+void UTIL_EXPORT MoveToParentCenter(QWidget& widget);
+
 } // namespace HomeCompa::Util
