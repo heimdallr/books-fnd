@@ -60,13 +60,16 @@ void BaseConnection::Get(const std::string& request)
 		page               = GetNextPage(headers);
 	}
 
-	if (m_impl->data.empty())
-	{
-		PLOGE << "No data on " << request;
-		return;
-	}
+	if (const auto it = std::ranges::find_if(
+			m_impl->data,
+			[](const auto& item) {
+				return item.isObject();
+			}
+		);
+	    it != m_impl->data.end())
+		return m_impl->Perform(&IObserver::HandleReceivedData, *it);
 
-	m_impl->Perform(&IObserver::HandleReceivedData, m_impl->data.front());
+	PLOGE << "No data on " << request;
 }
 
 const std::string& BaseConnection::Url() const noexcept
