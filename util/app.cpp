@@ -22,8 +22,7 @@ constexpr InstallerDescription MODES[] {
 
 const InstallerDescription& GetDefaultInstallerDescription()
 {
-	const auto suffix = Platform::SetDefaultInstallerSuffix();
-	const auto it     = std::ranges::find(MODES, Platform::SetDefaultInstallerSuffix(), [&](const auto& item) {
+	const auto it = std::ranges::find(MODES, Platform::GetDefaultInstallerSuffix(), [&](const auto& item) {
 		return item.ext;
 	});
 	assert(it != std::end(MODES));

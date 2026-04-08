@@ -79,7 +79,7 @@ void SetGeometry(QWidget& widget, const QRect& rect)
 	widget.setGeometry(rect);
 }
 
-QString SetDefaultInstallerSuffix()
+QString GetDefaultInstallerSuffix()
 {
 	return "exe";
 }
