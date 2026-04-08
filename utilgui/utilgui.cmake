@@ -1,16 +1,12 @@
-AddTarget(util	shared_lib
+AddTarget(utilgui shared_lib
 	PROJECT_GROUP Foundation
 	SOURCE_DIRECTORY
 		"${CMAKE_CURRENT_LIST_DIR}"
 	LINK_LIBRARIES
 		Qt${QT_MAJOR_VERSION}::Core
-		Qt${QT_MAJOR_VERSION}::Gui
-		XercesC::XercesC
-		cimg::cimg
+		Qt${QT_MAJOR_VERSION}::Widgets
 	LINK_TARGETS
-		flicu
-		fljxl
 		logging
-		platform
-		zip
+		platformgui
+		util
 )

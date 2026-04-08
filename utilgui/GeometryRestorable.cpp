@@ -6,7 +6,7 @@
 
 #include "fnd/algorithm.h"
 
-#include "platform/PlatformUtil.h"
+#include "platformgui/PlatformGuiUtil.h"
 #include "util/ISettingsObserver.h"
 #include "util/UiTimer.h"
 #include "util/serializer/Font.h"

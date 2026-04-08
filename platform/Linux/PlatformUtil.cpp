@@ -1,7 +1,5 @@
 #include "PlatformUtil.h"
 
-#include <QWidget>
-
 namespace HomeCompa::Platform
 {
 
@@ -33,11 +31,6 @@ void AddToAutostart(const QString& /*key*/, const QString& /*path*/)
 void RemoveFromAutostart(const QString& /*key*/)
 {
 	assert(false);
-}
-
-void SetGeometry(QWidget& widget, const QRect& rect)
-{
-	widget.resize(rect.size());
 }
 
 QString GetDefaultInstallerSuffix()

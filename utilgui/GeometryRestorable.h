@@ -5,14 +5,14 @@
 
 #include "util/ISettings.h"
 
-#include "export/util.h"
+#include "export/utilgui.h"
 
 class QSplitter;
 
 namespace HomeCompa::Util
 {
 
-class UTIL_EXPORT GeometryRestorable
+class UTILGUI_EXPORT GeometryRestorable
 {
 	NON_COPY_MOVABLE(GeometryRestorable)
 
@@ -41,7 +41,7 @@ private:
 	PropagateConstPtr<Impl> m_impl;
 };
 
-class UTIL_EXPORT GeometryRestorableObserver : virtual public GeometryRestorable::IObserver
+class UTILGUI_EXPORT GeometryRestorableObserver : virtual public GeometryRestorable::IObserver
 {
 protected:
 	explicit GeometryRestorableObserver(QWidget& widget);
@@ -53,6 +53,6 @@ private:
 	QWidget& m_widget;
 };
 
-void UTIL_EXPORT MoveToParentCenter(QWidget& widget);
+void UTILGUI_EXPORT MoveToParentCenter(QWidget& widget);
 
 } // namespace HomeCompa::Util

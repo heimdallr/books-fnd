@@ -4,7 +4,6 @@
 
 #include <QDir>
 #include <QSettings>
-#include <QWidget>
 
 #include "fnd/FindPair.h"
 
@@ -72,11 +71,6 @@ void AddToAutostart(const QString& key, const QString& path)
 void RemoveFromAutostart(const QString& key)
 {
 	GetStartupSettings()->remove(GetStartupKey(key));
-}
-
-void SetGeometry(QWidget& widget, const QRect& rect)
-{
-	widget.setGeometry(rect);
 }
 
 QString GetDefaultInstallerSuffix()
