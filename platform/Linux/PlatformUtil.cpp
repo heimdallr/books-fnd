@@ -1,5 +1,7 @@
 #include "PlatformUtil.h"
 
+#include <QString>
+
 namespace HomeCompa::Platform
 {
 
