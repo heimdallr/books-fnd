@@ -8,13 +8,19 @@ class QString;
 namespace HomeCompa::Platform
 {
 
+#define PLATFORM_TYPE_ITEMS_X_MACRO \
+	PLATFORM_TYPE_ITEM(Windows)     \
+	PLATFORM_TYPE_ITEM(Linux)
+
 enum class PlatformType
 {
-	Windows,
-	Linux,
+#define PLATFORM_TYPE_ITEM(NAME) NAME,
+	PLATFORM_TYPE_ITEMS_X_MACRO
+#undef PLATFORM_TYPE_ITEM
 };
 
 PLATFORM_EXPORT PlatformType GetPlatformType() noexcept;
+PLATFORM_EXPORT QString      GetPlatformName() noexcept;
 
 PLATFORM_EXPORT bool IsRegisteredExtension(const QString& extension);
 PLATFORM_EXPORT void SetKeyboardLayout(const QString& locale);
