@@ -58,6 +58,19 @@ void SetKeyboardLayout(const QString& locale)
 	assert(klId);
 }
 
+void SetKeyboardLayoutId(const QString& id)
+{
+	const auto                   keyboardLayoutId = id.toStdWString();
+	[[maybe_unused]] const auto* klId             = LoadKeyboardLayout(keyboardLayoutId.data(), KLF_ACTIVATE);
+	assert(klId);
+}
+
+QString GetKeyboardLayoutId()
+{
+	wchar_t buffer[KL_NAMELENGTH];
+	return GetKeyboardLayoutName(buffer) ? QString::fromStdWString(buffer) : QString {};
+}
+
 bool IsAppAddedToAutostart(const QString& key)
 {
 	return GetStartupSettings()->contains(GetStartupKey(key));

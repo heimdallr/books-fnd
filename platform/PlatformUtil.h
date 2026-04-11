@@ -22,8 +22,10 @@ enum class PlatformType
 PLATFORM_EXPORT PlatformType GetPlatformType() noexcept;
 PLATFORM_EXPORT QString      GetPlatformName() noexcept;
 
-PLATFORM_EXPORT bool IsRegisteredExtension(const QString& extension);
-PLATFORM_EXPORT void SetKeyboardLayout(const QString& locale);
+PLATFORM_EXPORT bool    IsRegisteredExtension(const QString& extension);
+PLATFORM_EXPORT void    SetKeyboardLayout(const QString& locale);
+PLATFORM_EXPORT void    SetKeyboardLayoutId(const QString& id);
+PLATFORM_EXPORT QString GetKeyboardLayoutId();
 
 PLATFORM_EXPORT bool IsAppAddedToAutostart(const QString& key);
 PLATFORM_EXPORT void AddToAutostart(const QString& key, const QString& path);
