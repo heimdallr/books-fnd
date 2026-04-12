@@ -11,14 +11,15 @@
 //
 // 2010-01-02 Kristian Setälä added code to retrieve layout variant information
 
-#ifndef XKEYBOARD_H_1C79861A_49B3_4A95_88D6_455C22FEB222
-#define XKEYBOARD_H_1C79861A_49B3_4A95_88D6_455C22FEB222
+#pragma once
 
 #include <vector>
 #include <string>
-#include <iostream>
 #include <X11/Xlib.h>
 
+
+namespace HomeCompa::Platform
+{
 
 typedef std::vector<std::string> StringVector;
 
@@ -31,32 +32,32 @@ public:
     XKeyboard();
     ~XKeyboard();
     int groupCount() const;
-    StringVector groupNames() const;
-    StringVector groupSymbols() const;
-    StringVector groupVariants() const;
-    int currentGroupNum() const;
-    std::string currentGroupName() const;
-    std::string currentGroupSymbol() const;
-    std::string currentGroupVariant() const;
-    bool setGroupByNum(int groupNum);
+    const StringVector& groupNames() const noexcept;
+    const StringVector& groupSymbols() const noexcept;
+    const StringVector& groupVariants() const noexcept;
+    unsigned int currentGroupNum() const;
+    const std::string& currentGroupName() const;
+    const std::string& currentGroupSymbol() const;
+    const std::string& currentGroupVariant() const;
+    bool setGroupByNum(unsigned int groupNum);
     bool changeGroup(int increment);
 
     //friend std::ostream& operator<<(std::ostream& os, const XKeyboard& xkb);
 
 private:
-    Bool initializeXkb();
+    void initializeXkb();
     std::string getSymbolNameByResNum(int groupResNum);
     int groupNumResToXkb(int groupNumRes);
     std::string getGroupNameByResNum(int groupResNum);
     int groupLookup(int srcValue, StringVector fromText, StringVector toText, int count);
     void accomodateGroupXkb();
 
-    Display* _display;
-    int _groupCount;
+    Display* _display{nullptr};
+    int _groupCount{0};
     StringVector _groupNames;
     StringVector _symbolNames;
     StringVector _variantNames;
-    int _currentGroupNum;
+    int _currentGroupNum{0};
 
     int _deviceId;
     int _baseEventCode;
@@ -66,31 +67,5 @@ private:
 
 // XkbSymbolParser -----------------------------------------------------
 
-class XkbSymbolParser
-{
-public:
-    typedef std::vector<std::string>::iterator StringVectorIter;
 
-    XkbSymbolParser();
-    ~XkbSymbolParser();
-    void parse(const std::string& symbols, std::vector<std::string>& symbolList,
-        std::vector<std::string>& variantList);
-	
-private:
-    bool isXkbLayoutSymbol(const std::string& symbol);
-
-    StringVector _nonSymbols;
-};
-
-
-// Helper functions ----------------------------------------------------
-
-int compareNoCase(const std::string& s1, const std::string& s2);
-// std::ostream& operator<<(std::ostream& os, const XKeyboard& xkb);
-// std::ostream& operator<<(std::ostream& os, const StringVector& v);
-
-#endif // XKEYBOARD_H_1C79861A_49B3_4A95_88D6_455C22FEB222
-
-// Local Variables:
-// mode: c++
-// End:
+}

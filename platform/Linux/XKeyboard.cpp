@@ -11,19 +11,129 @@
 //
 // 2010-01-02 Kristian Setälä added code to retrieve layout variant information
 
+#include "log.h"
+
 #include "XKeyboard.h"
-#include "X11Exception.h"
 #include <algorithm>
 #include <cstdlib>
 #include <cctype>
 #include <cstring>
+#include <stdexcept>
 #include <X11/XKBlib.h>
 
-// XKeyboard -----------------------------------------------------------
+using namespace HomeCompa::Platform;
+
+namespace{
+
+const std::string EMPTY;
+
+int compareNoCase(const std::string& s1, const std::string& s2)
+{
+    std::string::const_iterator it1 = s1.begin();
+    std::string::const_iterator it2 = s2.begin();
+
+    while (it1 != s1.end() && it2 != s2.end()) {
+        if (::toupper(*it1) != ::toupper(*it2)) {
+            return (::toupper(*it1) < ::toupper(*it2)) ? -1 : 1;
+        }
+
+        ++it1;
+        ++it2;
+    }
+
+    size_t size1 = s1.size();
+    size_t size2 = s2.size();
+
+    if (size1 == size2)  {
+        return 0;
+    }
+    return (size1 < size2) ? -1 : 1;
+}
+
+const std::string& Get(const StringVector& data, unsigned int index) noexcept
+{
+    return index < data.size() ? data[index] : EMPTY;
+}
+
+class XkbSymbolParser
+{
+public:
+    typedef StringVector::iterator StringVectorIter;
+
+    XkbSymbolParser()
+    {
+        _nonSymbols.push_back("group");
+        _nonSymbols.push_back("inet");
+        _nonSymbols.push_back("pc");
+    }
+
+    void parse(const std::string& symbols, StringVector& symbolList, StringVector& variantList)
+    {
+        bool inSymbol = false;
+        std::string curSymbol;
+        std::string curVariant;
+
+        //std::cout << symbols << std::endl;
+        // A sample line:
+        // pc+fi(dvorak)+fi:2+ru:3+inet(evdev)+group(menu_toggle)
+
+        for (size_t i = 0; i < symbols.size(); i++) {
+            char ch = symbols[i];
+            if (ch == '+' || ch == '_') {
+                if (inSymbol) {
+                    if (isXkbLayoutSymbol(curSymbol)) {
+                        symbolList.push_back(curSymbol);
+                        variantList.push_back(curVariant);
+                    }
+                    curSymbol.clear();
+                    curVariant.clear();
+                } else {
+                    inSymbol = true;
+                }
+            } else if (inSymbol && (isalpha(static_cast<int>(ch)) || ch == '_')) {
+                curSymbol.append(1, ch);
+            } else if (inSymbol && ch == '(') {
+                while (++i < symbols.size()) {
+                    ch = symbols[i];
+                    if (ch == ')')
+                        break;
+                    else
+                        curVariant.append(1, ch);
+                }
+            } else {
+                if (inSymbol) {
+                    if (isXkbLayoutSymbol(curSymbol)) {
+                        symbolList.push_back(curSymbol);
+                        variantList.push_back(curVariant);
+                    }
+                    curSymbol.clear();
+                    curVariant.clear();
+                    inSymbol = false;
+                }
+            }
+        }
+
+        if (inSymbol && !curSymbol.empty() && isXkbLayoutSymbol(curSymbol)) {
+            symbolList.push_back(curSymbol);
+            variantList.push_back(curVariant);
+        }
+    }
+
+private:
+    bool isXkbLayoutSymbol(const std::string& symbol) const
+    {
+        const auto result = find(_nonSymbols.cbegin(), _nonSymbols.cend(), symbol);
+        return result == _nonSymbols.cend();
+    }
+
+    StringVector _nonSymbols;
+};
+
+
+}
 
 XKeyboard::XKeyboard()
-    : _display(0), _groupCount(0), _currentGroupNum(0),
-      _deviceId(XkbUseCoreKbd)
+    : _deviceId(XkbUseCoreKbd)
 {
 
     XkbIgnoreExtension(False);
@@ -39,24 +149,17 @@ XKeyboard::XKeyboard()
     free(displayName);
     switch (reasonReturn) {
     case XkbOD_BadLibraryVersion:
-        throw X11Exception("Bad XKB library version.");
-        break;
+        throw std::runtime_error("Bad XKB library version.");
     case XkbOD_ConnectionRefused:
-        throw X11Exception("Connection to X server refused.");
-        break;
+        throw std::runtime_error("Connection to X server refused.");
     case XkbOD_BadServerVersion:
-        throw X11Exception("Bad X11 server version.");
-        break;
+        throw std::runtime_error("Bad X11 server version.");
     case XkbOD_NonXkbServer:
-        throw X11Exception("XKB not present.");
-        break;
-    case XkbOD_Success:
-        break;
+        throw std::runtime_error("XKB not present.");
     }
+    assert(reasonReturn == XkbOD_Success);
 
-    if (initializeXkb() != True) {
-        throw X11Exception("XKB not initialized.");
-    }
+    initializeXkb();
 
     XkbSelectEventDetails(_display, XkbUseCoreKbd, XkbStateNotify,
                           XkbAllStateComponentsMask, XkbGroupStateMask);
@@ -67,18 +170,16 @@ XKeyboard::XKeyboard()
     accomodateGroupXkb();
 }
 
-Bool XKeyboard::initializeXkb()
+void XKeyboard::initializeXkb()
 {
-    // Initialize the XKB extension.
     int major = XkbMajorVersion;
     int minor = XkbMinorVersion;
     int opCode;
-    /*Bool status =*/ XkbQueryExtension(_display, &opCode, &_baseEventCode, &_baseErrorCode,  &major, &minor);
+    /*auto status =*/ XkbQueryExtension(_display, &opCode, &_baseEventCode, &_baseErrorCode,  &major, &minor);
 
     XkbDescRec* kbdDescPtr = XkbAllocKeyboard();
-    if (kbdDescPtr == NULL) {
-        std::cerr << "Failed to get keyboard description." << std::endl;
-        return False;
+    if (!kbdDescPtr) {
+        std::runtime_error("Failed to get keyboard description.");
     }
 
     kbdDescPtr->dpy = _display;
@@ -91,12 +192,11 @@ Bool XKeyboard::initializeXkb()
     XkbGetNames(_display, XkbGroupNamesMask, kbdDescPtr);
 
     if (kbdDescPtr->names == NULL) {
-        std::cerr << "Failed to get keyboard description." << std::endl;
         XFree(kbdDescPtr);
         XkbFreeControls(kbdDescPtr, XkbAllControlsMask, true);
         XkbFreeNames(kbdDescPtr, XkbSymbolsNameMask, true);
         XkbFreeNames(kbdDescPtr, XkbGroupNamesMask, true);
-        return False;
+        std::runtime_error("Failed to get keyboard description.");
     }
 
     // Count the number of configured groups.
@@ -150,14 +250,14 @@ Bool XKeyboard::initializeXkb()
             XkbFreeControls(kbdDescPtr, XkbAllControlsMask, true);
             XkbFreeNames(kbdDescPtr, XkbSymbolsNameMask, true);
             XkbFreeNames(kbdDescPtr, XkbGroupNamesMask, true);
-            return False;
+            throw std::runtime_error("symName is empty");
         }
     } else {
         XFree(kbdDescPtr);
         XkbFreeControls(kbdDescPtr, XkbAllControlsMask, true);
         XkbFreeNames(kbdDescPtr, XkbSymbolsNameMask, true);
         XkbFreeNames(kbdDescPtr, XkbGroupNamesMask, true);
-        return False;
+        throw std::runtime_error("symNameAtom is None");
     }
 
     XkbSymbolParser symParser;
@@ -194,8 +294,7 @@ Bool XKeyboard::initializeXkb()
             if (name.empty()) {
                 name = "U/A";
             }
-            std::cerr << "Group Name " << i + 1 << " is undefined, set to '"
-                      << name << "'!\n";
+            PLOGW << "Group Name " << i + 1 << " is undefined, set to '" << name << "'!\n";
             _groupNames[i] = name;
         }
     }
@@ -207,8 +306,6 @@ Bool XKeyboard::initializeXkb()
     XkbFreeControls(kbdDescPtr, XkbAllControlsMask, true);
     XkbFreeNames(kbdDescPtr, XkbSymbolsNameMask, true);
     XkbFreeNames(kbdDescPtr, XkbGroupNamesMask, true);
-
-    return True;
 }
 
 std::string XKeyboard::getSymbolNameByResNum(int groupResNum)
@@ -264,50 +361,50 @@ int XKeyboard::groupCount() const
     return _groupCount;
 }
 
-StringVector XKeyboard::groupNames() const
+const StringVector& XKeyboard::groupNames() const noexcept
 {
     return _groupNames;
 }
 
-StringVector XKeyboard::groupSymbols() const
+const StringVector& XKeyboard::groupSymbols() const noexcept
 {
     return _symbolNames;
 }
 
-StringVector XKeyboard::groupVariants() const
+const StringVector& XKeyboard::groupVariants() const noexcept
 {
     return _variantNames;
 }
 
-int XKeyboard::currentGroupNum() const
+unsigned int XKeyboard::currentGroupNum() const
 {
     XkbStateRec xkbState;
     XkbGetState(_display, _deviceId, &xkbState);
-    return static_cast<int>(xkbState.group);
+    return static_cast<unsigned int>(xkbState.group);
 }
 
-std::string XKeyboard::currentGroupName() const
+const std::string& XKeyboard::currentGroupName() const
 {
-    return _groupNames.at(currentGroupNum());
+    return Get(_groupNames, currentGroupNum());
 }
 
-std::string XKeyboard::currentGroupSymbol() const
+const std::string& XKeyboard::currentGroupSymbol() const
 {
-    return _symbolNames.at(currentGroupNum());
+    return Get(_symbolNames, currentGroupNum());
 }
 
-std::string XKeyboard::currentGroupVariant() const
+const std::string& XKeyboard::currentGroupVariant() const
 {
-    return _variantNames.at(currentGroupNum());
+    return Get(_variantNames, currentGroupNum());
 }
 
-bool XKeyboard::setGroupByNum(int groupNum)
+bool XKeyboard::setGroupByNum(unsigned int groupNum)
 {
     if (_groupCount <= 1) {
         return false;
     }
 
-    Bool result = XkbLockGroup(_display, _deviceId, groupNum);
+    const auto result = XkbLockGroup(_display, _deviceId, groupNum);
     if (result == False) {
         return false;
     }
@@ -317,146 +414,10 @@ bool XKeyboard::setGroupByNum(int groupNum)
 
 bool XKeyboard::changeGroup(int increment)
 {
-    Bool result = XkbLockGroup(_display, _deviceId,
-                               (_currentGroupNum + increment) % _groupCount);
+    const auto result = XkbLockGroup(_display, _deviceId, (_currentGroupNum + increment) % _groupCount);
     if (result == False) {
         return false;
     }
     accomodateGroupXkb();
     return true;
 }
-
-
-// XkbSymbolParser -----------------------------------------------------
-
-XkbSymbolParser::XkbSymbolParser()
-{
-    _nonSymbols.push_back("group");
-    _nonSymbols.push_back("inet");
-    _nonSymbols.push_back("pc");
-}
-
-XkbSymbolParser::~XkbSymbolParser()
-{
-    _nonSymbols.clear();
-}
-
-void XkbSymbolParser::parse(const std::string& symbols, StringVector& symbolList,
-    StringVector& variantList)
-{
-    bool inSymbol = false;
-    std::string curSymbol;
-    std::string curVariant;
-
-    //std::cout << symbols << std::endl;
-    // A sample line:
-    // pc+fi(dvorak)+fi:2+ru:3+inet(evdev)+group(menu_toggle)
-    
-    for (size_t i = 0; i < symbols.size(); i++) {
-        char ch = symbols[i];
-        if (ch == '+' || ch == '_') {
-            if (inSymbol) {
-                if (isXkbLayoutSymbol(curSymbol)) {
-                    symbolList.push_back(curSymbol);
-                    variantList.push_back(curVariant);
-                }
-                curSymbol.clear();
-                curVariant.clear();
-            } else {
-                inSymbol = true;
-            }
-        } else if (inSymbol && (isalpha(static_cast<int>(ch)) || ch == '_')) {
-            curSymbol.append(1, ch);
-        } else if (inSymbol && ch == '(') {
-            while (++i < symbols.size()) {
-                ch = symbols[i];
-                if (ch == ')')
-                    break;
-                else
-                    curVariant.append(1, ch);
-            }
-        } else {
-            if (inSymbol) {
-                if (isXkbLayoutSymbol(curSymbol)) {
-                    symbolList.push_back(curSymbol);
-                    variantList.push_back(curVariant);
-                }
-                curSymbol.clear();
-                curVariant.clear();
-                inSymbol = false;
-            }
-        }
-    }
-
-    if (inSymbol && !curSymbol.empty() && isXkbLayoutSymbol(curSymbol)) {
-        symbolList.push_back(curSymbol);
-        variantList.push_back(curVariant);
-    }
-}
-
-bool XkbSymbolParser::isXkbLayoutSymbol(const std::string& symbol) {
-    StringVectorIter result = find(_nonSymbols.begin(), _nonSymbols.end(), symbol);
-    return result == _nonSymbols.end();
-}
-
-// Helper functions ----------------------------------------------------
-
-int compareNoCase(const std::string& s1, const std::string& s2)
-{
-    std::string::const_iterator it1 = s1.begin();
-    std::string::const_iterator it2 = s2.begin();
-
-    //Has the end of at least one of the strings been reached?
-    while (it1 != s1.end() && it2 != s2.end()) {
-        // Do the letters differ?
-        if (::toupper(*it1) != ::toupper(*it2)) {
-            // return -1 to indicate 'smaller than', 1 otherwise
-            return (::toupper(*it1) < ::toupper(*it2)) ? -1 : 1;
-        }
-
-        // Proceed to the next character in each string.
-        ++it1;
-        ++it2;
-    }
-
-    size_t size1 = s1.size();
-    size_t size2 = s2.size();
-
-    // Return -1, 0 or 1 according to strings' lengths.
-    if (size1 == size2)  {
-        return 0;
-    }
-    return (size1 < size2) ? -1 : 1;
-}
-
-// std::ostream& operator<<(std::ostream& os, const XKeyboard& xkb)
-// {
-//     os << "xkb {\n\t" << xkb.groupCount() << " groups {" << xkb.groupNames()
-//        << "},\n\tsymbols {" << xkb.groupSymbols() << "}\n\tcurrent group: "
-//        << xkb.currentGroupSymbol() << " - " << xkb.currentGroupName()
-//        << " (" << xkb.currentGroupNum() << ")\n}";
-//     return os;
-// }
-
-// std::ostream& operator<<(std::ostream& os, const StringVector& sv)
-// {
-//     for (int i = 0; i < sv.size(); i++) {
-//      os << (i == 0 ? "" : ", ") << sv[i];
-//     }
-//     return os;
-// }
-
-// Main entry point (test) ---------------------------------------------
-
-// int main(int argc, char** argv)
-// {
-//     XKeyboard xkb;
-//     std::cout << xkb << std::endl;
-//     xkb.changeGroup(1);
-//     std::cout << xkb << std::endl;
-//     xkb.changeGroup(1);
-//     std::cout << xkb << std::endl;
-//     xkb.changeGroup(1);
-//     std::cout << xkb << std::endl;
-//     return EXIT_SUCCESS;
-// }

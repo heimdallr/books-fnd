@@ -2,6 +2,10 @@
 
 #include <QString>
 
+#include "log.h"
+
+#include "XKeyboard.h"
+
 namespace HomeCompa::Platform
 {
 
@@ -22,12 +26,20 @@ void SetKeyboardLayout(const QString& /*locale*/)
 
 void SetKeyboardLayoutId(const QString& /*id*/)
 {
-	assert(false);
 }
 
 QString GetKeyboardLayoutId()
 {
-	assert(false);
+    try{
+        XKeyboard xKeyboard;
+        return QString::fromStdString(xKeyboard.currentGroupName());
+    }
+    catch(const std::exception& ex)
+    {
+        PLOGE << ex.what();
+    }
+
+    return {};
 }
 
 bool IsAppAddedToAutostart(const QString& /*key*/)
