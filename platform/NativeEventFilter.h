@@ -4,6 +4,8 @@
 #include "fnd/memory.h"
 #include "fnd/observer.h"
 
+#include "QtTypes.h"
+
 #include "export/platform.h"
 
 class QCoreApplication;
@@ -19,7 +21,7 @@ public:
 	class IObserver : public Observer
 	{
 	public:
-		virtual void OnQueryEndSession(long long* result) = 0;
+		virtual void OnQueryEndSession(qintptr_t* result) = 0;
 	};
 
 public:

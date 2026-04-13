@@ -3,6 +3,7 @@
 
 #include "Database.h"
 #include "IQuery.h"
+#include "QtTypes.h"
 #include "sqlite3ppext.h"
 
 namespace HomeCompa::DB::Impl::Sqlite
@@ -88,7 +89,7 @@ private: // Query
 	QString GetQString(const size_t index) const override
 	{
 		const auto str = GetString(index);
-		return QString::fromUtf8(str.data(), static_cast<qsizetype>(str.size()));
+		return QString::fromUtf8(str.data(), static_cast<qsizetype_t>(str.size()));
 	}
 
 	const char* GetRawString(const size_t index) const override
