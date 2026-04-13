@@ -304,14 +304,14 @@ private: // Util::SaxParser
 			if (!m_isBinary || !IsOneOf(path, BINARY, BODY_BINARY))
 			{
 				PLOGW << "bad binary";
-				m_picId = {};
+				m_picId = QString {};
 				return true;
 			}
 
 			const auto isCover       = m_picId == m_coverPage;
 			auto&      imageItemHash = isCover ? m_cover : m_images.emplace_back();
 			imageItemHash            = { .file = std::move(m_picId), .body = QByteArray::fromBase64(value.toUtf8()) };
-			m_picId                  = {};
+			m_picId                  = QString {};
 
 			return true;
 		}

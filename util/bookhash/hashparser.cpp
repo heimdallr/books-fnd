@@ -90,7 +90,7 @@ private: // Util::SaxParser
 				))
 				return false;
 
-#define HASH_PARSER_CALLBACK_ITEM(NAME) m_##NAME = {};
+#define HASH_PARSER_CALLBACK_ITEM(NAME) m_##NAME = QString{};
 			HASH_PARSER_CALLBACK_ITEMS_X_MACRO
 #undef HASH_PARSER_CALLBACK_ITEM
 
@@ -98,7 +98,7 @@ private: // Util::SaxParser
 			m_images         = {};
 			m_section        = {};
 			m_textHistogram  = {};
-			m_annotation     = {};
+			m_annotation     = QStringList{};
 			m_currentSection = nullptr;
 		}
 		else if (name == SECTION)
