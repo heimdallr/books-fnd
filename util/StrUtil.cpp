@@ -4,12 +4,14 @@
 
 #include "fnd/IsOneOf.h"
 
+#include "QtTypes.h"
+
 namespace HomeCompa::Util
 {
 
 QString& SimplifyTitle(QString& value)
 {
-	value.removeIf([](const QChar ch) {
+	RemoveIf(value, [](const QChar ch) {
 		return ch != ' ' && !IsOneOf(ch.category(), QChar::Number_DecimalDigit, QChar::Letter_Lowercase);
 	});
 
@@ -18,7 +20,7 @@ QString& SimplifyTitle(QString& value)
 	for (auto& word : split)
 	{
 		QString digitsWord;
-		word.removeIf([&](const QChar ch) {
+		RemoveIf(word, [&](const QChar ch) {
 			const auto c = ch.category();
 			if (c == QChar::Number_DecimalDigit)
 			{

@@ -18,6 +18,7 @@
 #include "xml/XmlAttributes.h"
 
 #include "ImageUtil.h"
+#include "QtTypes.h"
 #include "StrUtil.h"
 #include "canny.h"
 #include "log.h"
@@ -243,7 +244,7 @@ private: // Util::SaxParser
 					}
 				);
 			    it != m_picId.end())
-				m_picId = m_picId.last(std::distance(it, m_picId.end())).trimmed();
+				m_picId = Last(m_picId, std::distance(it, m_picId.end())).trimmed();
 			return true;
 		}
 
@@ -268,7 +269,7 @@ private: // Util::SaxParser
 							}
 						);
 					    it != attributeValue.end())
-						m_coverPage = attributeValue.last(std::distance(it, attributeValue.end())).trimmed();
+						m_coverPage = Last(attributeValue, std::distance(it, attributeValue.end())).trimmed();
 					break;
 				}
 			}
@@ -332,7 +333,7 @@ private: // Util::SaxParser
 			{
 				UpdateHash(word);
 
-				word.removeIf([](const QChar ch) {
+				RemoveIf(word, [](const QChar ch) {
 					const auto category = ch.category();
 					return category < QChar::Letter_Lowercase || category > QChar::Letter_Other;
 				});
@@ -355,7 +356,7 @@ private: // Util::SaxParser
 private:
 	void UpdateHash(QString value)
 	{
-		value.removeIf([](const QChar ch) {
+		RemoveIf(value, [](const QChar ch) {
 			return ch.category() != QChar::Letter_Lowercase;
 		});
 		m_md5.addData(value.toUtf8());

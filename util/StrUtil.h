@@ -42,7 +42,7 @@ struct WStringHash
 private:
 	static size_t GetHashImpl(const QStringView& txt)
 	{
-		const auto txtLower = QString(txt).toLower();
+		const auto txtLower = txt.toString().toLower();
 		const auto result   = std::hash<QString>()(txtLower);
 		return result;
 	}
