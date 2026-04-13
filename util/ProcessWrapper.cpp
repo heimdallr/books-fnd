@@ -47,7 +47,7 @@ bool RunProcess(const QString& command, const QString& parameters, const QString
 		PLOGE << QString("%1 %2 error: %3").arg(command, args.join(" ")).arg(errorCode);
 		eventLoop.exit(errorCode);
 	});
-	QObject::connect(&process, &QProcess::finished, [&](const int code, const QProcess::ExitStatus) {
+	QObject::connect(&process, qOverload<int, QProcess::ExitStatus>(&QProcess::finished), [&](const int code, const QProcess::ExitStatus) {
 		eventLoop.exit(code);
 	});
 	QObject::connect(&process, &QProcess::readyReadStandardError, [&] {
