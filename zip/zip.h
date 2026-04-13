@@ -9,6 +9,7 @@
 
 #include "export/zip.h"
 
+class QVariant;
 class QDateTime;
 
 namespace HomeCompa

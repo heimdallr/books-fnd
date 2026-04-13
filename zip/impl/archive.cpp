@@ -4,6 +4,8 @@
 #include <ranges>
 #include <thread>
 
+#include <QVariant>
+
 #include "fnd/FindPair.h"
 #include "fnd/QIODeviceStreamWrapper.h"
 #include "fnd/StrUtil.h"
