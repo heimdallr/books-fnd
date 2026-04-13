@@ -1,4 +1,5 @@
 #pragma once
+#include <qmetatype.h>
 
 namespace HomeCompa::ZipDetails
 {
@@ -33,3 +34,6 @@ enum class CompressionMethod
 };
 
 }
+
+Q_DECLARE_METATYPE(HomeCompa::ZipDetails::CompressionLevel)
+Q_DECLARE_METATYPE(HomeCompa::ZipDetails::CompressionMethod)
