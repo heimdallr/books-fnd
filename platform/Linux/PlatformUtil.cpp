@@ -10,6 +10,11 @@ PlatformType GetPlatformType() noexcept
 	return PlatformType::Linux;
 }
 
+QString GetPlatformName()
+{
+	return "Linux";
+}
+
 bool IsRegisteredExtension(const QString& /*extension*/)
 {
 	return true;
