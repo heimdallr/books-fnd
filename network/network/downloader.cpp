@@ -102,7 +102,7 @@ size_t Downloader::Download(const QString& url, QIODevice& io, OnFinish callback
 }
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-size_t Downloader::Download(const QString& url, const QHttpHeaders& headers, QIODevice& io, OnFinish callback, OnProgress progress = {})
+size_t Downloader::Download(const QString& url, const QHttpHeaders& headers, QIODevice& io, OnFinish callback, OnProgress progress)
 {
 	QNetworkRequest request(url);
 	if (!headers.isEmpty())

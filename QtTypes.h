@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QCryptographicHash>
+
 #include <ranges>
 #include <set>
 #include <unordered_set>
@@ -10,8 +12,11 @@
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 
-using qsizetype_t = qsizetype;
-using qintptr_t   = qintptr;
+class QEnterEvent;
+
+using qsizetype_t   = qsizetype;
+using qintptr_t     = qintptr;
+using enter_event_t = QEnterEvent;
 
 template <typename T>
 inline void RemoveIf(QString& value, T&& functor)
@@ -46,14 +51,20 @@ inline int TypeId(const QVariant& var)
 	return var.typeId();
 }
 
+inline void AddData(QCryptographicHash& hash, const char* data, qint64 length)
+{
+	hash.addData(QByteArrayView { data, length });
+}
+
 	#define BEGIN_FILTER_CHANGE beginFilterChange()
 
 	#define END_FILTER_CHANGE endFilterChange(Direction::Rows)
 
 #elif QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 
-using qsizetype_t = int;
-using qintptr_t   = long;
+using qsizetype_t   = int;
+using qintptr_t     = long;
+using enter_event_t = QEvent;
 
 template <typename T>
 inline void RemoveIf(QString& value, T&& functor)
@@ -86,6 +97,11 @@ inline void Erase(QString& string, const T& it)
 inline int TypeId(const QVariant& var)
 {
 	return var.type();
+}
+
+inline void AddData(QCryptographicHash& hash, const char* data, qint64 length)
+{
+	hash.addData(data, length);
 }
 
 	#define BEGIN_FILTER_CHANGE (void)0
