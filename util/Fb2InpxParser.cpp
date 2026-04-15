@@ -42,12 +42,12 @@ QString AuthorsToString(const Fb2InpxParser::Data::Authors& authors)
 	std::ranges::transform(authors, std::back_inserter(values), [](const auto& author) {
 		return (QStringList() << author.last << author.first << author.middle).join(Fb2InpxParser::NAMES_SEPARATOR);
 	});
-	return values.join(Fb2InpxParser::LIST_SEPARATOR) + Fb2InpxParser::LIST_SEPARATOR;
+	return Fb2InpxParser::Simplify(values.join(Fb2InpxParser::LIST_SEPARATOR) + Fb2InpxParser::LIST_SEPARATOR);
 }
 
 QString GenresToString(const QStringList& genres)
 {
-	return genres.empty() ? QString {} : genres.join(Fb2InpxParser::LIST_SEPARATOR) + Fb2InpxParser::LIST_SEPARATOR;
+	return genres.empty() ? QString {} : Fb2InpxParser::Simplify(genres.join(Fb2InpxParser::LIST_SEPARATOR) + Fb2InpxParser::LIST_SEPARATOR);
 }
 
 } // namespace
@@ -314,4 +314,17 @@ QString Fb2InpxParser::GetSeqNumber(QString seqNumber)
 	if (const auto value = seqNumber.toInt(&ok); ok && value > 0)
 		return seqNumber;
 	return QString {};
+}
+
+const auto DASH = QString(" %1 ").arg(QChar { 0x2013 });
+
+QString Fb2InpxParser::Simplify(const QString& name)
+{
+	auto simplified = name.simplified();
+	std::ranges::transform(simplified, simplified.begin(), [](const QChar ch) {
+		return ch >= QChar { 0x2010 } && ch <= QChar { 0x2015 } ? QChar { '-' } : ch == QChar { 0x0451 } ? QChar { 0x0435 } : ch == QChar { 0x0401 } ? QChar { 0x0415 } : ch;
+	});
+	simplified.replace(" - ", DASH);
+	simplified.replace(" -- ", DASH);
+	return simplified;
 }
