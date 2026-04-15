@@ -55,7 +55,13 @@ void Deserialize(QFont& font, const ISettings& settings)
 	if (const auto pixelSize = settings.Get(PIXEL_SIZE, font.pixelSize()); pixelSize > 0)
 		font.setPixelSize(pixelSize);
 	font.setStyleHint(settings.Get(STYLE_HINT, font.styleHint()));
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 	font.setWeight(settings.Get(WEIGHT, font.weight()));
+#else
+	font.setWeight(std::clamp(settings.Get(WEIGHT, font.weight()), 0, 99));
+#endif
+
 	font.setStyle(settings.Get(STYLE, font.style()));
 	font.setUnderline(settings.Get(UNDERLINE, font.underline()));
 	font.setStrikeOut(settings.Get(STRIKE_OUT, font.strikeOut()));

@@ -6,6 +6,8 @@
 
 #include "ProgressCallback.h"
 
+class QVariant;
+
 namespace HomeCompa
 {
 

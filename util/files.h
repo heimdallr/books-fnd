@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include <QString>
 
 #include "export/util.h"

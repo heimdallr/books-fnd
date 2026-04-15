@@ -4,6 +4,7 @@
 
 #include <QDir>
 #include <QSettings>
+#include <QtGlobal>
 
 #include "fnd/FindPair.h"
 
@@ -35,6 +36,15 @@ QString GetStartupKey(const QString& key)
 PlatformType GetPlatformType() noexcept
 {
 	return PlatformType::Windows;
+}
+
+QString GetPlatformName()
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+	return "Windows";
+#else
+	return "Win7";
+#endif
 }
 
 bool IsRegisteredExtension(const QString& extension)

@@ -1,5 +1,6 @@
 #include "GeometryRestorable.h"
 
+#include <QGuiApplication>
 #include <QScreen>
 #include <QSplitter>
 #include <QTimer>

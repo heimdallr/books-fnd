@@ -5,6 +5,8 @@
 #include <jxl/thread_parallel_runner.h>
 #include <jxl/thread_parallel_runner_cxx.h>
 
+#include "QtTypes.h"
+
 #include "jxl.h"
 #include "log.h"
 
@@ -132,7 +134,7 @@ QByteArray Encode(const QImage& image, int quality)
 		return {};
 	}
 
-	return QByteArray { reinterpret_cast<char*>(compressed.data()), static_cast<qsizetype>(compressed.size()) };
+	return QByteArray { reinterpret_cast<char*>(compressed.data()), static_cast<qsizetype_t>(compressed.size()) };
 }
 
 } // namespace HomeCompa::JXL

@@ -9,6 +9,7 @@
 #include "zip/interface/stream.h"
 
 #include "FileItem.h"
+#include "QtTypes.h"
 
 namespace HomeCompa::ZipDetails::SevenZip
 {
@@ -32,7 +33,7 @@ public:
 		);
 		std::vector<std::byte> buffer;
 		zip.extractTo(buffer, fileItem.index);
-		m_bytes = QByteArray { reinterpret_cast<char*>(buffer.data()), static_cast<qsizetype>(buffer.size()) };
+		m_bytes = QByteArray { reinterpret_cast<char*>(buffer.data()), static_cast<qsizetype_t>(buffer.size()) };
 	}
 
 private: // Stream

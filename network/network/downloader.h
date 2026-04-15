@@ -2,7 +2,11 @@
 
 #include <functional>
 
-#include <QHttpHeaders>
+#include <QtGlobal>
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+	#include <QHttpHeaders>
+#endif
 
 #include "fnd/NonCopyMovable.h"
 #include "fnd/memory.h"
@@ -29,11 +33,15 @@ public:
 	~Downloader();
 
 public:
-	size_t Download(const QString& url, QIODevice& io, OnFinish callback, OnProgress progress = {}, const QHttpHeaders& headers = {});
+	size_t Download(const QString& url, QIODevice& io, OnFinish callback, OnProgress progress = {} /*, const QHttpHeaders& headers = {}*/);
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+	size_t Download(const QString& url, const QHttpHeaders& headers, QIODevice& io, OnFinish callback, OnProgress progress = {});
+#endif
 
 private:
 	class Impl;
 	PropagateConstPtr<Impl> m_impl;
 };
 
-}
+} // namespace HomeCompa::Network
