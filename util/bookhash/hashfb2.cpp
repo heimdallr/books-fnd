@@ -4,6 +4,8 @@
 #include <set>
 
 // clang-format off
+#include "QtTypes.h"
+
 #include <QBuffer>
 #include <QCryptographicHash>
 #include <QPixmap>
@@ -18,9 +20,9 @@
 #include "xml/XmlAttributes.h"
 
 #include "ImageUtil.h"
-#include "QtTypes.h"
 #include "StrUtil.h"
 #include "canny.h"
+
 #include "log.h"
 
 using namespace HomeCompa::Util;
