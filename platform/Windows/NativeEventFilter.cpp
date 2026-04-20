@@ -39,7 +39,7 @@ private: // QAbstractNativeEventFilter
 		if (eventType != "windows_generic_MSG" || msg->message != WM_QUERYENDSESSION)
 			return false;
 
-//		PLOGI << "WM_QUERYENDSESSION: " << "0x" << std::setfill('0') << std::setw(sizeof(msg->lParam) * 2) << std::hex << msg->lParam;
+		//		PLOGI << "WM_QUERYENDSESSION: " << "0x" << std::setfill('0') << std::setw(sizeof(msg->lParam) * 2) << std::hex << msg->lParam;
 
 		Perform(&IObserver::OnQueryEndSession, result);
 

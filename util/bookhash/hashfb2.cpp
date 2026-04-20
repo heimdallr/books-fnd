@@ -22,7 +22,6 @@
 #include "ImageUtil.h"
 #include "StrUtil.h"
 #include "canny.h"
-
 #include "log.h"
 
 using namespace HomeCompa::Util;

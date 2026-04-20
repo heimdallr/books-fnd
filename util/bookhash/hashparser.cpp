@@ -98,7 +98,7 @@ private: // Util::SaxParser
 			m_images         = {};
 			m_section        = {};
 			m_textHistogram  = {};
-			m_annotation     = QStringList{};
+			m_annotation     = QStringList {};
 			m_currentSection = nullptr;
 		}
 		else if (name == SECTION)

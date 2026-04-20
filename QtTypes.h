@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QCryptographicHash>
+
 #include <ranges>
 #include <set>
 #include <unordered_set>
@@ -7,7 +9,6 @@
 #include <QString>
 #include <QVariant>
 #include <QtGlobal>
-#include <QCryptographicHash>
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 
