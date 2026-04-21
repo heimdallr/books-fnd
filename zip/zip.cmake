@@ -17,16 +17,19 @@ AddTarget(zip	shared_lib
 
 set(7zip_BIN_FILENAME)
 set(7zip_INSTALL_PATH)
+set(7zip_BIN_PATH)
 if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL Windows)
 	set(7zip_BIN_FILENAME 7z.dll)
 	set(7zip_INSTALL_PATH .)
+	set(7zip_BIN_PATH ${CMAKE_BINARY_DIR}/bin)
 elseif (${CMAKE_HOST_SYSTEM_NAME} STREQUAL Linux)
 	set(7zip_BIN_FILENAME 7z.so)
 	set(7zip_INSTALL_PATH lib)
+	set(7zip_BIN_PATH ${CMAKE_BINARY_DIR}/lib)
 else()
 	message(FATAL_ERROR "Unsupported host system: ${CMAKE_HOST_SYSTEM_NAME}")
 endif()
 
-file(COPY "${7zip_BIN_DIR}/${7zip_BIN_FILENAME}" DESTINATION ${CMAKE_BINARY_DIR}/bin)
+file(COPY "${7zip_BIN_DIR}/${7zip_BIN_FILENAME}" DESTINATION ${7zip_BIN_PATH})
 install(FILES "${7zip_BIN_DIR}/${7zip_BIN_FILENAME}" DESTINATION ${7zip_INSTALL_PATH})
 
