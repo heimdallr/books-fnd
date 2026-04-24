@@ -1,7 +1,6 @@
 #include "ImageUtil.h"
 
 #include <QBuffer>
-#include <QImage>
 #include <QPixmap>
 
 #include "jxl/jxl.h"
@@ -14,6 +13,24 @@ namespace
 
 using Decoder = QPixmap (*)(const QByteArray&);
 using Recoder = std::pair<QByteArray, const char*> (*)(const QByteArray& bytes, const char* type);
+
+std::pair<QByteArray, const char*> QtEncoder(const QImage& image)
+{
+	std::pair<QByteArray, const char*> result;
+	if (image.isNull())
+		return result;
+
+	QByteArray bytes;
+	{
+		QBuffer buffer(&bytes);
+		buffer.open(QIODevice::WriteOnly);
+		const auto hasAlpha = image.pixelFormat().alphaUsage() == QPixelFormat::UsesAlpha;
+		image.save(&buffer, hasAlpha ? PNG : JPEG);
+		result.second = hasAlpha ? IMAGE_PNG : IMAGE_JPEG;
+	}
+	result.first = std::move(bytes);
+	return result;
+}
 
 QPixmap QtDecoder(const QByteArray& data)
 {
@@ -29,25 +46,19 @@ QPixmap JxlDecoder(const QByteArray& data)
 	return QPixmap::fromImage(std::move(image));
 }
 
-std::pair<QByteArray, const char*> QtRecoder(const QByteArray& data, const char* type)
+std::pair<QByteArray, const char*> StubRecoder(const QByteArray& data, const char* type)
 {
 	return std::make_pair(data, type);
 }
 
+std::pair<QByteArray, const char*> QtRecoder(const QByteArray& data, const char*)
+{
+	return QtEncoder(QtDecoder(data).toImage());
+}
+
 std::pair<QByteArray, const char*> JxlRecoder(const QByteArray& data, const char*)
 {
-	std::pair<QByteArray, const char*> result;
-	auto                               image = JXL::Decode(data);
-	QByteArray                         bytes;
-	{
-		QBuffer buffer(&bytes);
-		buffer.open(QIODevice::WriteOnly);
-		const auto hasAlpha = image.pixelFormat().alphaUsage() == QPixelFormat::UsesAlpha;
-		image.save(&buffer, hasAlpha ? PNG : JPEG);
-		result.second = hasAlpha ? IMAGE_PNG : IMAGE_JPEG;
-	}
-	result.first = std::move(bytes);
-	return result;
+	return QtEncoder(JXL::Decode(data));
 }
 
 struct ImageFormatDescription
@@ -60,9 +71,9 @@ struct ImageFormatDescription
 constexpr ImageFormatDescription DEFAULT_DESCRIPTION { IMAGE_JPEG, &QtDecoder, &QtRecoder };
 
 constexpr std::pair<const char*, ImageFormatDescription> SIGNATURES[] {
-	{ "\xFF\xD8\xFF\xE0", { IMAGE_JPEG, &QtDecoder, &QtRecoder } },
-	{ "\x89\x50\x4E\x47",  { IMAGE_PNG, &QtDecoder, &QtRecoder } },
-	{		 "\xFF\x0A",  { nullptr, &JxlDecoder, &JxlRecoder } },
+	{ "\xFF\xD8\xFF\xE0", { IMAGE_JPEG, &QtDecoder, &StubRecoder } },
+	{ "\x89\x50\x4E\x47",  { IMAGE_PNG, &QtDecoder, &StubRecoder } },
+	{		 "\xFF\x0A",    { nullptr, &JxlDecoder, &JxlRecoder } },
 };
 
 } // namespace
@@ -108,6 +119,11 @@ QImage HasAlpha(const QImage& image, const char* data)
 	}
 
 	return image.convertToFormat(QImage::Format_RGB888);
+}
+
+std::pair<QByteArray, const char*> Encode(const QImage& image)
+{
+	return QtEncoder(image);
 }
 
 } // namespace HomeCompa::Util

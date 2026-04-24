@@ -5,8 +5,11 @@
 #include <QFileInfo>
 #include <QPixmap>
 
+#include "fnd/EnumBitmask.h"
 #include "fnd/IsOneOf.h"
 #include "fnd/try.h"
+
+#include "interface/constants/SettingsConstant.h"
 
 #include "xml/SaxParser.h"
 #include "xml/XmlAttributes.h"
@@ -16,6 +19,7 @@
 #include "Constant.h"
 #include "ISettings.h"
 #include "ImageUtil.h"
+#include "QtTypes.h"
 #include "zip.h"
 
 #include "config/version.h"
@@ -26,14 +30,116 @@ using namespace HomeCompa;
 namespace
 {
 
-using Covers = std::unordered_map<QString, QByteArray>;
+enum class ImageProcessing
+{
+	None             = 0,
+	RemoveCovers     = 1 << 0,
+	RemoveImages     = 1 << 1,
+	GrayscaleCovers  = 1 << 2,
+	GrayscaleImages  = 1 << 3,
+	ConvertToJpegPng = 1 << 4,
+};
+
+}
+
+ENABLE_BITMASK_OPERATORS(ImageProcessing);
+
+namespace
+{
+
+using Covers = std::unordered_map<QString, std::pair<bool, QByteArray>>;
+
+constexpr auto BINARY       = "binary";
+constexpr auto ID           = "id";
+constexpr auto CONTENT_TYPE = "content-type";
+
+void ConvertToGrayscale(QImage& image)
+{
+	if (image.pixelFormat().alphaUsage() == QPixelFormat::AlphaUsage::IgnoresAlpha)
+		return image.convertTo(QImage::Format::Format_Grayscale8);
+
+	QImage alpha(image.width(), image.height(), QImage::Format::Format_Grayscale8);
+
+	for (auto h = 0, H = image.height(); h < H; ++h)
+	{
+		auto* alphaBytes = alpha.scanLine(h);
+		for (auto w = 0, W = image.width(); w < W; ++w, ++alphaBytes)
+			*alphaBytes = static_cast<uchar>(qAlpha(image.pixel(w, h)));
+	}
+
+	image.convertTo(QImage::Format::Format_Grayscale8);
+	image.setAlphaChannel(alpha);
+}
+
+class BinaryParser final : public SaxParser
+{
+	static constexpr auto COVERPAGE_IMAGE = "FictionBook/description/title-info/coverpage/image";
+
+public:
+	BinaryParser(QIODevice& input, Covers& covers, const ImageProcessing imageProcessing)
+		: SaxParser { input }
+		, m_imageProcessing { imageProcessing }
+		, m_covers { covers }
+	{
+		Parse();
+		input.seek(0);
+	}
+
+private:
+	bool OnStartElement(const QString& name, const QString& path, const XmlAttributes& attributes) override
+	{
+		if (name == BINARY)
+			return (m_id = attributes.GetAttribute(ID)), true;
+
+		if (path == COVERPAGE_IMAGE)
+		{
+			for (size_t i = 0, sz = attributes.GetCount(); i < sz; ++i)
+			{
+				auto attributeName  = attributes.GetName(i);
+				auto attributeValue = attributes.GetValue(i);
+				if (attributeName.endsWith(":href"))
+				{
+					if (const auto it = std::ranges::find_if(
+							attributeValue,
+							[](const auto ch) {
+								return ch != '#';
+							}
+						);
+					    it != attributeValue.end())
+						m_coverId = Last(attributeValue, std::distance(it, attributeValue.end())).trimmed();
+					break;
+				}
+			}
+			return true;
+		}
+
+		return true;
+	}
+
+	bool OnCharacters(const QString&, const QString& value) override
+	{
+		if (m_id.isEmpty())
+			return true;
+
+		auto       bytes   = QByteArray::fromBase64(value.toUtf8());
+		const auto isCover = m_id == m_coverId;
+		if ((isCover && !(m_imageProcessing & ImageProcessing::RemoveCovers)) || (!isCover && !(m_imageProcessing & ImageProcessing::RemoveImages)))
+			m_covers.emplace(std::move(m_id), std::make_pair(isCover, std::move(bytes)));
+		m_id = QString{};
+
+		return true;
+	}
+
+private:
+	const ImageProcessing m_imageProcessing;
+
+	Covers& m_covers;
+	QString m_coverId;
+	QString m_id;
+};
 
 class SaxPrinter final : public SaxParser
 {
-	static constexpr auto BINARY       = "binary";
-	static constexpr auto ID           = "id";
-	static constexpr auto CONTENT_TYPE = "content-type";
-
 	static constexpr auto FICTION_BOOK       = "FictionBook";
 	static constexpr auto DESCRIPTION        = "FictionBook/description";
 	static constexpr auto DOCUMENT_INFO      = "FictionBook/description/document-info";
@@ -47,11 +153,12 @@ class SaxPrinter final : public SaxParser
 	static constexpr auto SEQUENCE           = "FictionBook/description/title-info/sequence";
 
 public:
-	SaxPrinter(QIODevice& input, QIODevice& output, Covers covers, std::unique_ptr<const ExtractedBook> metadataReplacement)
+	SaxPrinter(QIODevice& input, QIODevice& output, Covers covers, std::unique_ptr<const ExtractedBook> metadataReplacement, const ImageProcessing imageProcessing)
 		: SaxParser { input }
+		, m_metadataReplacement { std::move(metadataReplacement) }
+		, m_imageProcessing { imageProcessing }
 		, m_writer { output }
 		, m_covers { std::move(covers) }
-		, m_metadataReplacement { std::move(metadataReplacement) }
 	{
 		Parse();
 		assert(m_hasProgramUsed);
@@ -73,10 +180,10 @@ private: // Util::SaxParser
 		if (m_specialNode || (m_metadataReplacement && IsOneOf(path, AUTHOR, BOOK_TITLE, SEQUENCE)))
 			return m_specialNode = true;
 
-		m_writer.WriteStartElement(name, attributes);
-
 		if (name == BINARY && !m_covers.empty())
-			WriteImage(attributes.GetAttribute(ID));
+			return WriteImage(attributes.GetAttribute(ID)), true;
+
+		m_writer.WriteStartElement(name, attributes);
 
 		if (path == TITLE_INFO && m_metadataReplacement)
 			for (const auto invoker : {
@@ -89,10 +196,13 @@ private: // Util::SaxParser
 		return true;
 	}
 
-	bool OnEndElement(const QString&, const QString& path) override
+	bool OnEndElement(const QString& name, const QString& path) override
 	{
 		if (m_specialNode)
 		{
+			if (name == BINARY)
+				m_specialNode = false;
+
 			if (IsOneOf(path, AUTHOR, BOOK_TITLE, SEQUENCE))
 				m_specialNode = false;
 			return true;
@@ -179,12 +289,14 @@ private:
 
 	void WriteImage(const QString& imageFileName)
 	{
-		const auto data = [&]() -> QByteArray {
+		m_specialNode = true;
+
+		const auto [isCover, body] = [&]() -> std::pair<bool, QByteArray> {
 			try
 			{
 				const auto it = m_covers.find(imageFileName);
 				if (it == m_covers.end())
-					return assert(false), QByteArray {};
+					return {};
 
 				auto result = std::move(it->second);
 				m_covers.erase(it);
@@ -199,79 +311,56 @@ private:
 			return {};
 		}();
 
-		if (data.isEmpty())
+		if (body.isNull())
 		{
 			PLOGW << imageFileName << " not found";
 			return;
 		}
 
-		const auto image = QString::fromUtf8(data.toBase64());
-		OnCharacters({}, image);
+		WriteImage(imageFileName, isCover, body);
 	}
 
 	void WriteImages()
 	{
 		for (const auto& [name, body] : m_covers)
-		{
-			const auto [recoded, mediaType] = Recode(body);
-			m_writer.WriteStartElement(BINARY).WriteAttribute(ID, name).WriteAttribute(CONTENT_TYPE, mediaType).WriteCharacters(QString::fromUtf8(recoded.toBase64())).WriteEndElement();
-		}
+			WriteImage(name, body.first, body.second);
 
 		m_covers.clear();
 	}
 
+	void WriteImage(const QString& name, const bool isCover, const QByteArray& body)
+	{
+		if (body.isEmpty())
+			return;
+
+		auto image = Decode(body).toImage();
+		if (image.isNull())
+			return;
+
+		if ((isCover && !!(m_imageProcessing & ImageProcessing::GrayscaleCovers)) || (!isCover && !!(m_imageProcessing & ImageProcessing::GrayscaleImages)))
+			ConvertToGrayscale(image);
+
+		if (const auto [bytes, mediaType] = Encode(image); !bytes.isEmpty())
+			m_writer.WriteStartElement(BINARY).WriteAttribute(ID, name).WriteAttribute(CONTENT_TYPE, mediaType).WriteCharacters(QString::fromUtf8(bytes.toBase64())).WriteEndElement();
+	}
+
 private:
+	std::unique_ptr<const ExtractedBook> m_metadataReplacement;
+	const ImageProcessing                m_imageProcessing;
 	XmlWriter                            m_writer;
 	Covers                               m_covers;
-	std::unique_ptr<const ExtractedBook> m_metadataReplacement;
 	bool                                 m_hasError { false };
 	bool                                 m_hasProgramUsed { false };
 	bool                                 m_specialNode { false };
 };
 
-QByteArray PrepareToExportImpl(QIODevice& stream, Covers covers, std::unique_ptr<const ExtractedBook> metadataReplacement)
+QByteArray PrepareToExportImpl(QIODevice& stream, Covers covers, std::unique_ptr<const ExtractedBook> metadataReplacement, const ImageProcessing imageProcessing)
 {
 	QByteArray byteArray;
 	QBuffer    buffer(&byteArray);
 	buffer.open(QIODevice::WriteOnly);
-	const SaxPrinter saxPrinter(stream, buffer, std::move(covers), std::move(metadataReplacement));
+	const SaxPrinter saxPrinter(stream, buffer, std::move(covers), std::move(metadataReplacement), imageProcessing);
 	return saxPrinter.HasError() ? QByteArray {} : byteArray;
-}
-
-void ConvertToGrayscale(QByteArray& srcImageBody, const int quality)
-{
-	const auto pixmap = Decode(srcImageBody);
-	if (pixmap.isNull())
-		return;
-
-	auto image = pixmap.toImage();
-	if (image.pixelFormat().alphaUsage() == QPixelFormat::AlphaUsage::IgnoresAlpha)
-	{
-		image.convertTo(QImage::Format::Format_Grayscale8);
-	}
-	else
-	{
-		QImage alpha(image.width(), image.height(), QImage::Format::Format_Grayscale8);
-
-		for (auto h = 0, H = image.height(); h < H; ++h)
-		{
-			auto* alphaBytes = alpha.scanLine(h);
-			for (auto w = 0, W = image.width(); w < W; ++w, ++alphaBytes)
-				*alphaBytes = static_cast<uchar>(qAlpha(image.pixel(w, h)));
-		}
-
-		image.convertTo(QImage::Format::Format_Grayscale8);
-		image.setAlphaChannel(alpha);
-	}
-
-	QByteArray result;
-	{
-		QBuffer imageOutput(&result);
-		if (!image.save(&imageOutput, PNG, quality))
-			return;
-	}
-
-	srcImageBody = std::move(result);
 }
 
 QByteArray PrepareToExportImpl(QIODevice& stream, const QString& folder, const QString& fileName, const std::shared_ptr<const ISettings>& settings, std::unique_ptr<const ExtractedBook> metadataReplacement)
@@ -280,23 +369,33 @@ QByteArray PrepareToExportImpl(QIODevice& stream, const QString& folder, const Q
 	ExtractBookImages(
 		folder,
 		fileName,
-		[&covers](auto name, auto body) {
-			covers.try_emplace(std::move(name), std::move(body));
+		[&covers](QString name, const bool isCover, QByteArray body) {
+			covers.try_emplace(std::move(name), std::make_pair(isCover, std::move(body)));
 			return false;
 		},
 		settings
 	);
+
+	const auto imageProcessing = ImageProcessing::None | (settings->Get(Export::REMOVE_COVER_KEY, false) ? ImageProcessing::RemoveCovers : ImageProcessing::None)
+	                           | (settings->Get(Export::REMOVE_IMAGES_KEY, false) ? ImageProcessing::RemoveImages : ImageProcessing::None)
+	                           | (settings->Get(Export::GRAYSCALE_COVER_KEY, false) ? ImageProcessing::GrayscaleCovers : ImageProcessing::None)
+	                           | (settings->Get(Export::GRAYSCALE_IMAGES_KEY, false) ? ImageProcessing::GrayscaleImages : ImageProcessing::None)
+	                           | (settings->Get(Flibrary::Constant::Settings::EXPORT_CONVERT_IMAGES_KEY, false) ? ImageProcessing::ConvertToJpegPng : ImageProcessing::None);
+
+	if (imageProcessing != ImageProcessing::None || !!metadataReplacement)
+		BinaryParser(stream, covers, imageProcessing);
+
 	if (covers.empty() && !metadataReplacement)
 		return stream.readAll();
 
-	if (auto byteArray = PrepareToExportImpl(stream, std::move(covers), std::move(metadataReplacement)); !byteArray.isEmpty())
+	if (auto byteArray = PrepareToExportImpl(stream, std::move(covers), std::move(metadataReplacement), imageProcessing); !byteArray.isEmpty())
 		return byteArray;
 
 	stream.seek(0);
 	return stream.readAll();
 }
 
-bool ParseCover(const QString& folder, const QString& fileName, const ExtractBookImagesCallback& callback, bool& stop, const bool grayscale)
+bool ParseCover(const QString& folder, const QString& fileName, const ExtractBookImagesCallback& callback, bool& stop)
 {
 	if (!QFile::exists(folder))
 		return false;
@@ -309,13 +408,11 @@ bool ParseCover(const QString& folder, const QString& fileName, const ExtractBoo
 
 	const auto stream = zip.Read(file);
 	auto       body   = stream->GetStream().readAll();
-	if (grayscale)
-		ConvertToGrayscale(body, 50);
-	stop = callback(Global::COVER, std::move(body));
+	stop              = callback(Global::COVER, true, std::move(body));
 	return true;
 }
 
-void ParseImages(const QString& folder, const QString& fileName, const ExtractBookImagesCallback& callback, const bool grayscale)
+void ParseImages(const QString& folder, const QString& fileName, const ExtractBookImagesCallback& callback)
 {
 	if (!QFile::exists(folder))
 		return;
@@ -335,9 +432,7 @@ void ParseImages(const QString& folder, const QString& fileName, const ExtractBo
 	for (const auto& file : fileList)
 	{
 		auto body = zip.Read(file)->GetStream().readAll();
-		if (grayscale)
-			ConvertToGrayscale(body, 25);
-		if (!body.isEmpty() && callback(file.split('/').back(), std::move(body)))
+		if (!body.isEmpty() && callback(file.split('/').back(), false, std::move(body)))
 			return;
 	}
 }
@@ -353,13 +448,7 @@ void ExtractBookImagesCoverImpl(const QFileInfo& fileInfo, const QString& fileNa
 	for (const auto* ext : EXTENSIONS)
 	{
 		TRY("parse cover", [&] {
-			ParseCover(
-				QString("%1/%2/%3.%4").arg(fileInfo.dir().path(), Global::COVERS, fileInfo.completeBaseName(), ext),
-				fileName,
-				callback,
-				stop,
-				settings && settings->Get(Export::GRAYSCALE_COVER_KEY, false)
-			);
+			ParseCover(QString("%1/%2/%3.%4").arg(fileInfo.dir().path(), Global::COVERS, fileInfo.completeBaseName(), ext), fileName, callback, stop);
 			return true;
 		});
 	}
@@ -373,12 +462,7 @@ void ExtractBookImagesImagesImpl(const QFileInfo& fileInfo, const QString& fileN
 	for (const auto* ext : EXTENSIONS)
 	{
 		TRY("parse cover", [&] {
-			ParseImages(
-				QString("%1/%2/%3.%4").arg(fileInfo.dir().path(), Global::IMAGES, fileInfo.completeBaseName(), ext),
-				fileName,
-				callback,
-				settings && settings->Get(Export::GRAYSCALE_IMAGES_KEY, false)
-			);
+			ParseImages(QString("%1/%2/%3.%4").arg(fileInfo.dir().path(), Global::IMAGES, fileInfo.completeBaseName(), ext), fileName, callback);
 			return true;
 		});
 	}
