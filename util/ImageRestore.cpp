@@ -19,6 +19,7 @@
 #include "Constant.h"
 #include "ISettings.h"
 #include "ImageUtil.h"
+#include "QtTypes.h"
 #include "zip.h"
 
 #include "config/version.h"
@@ -105,7 +106,7 @@ private:
 							}
 						);
 					    it != attributeValue.end())
-						m_coverId = attributeValue.last(std::distance(it, attributeValue.end())).trimmed();
+						m_coverId = Last(attributeValue, std::distance(it, attributeValue.end())).trimmed();
 					break;
 				}
 			}
@@ -124,7 +125,7 @@ private:
 		const auto isCover = m_id == m_coverId;
 		if ((isCover && !(m_imageProcessing & ImageProcessing::RemoveCovers)) || (!isCover && !(m_imageProcessing & ImageProcessing::RemoveImages)))
 			m_covers.emplace(std::move(m_id), std::make_pair(isCover, std::move(bytes)));
-		m_id = {};
+		m_id = QString{};
 
 		return true;
 	}
