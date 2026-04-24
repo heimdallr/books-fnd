@@ -9,8 +9,6 @@
 #include "fnd/IsOneOf.h"
 #include "fnd/try.h"
 
-#include "interface/constants/SettingsConstant.h"
-
 #include "xml/SaxParser.h"
 #include "xml/XmlAttributes.h"
 #include "xml/XmlWriter.h"
@@ -125,7 +123,7 @@ private:
 		const auto isCover = m_id == m_coverId;
 		if ((isCover && !(m_imageProcessing & ImageProcessing::RemoveCovers)) || (!isCover && !(m_imageProcessing & ImageProcessing::RemoveImages)))
 			m_covers.emplace(std::move(m_id), std::make_pair(isCover, std::move(bytes)));
-		m_id = QString{};
+		m_id = QString {};
 
 		return true;
 	}
@@ -380,7 +378,7 @@ QByteArray PrepareToExportImpl(QIODevice& stream, const QString& folder, const Q
 	                           | (settings->Get(Export::REMOVE_IMAGES_KEY, false) ? ImageProcessing::RemoveImages : ImageProcessing::None)
 	                           | (settings->Get(Export::GRAYSCALE_COVER_KEY, false) ? ImageProcessing::GrayscaleCovers : ImageProcessing::None)
 	                           | (settings->Get(Export::GRAYSCALE_IMAGES_KEY, false) ? ImageProcessing::GrayscaleImages : ImageProcessing::None)
-	                           | (settings->Get(Flibrary::Constant::Settings::EXPORT_CONVERT_IMAGES_KEY, false) ? ImageProcessing::ConvertToJpegPng : ImageProcessing::None);
+	                           | (settings->Get(Export::CONVERT_IMAGES_KEY, false) ? ImageProcessing::ConvertToJpegPng : ImageProcessing::None);
 
 	if (imageProcessing != ImageProcessing::None || !!metadataReplacement)
 		BinaryParser(stream, covers, imageProcessing);

@@ -19,6 +19,7 @@ constexpr auto GRAYSCALE_COVER_KEY  = "ui/Export/GrayscaleCover";
 constexpr auto GRAYSCALE_IMAGES_KEY = "ui/Export/GrayscaleImages";
 constexpr auto REMOVE_COVER_KEY     = "ui/Export/RemoveCover";
 constexpr auto REMOVE_IMAGES_KEY    = "ui/Export/RemoveImages";
+constexpr auto CONVERT_IMAGES_KEY   = "ui/Export/ConvertImagesToJpegPng";
 
 }
 
