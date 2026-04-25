@@ -361,25 +361,19 @@ QByteArray PrepareToExportImpl(QIODevice& stream, Covers covers, std::unique_ptr
 	return saxPrinter.HasError() ? QByteArray {} : byteArray;
 }
 
-QByteArray PrepareToExportImpl(QIODevice& stream, const QString& folder, const QString& fileName, const std::shared_ptr<const ISettings>& settings, std::unique_ptr<const ExtractedBook> metadataReplacement)
+QByteArray PrepareToExportImpl(QIODevice& stream, const QString& folder, const QString& fileName, const ISettings& settings, std::unique_ptr<const ExtractedBook> metadataReplacement)
 {
 	Covers covers;
-	ExtractBookImages(
-		folder,
-		fileName,
-		[&covers](QString name, const bool isCover, QByteArray body) {
-			covers.try_emplace(std::move(name), std::make_pair(isCover, std::move(body)));
-			return false;
-		},
-		settings
-	);
+	ExtractBookImages(folder, fileName, settings, [&covers](QString name, const bool isCover, QByteArray body) {
+		covers.try_emplace(std::move(name), std::make_pair(isCover, std::move(body)));
+		return false;
+	});
 
-	const auto imageProcessing = settings ? ((settings->Get(Export::REMOVE_COVER_KEY, false) ? ImageProcessing::RemoveCovers : ImageProcessing::None)
-	                                         | (settings->Get(Export::REMOVE_IMAGES_KEY, false) ? ImageProcessing::RemoveImages : ImageProcessing::None)
-	                                         | (settings->Get(Export::GRAYSCALE_COVER_KEY, false) ? ImageProcessing::GrayscaleCovers : ImageProcessing::None)
-	                                         | (settings->Get(Export::GRAYSCALE_IMAGES_KEY, false) ? ImageProcessing::GrayscaleImages : ImageProcessing::None)
-	                                         | (settings->Get(Export::CONVERT_IMAGES_KEY, false) ? ImageProcessing::ConvertToJpegPng : ImageProcessing::None))
-	                                      : ImageProcessing::None;
+	const auto imageProcessing = (settings.Get(Export::REMOVE_COVER_KEY, false) ? ImageProcessing::RemoveCovers : ImageProcessing::None)
+	                           | (settings.Get(Export::REMOVE_IMAGES_KEY, false) ? ImageProcessing::RemoveImages : ImageProcessing::None)
+	                           | (settings.Get(Export::GRAYSCALE_COVER_KEY, false) ? ImageProcessing::GrayscaleCovers : ImageProcessing::None)
+	                           | (settings.Get(Export::GRAYSCALE_IMAGES_KEY, false) ? ImageProcessing::GrayscaleImages : ImageProcessing::None)
+	                           | (settings.Get(Export::CONVERT_IMAGES_KEY, false) ? ImageProcessing::ConvertToJpegPng : ImageProcessing::None);
 
 	if (imageProcessing != ImageProcessing::None || !!metadataReplacement)
 		BinaryParser(stream, covers, imageProcessing);
@@ -438,9 +432,9 @@ void ParseImages(const QString& folder, const QString& fileName, const ExtractBo
 
 constexpr const char* EXTENSIONS[] { "zip", "7z" };
 
-void ExtractBookImagesCoverImpl(const QFileInfo& fileInfo, const QString& fileName, const ExtractBookImagesCallback& callback, const std::shared_ptr<const ISettings>& settings)
+void ExtractBookImagesCoverImpl(const QFileInfo& fileInfo, const QString& fileName, const ExtractBookImagesCallback& callback, const ISettings& settings)
 {
-	if (settings && settings->Get(Export::REMOVE_COVER_KEY, false))
+	if (settings.Get(Export::REMOVE_COVER_KEY, false))
 		return;
 
 	bool stop = false;
@@ -453,9 +447,9 @@ void ExtractBookImagesCoverImpl(const QFileInfo& fileInfo, const QString& fileNa
 	}
 }
 
-void ExtractBookImagesImagesImpl(const QFileInfo& fileInfo, const QString& fileName, const ExtractBookImagesCallback& callback, const std::shared_ptr<const ISettings>& settings)
+void ExtractBookImagesImagesImpl(const QFileInfo& fileInfo, const QString& fileName, const ExtractBookImagesCallback& callback, const ISettings& settings)
 {
-	if (settings && settings->Get(Export::REMOVE_IMAGES_KEY, false))
+	if (settings.Get(Export::REMOVE_IMAGES_KEY, false))
 		return;
 
 	for (const auto* ext : EXTENSIONS)
@@ -472,12 +466,12 @@ void ExtractBookImagesImagesImpl(const QFileInfo& fileInfo, const QString& fileN
 namespace HomeCompa::Util
 {
 
-QByteArray PrepareToExport(QIODevice& input, const QString& folder, const QString& fileName, const std::shared_ptr<const ISettings>& settings, std::unique_ptr<const ExtractedBook> metadataReplacement)
+QByteArray PrepareToExport(QIODevice& input, const QString& folder, const QString& fileName, const ISettings& settings, std::unique_ptr<const ExtractedBook> metadataReplacement)
 {
 	return PrepareToExportImpl(input, folder, fileName, settings, std::move(metadataReplacement));
 }
 
-void ExtractBookImages(const QString& folder, const QString& fileName, const ExtractBookImagesCallback& callback, const std::shared_ptr<const ISettings>& settings)
+void ExtractBookImages(const QString& folder, const QString& fileName, const ISettings& settings, const ExtractBookImagesCallback& callback)
 {
 	const QFileInfo fileInfo(folder);
 	ExtractBookImagesCoverImpl(fileInfo, fileName, callback, settings);

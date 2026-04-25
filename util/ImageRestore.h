@@ -24,10 +24,9 @@ namespace HomeCompa::Util
 
 struct ExtractedBook;
 
-UTIL_EXPORT QByteArray
-PrepareToExport(QIODevice& input, const QString& folder, const QString& fileName, const std::shared_ptr<const ISettings>& settings = {}, std::unique_ptr<const ExtractedBook> metadataReplacement = {});
+UTIL_EXPORT QByteArray PrepareToExport(QIODevice& input, const QString& folder, const QString& fileName, const ISettings& settings, std::unique_ptr<const ExtractedBook> metadataReplacement = {});
 
 using ExtractBookImagesCallback = std::function<bool(QString /*name*/, bool /*isCover*/, QByteArray /*body*/)>;
-UTIL_EXPORT void ExtractBookImages(const QString& folder, const QString& fileName, const ExtractBookImagesCallback& callback, const std::shared_ptr<const ISettings>& settings = {});
+UTIL_EXPORT void ExtractBookImages(const QString& folder, const QString& fileName, const ISettings& settings, const ExtractBookImagesCallback& callback);
 
 }
