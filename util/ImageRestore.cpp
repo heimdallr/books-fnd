@@ -374,11 +374,12 @@ QByteArray PrepareToExportImpl(QIODevice& stream, const QString& folder, const Q
 		settings
 	);
 
-	const auto imageProcessing = ImageProcessing::None | (settings->Get(Export::REMOVE_COVER_KEY, false) ? ImageProcessing::RemoveCovers : ImageProcessing::None)
-	                           | (settings->Get(Export::REMOVE_IMAGES_KEY, false) ? ImageProcessing::RemoveImages : ImageProcessing::None)
-	                           | (settings->Get(Export::GRAYSCALE_COVER_KEY, false) ? ImageProcessing::GrayscaleCovers : ImageProcessing::None)
-	                           | (settings->Get(Export::GRAYSCALE_IMAGES_KEY, false) ? ImageProcessing::GrayscaleImages : ImageProcessing::None)
-	                           | (settings->Get(Export::CONVERT_IMAGES_KEY, false) ? ImageProcessing::ConvertToJpegPng : ImageProcessing::None);
+	const auto imageProcessing = settings ? ((settings->Get(Export::REMOVE_COVER_KEY, false) ? ImageProcessing::RemoveCovers : ImageProcessing::None)
+	                                         | (settings->Get(Export::REMOVE_IMAGES_KEY, false) ? ImageProcessing::RemoveImages : ImageProcessing::None)
+	                                         | (settings->Get(Export::GRAYSCALE_COVER_KEY, false) ? ImageProcessing::GrayscaleCovers : ImageProcessing::None)
+	                                         | (settings->Get(Export::GRAYSCALE_IMAGES_KEY, false) ? ImageProcessing::GrayscaleImages : ImageProcessing::None)
+	                                         | (settings->Get(Export::CONVERT_IMAGES_KEY, false) ? ImageProcessing::ConvertToJpegPng : ImageProcessing::None))
+	                                      : ImageProcessing::None;
 
 	if (imageProcessing != ImageProcessing::None || !!metadataReplacement)
 		BinaryParser(stream, covers, imageProcessing);
