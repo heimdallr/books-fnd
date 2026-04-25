@@ -59,13 +59,13 @@ constexpr std::pair<XmlWriter::Type, void (*)(XMLFormatter&)> STARTERS[] {
 class XmlWriter::Impl final : public XMLFormatTarget
 {
 public:
-	Impl(QIODevice& stream, const Type type, const bool indented)
+	Impl(QIODevice& stream, const Options& options)
 		: m_stream { stream }
-		, m_indented { indented }
-		, m_formatter("utf-8", this, XMLFormatter::NoEscapes, XMLFormatter::UnRep_CharRef)
+		, m_indented { options.indented }
+		, m_formatter(options.encoding, this, XMLFormatter::NoEscapes, XMLFormatter::UnRep_CharRef)
 	{
 		if (stream.isOpen())
-			FindSecond(STARTERS, type)(m_formatter);
+			FindSecond(STARTERS, options.type)(m_formatter);
 	}
 
 	void WriteProcessingInstruction(const QString& target, const QString& data)
@@ -183,8 +183,8 @@ private:
 	int               m_unbreakableCount { 0 };
 };
 
-XmlWriter::XmlWriter(QIODevice& stream, const Type type, const bool indented)
-	: m_impl(stream, type, indented)
+XmlWriter::XmlWriter(QIODevice& stream, const Options& options)
+	: m_impl(stream, options)
 {
 }
 

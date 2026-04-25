@@ -18,11 +18,22 @@ class UTIL_EXPORT XmlWriter
 	NON_COPY_MOVABLE(XmlWriter)
 
 public:
+	static constexpr auto UTF8 = "utf-8"; 
+	static constexpr auto WINDOWS1251 = "windows-1251";
+
+public:
 	enum class Type
 	{
 		Xml,
 		Html,
 		Headless,
+	};
+
+	struct Options
+	{
+		Type type     = Type::Xml;
+		bool indented = true;
+		const char* encoding = UTF8;
 	};
 
 	class XmlNodeGuard
@@ -70,7 +81,7 @@ public:
 	};
 
 public:
-	explicit XmlWriter(QIODevice& stream, Type type = Type::Xml, bool indented = true);
+	explicit XmlWriter(QIODevice& stream, const Options& options = {});
 	~XmlWriter();
 
 	XmlWriter& WriteProcessingInstruction(const QString& target, const QString& data);
