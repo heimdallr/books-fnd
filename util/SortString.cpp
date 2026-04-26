@@ -89,14 +89,13 @@ void QStringWrapper::SetLocale(const QString& locale)
 	static constexpr std::pair<const char*, std::pair<QLocale::Language, FixCategoryGetter>> localeDescription[] {
 		{ "ru",         { QLocale::Russian, &FixCategoryCyr } },
 		{ "uk",       { QLocale::Ukrainian, &FixCategoryCyr } },
-		{ "en", { QLocale::AnyLanguage, &FixCategoryDefault } },
+		{ "en", { QLocale::C, &FixCategoryDefault } },
 	};
 #ifdef LOCALIZED_APPLICATION
 	static_assert(std::size(localeDescription) == std::size(Loc::LOCALES));
 #endif
 	auto [language, fixCategoryGetter] = FindSecond(localeDescription, locale.toStdString().data(), PszComparer {});
-	if (language != QLocale::AnyLanguage)
-		COLLATOR.setLocale(language);
+	COLLATOR.setLocale(language);
 	COLLATOR.setCaseSensitivity(Qt::CaseInsensitive);
 	FIX_CATEGORY_GETTER = fixCategoryGetter;
 }
