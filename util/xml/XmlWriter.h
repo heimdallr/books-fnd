@@ -13,25 +13,34 @@ namespace HomeCompa::Util
 
 class XmlAttributes;
 
+namespace details
+{
+
+enum class XmlWriterType
+{
+    Xml,
+    Html,
+    Headless,
+};
+
+struct XmlWriterOptions
+{
+    XmlWriterType type     { XmlWriterType::Xml };
+    bool          indented { true };
+    const char*   encoding { "utf-8" };
+};
+
+}
+
 class UTIL_EXPORT XmlWriter
 {
 	NON_COPY_MOVABLE(XmlWriter)
 
 public:
-	enum class Type
-	{
-		Xml,
-		Html,
-		Headless,
-	};
+    using Type = details::XmlWriterType;
+    using Options = details::XmlWriterOptions;
 
-	struct Options
-	{
-		Type        type     = Type::Xml;
-		bool        indented = true;
-		const char* encoding = "utf-8";
-	};
-
+public:
 	class XmlNodeGuard
 	{
 		NON_COPYABLE(XmlNodeGuard)
@@ -77,7 +86,7 @@ public:
 	};
 
 public:
-	explicit XmlWriter(QIODevice& stream, const Options& options = {});
+    explicit XmlWriter(QIODevice& stream, const Options& options = Options {});
 	~XmlWriter();
 
 	XmlWriter& WriteProcessingInstruction(const QString& target, const QString& data);
