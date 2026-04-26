@@ -18,10 +18,6 @@ class UTIL_EXPORT XmlWriter
 	NON_COPY_MOVABLE(XmlWriter)
 
 public:
-	static constexpr auto UTF8 = "utf-8"; 
-	static constexpr auto WINDOWS1251 = "windows-1251";
-
-public:
 	enum class Type
 	{
 		Xml,
@@ -31,9 +27,9 @@ public:
 
 	struct Options
 	{
-		Type type     = Type::Xml;
-		bool indented = true;
-		const char* encoding = UTF8;
+		Type        type     = Type::Xml;
+		bool        indented = true;
+		const char* encoding = "utf-8";
 	};
 
 	class XmlNodeGuard
