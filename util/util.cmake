@@ -5,6 +5,7 @@ AddTarget(util	shared_lib
 	LINK_LIBRARIES
 		Qt${QT_MAJOR_VERSION}::Core
 		Qt${QT_MAJOR_VERSION}::Gui
+		Iconv::Iconv
 		XercesC::XercesC
 		cimg::cimg
 	LINK_TARGETS

@@ -1,6 +1,10 @@
 #include "translit.h"
 
+#include <iconv.h>
+
 #include <QString>
+
+#include "fnd/ScopedCall.h"
 
 namespace HomeCompa::Util
 {
@@ -32,6 +36,32 @@ QString Transliterate(const ICU::TransliterateType transliterate, QString fileNa
 		fileName = std::move(result);
 
 	return fileName.replace(' ', '_');
+}
+
+QString Transliterate(QString fileName)
+{
+	auto cd = iconv_open("ASCII//TRANSLIT", "UTF-8");
+	if (cd == reinterpret_cast<iconv_t>(-1))
+		return fileName;
+
+	ScopedCall cdGuard([=] {
+		iconv_close(cd);
+	});
+
+	auto  input       = fileName.toStdString();
+	auto* inputPtr    = input.data();
+	auto  inbytesleft = input.size();
+
+	std::string output(inbytesleft * 4, '0');
+	auto        outputPtr    = output.data();
+	auto        outbytesleft = output.size();
+
+	if (iconv(cd, &inputPtr, &inbytesleft, &outputPtr, &outbytesleft) == static_cast<size_t>(-1))
+		return fileName;
+
+	output.resize(output.size() - outbytesleft);
+
+	return QString::fromStdString(output);
 }
 
 } // namespace HomeCompa::Util

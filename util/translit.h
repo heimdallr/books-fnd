@@ -9,6 +9,7 @@ class QString;
 namespace HomeCompa::Util
 {
 
+UTIL_EXPORT QString Transliterate(QString fileName);
 UTIL_EXPORT QString Transliterate(ICU::TransliterateType transliterate, QString fileName);
 
 }
