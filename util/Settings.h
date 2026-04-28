@@ -17,4 +17,4 @@ UTIL_EXPORT std::unique_ptr<AbstractSettings> CreateStub();
 UTIL_EXPORT std::unique_ptr<AbstractSettings> Create(const QString& fileName);
 UTIL_EXPORT std::unique_ptr<AbstractSettings> Create(const QString& organization, const QString& application);
 
-} // namespace HomeCompa
+} // namespace HomeCompa::SettingsFactory

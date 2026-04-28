@@ -18,16 +18,16 @@ namespace details
 
 enum class XmlWriterType
 {
-    Xml,
-    Html,
-    Headless,
+	Xml,
+	Html,
+	Headless,
 };
 
 struct XmlWriterOptions
 {
-    XmlWriterType type     { XmlWriterType::Xml };
-    bool          indented { true };
-    const char*   encoding { "utf-8" };
+	XmlWriterType type { XmlWriterType::Xml };
+	bool          indented { true };
+	const char*   encoding { "utf-8" };
 };
 
 }
@@ -37,8 +37,8 @@ class UTIL_EXPORT XmlWriter
 	NON_COPY_MOVABLE(XmlWriter)
 
 public:
-    using Type = details::XmlWriterType;
-    using Options = details::XmlWriterOptions;
+	using Type    = details::XmlWriterType;
+	using Options = details::XmlWriterOptions;
 
 public:
 	class XmlNodeGuard
@@ -86,7 +86,7 @@ public:
 	};
 
 public:
-    explicit XmlWriter(QIODevice& stream, const Options& options = Options {});
+	explicit XmlWriter(QIODevice& stream, const Options& options = Options {});
 	~XmlWriter();
 
 	XmlWriter& WriteProcessingInstruction(const QString& target, const QString& data);
