@@ -8,9 +8,10 @@ AddTarget(util	shared_lib
 		XercesC::XercesC
 		cimg::cimg
 	LINK_TARGETS
-		flicu
 		fljxl
 		logging
 		platform
 		zip
+	DEPENDENCIES
+		flicu
 )

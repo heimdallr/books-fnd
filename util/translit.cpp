@@ -2,13 +2,16 @@
 
 #include <QString>
 
+#include "icu/icu.h"
+#include "platform/DyLib.h"
+
 namespace HomeCompa::Util
 {
 
 namespace
 {
 
-bool Transliterate(const ICU::TransliterateType transliterate, const char* id, QString& str)
+bool TransliterateImpl(const ICU::TransliterateType transliterate, const char* id, QString& str)
 {
 	assert(transliterate);
 	auto src = str.toStdU32String();
@@ -23,15 +26,36 @@ bool Transliterate(const ICU::TransliterateType transliterate, const char* id, Q
 
 }
 
-QString Transliterate(const ICU::TransliterateType transliterate, QString fileName)
+struct Transliterator::Impl
 {
-	if (!transliterate)
+	Platform::DyLib              lib { ICU::LIB_NAME };
+	const ICU::TransliterateType transliterate { lib.GetTypedProc<ICU::TransliterateType>(ICU::TRANSLITERATE_NAME) };
+
+	QString Transliterate(QString fileName) const
+	{
+		if (!transliterate)
+			return fileName.replace(' ', '_');
+
+		if (auto result = fileName;
+		    TransliterateImpl(transliterate, "ru-ru_Latn/BGN", result) && TransliterateImpl(transliterate, "Any-Latin", result) && TransliterateImpl(transliterate, "Latin-ASCII", result))
+			fileName = std::move(result);
+
 		return fileName.replace(' ', '_');
+	}
+};
 
-	if (auto result = fileName; Transliterate(transliterate, "ru-ru_Latn/BGN", result) && Transliterate(transliterate, "Any-Latin", result) && Transliterate(transliterate, "Latin-ASCII", result))
-		fileName = std::move(result);
+Transliterator::Transliterator() = default;
 
-	return fileName.replace(' ', '_');
+Transliterator::~Transliterator() = default;
+
+bool Transliterator::IsReady() const noexcept
+{
+	return !!m_impl->transliterate;
+}
+
+QString Transliterator::Transliterate(QString fileName) const
+{
+	return m_impl->Transliterate(std::move(fileName));
 }
 
 } // namespace HomeCompa::Util

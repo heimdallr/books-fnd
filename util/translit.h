@@ -1,6 +1,7 @@
 ﻿#pragma once
 
-#include "icu/icu.h"
+#include "fnd/NonCopyMovable.h"
+#include "fnd/memory.h"
 
 #include "export/util.h"
 
@@ -9,6 +10,19 @@ class QString;
 namespace HomeCompa::Util
 {
 
-UTIL_EXPORT QString Transliterate(ICU::TransliterateType transliterate, QString fileName);
+class UTIL_EXPORT Transliterator
+{
+	NON_COPY_MOVABLE(Transliterator)
+
+public:
+	Transliterator();
+	~Transliterator();
+	[[nodiscard]] bool    IsReady() const noexcept;
+	[[nodiscard]] QString Transliterate(QString fileName) const;
+
+private:
+	struct Impl;
+	PropagateConstPtr<Impl> m_impl;
+};
 
 }
