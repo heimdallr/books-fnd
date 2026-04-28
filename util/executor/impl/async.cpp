@@ -22,32 +22,20 @@ namespace
 class IPool // NOLINT(cppcoreguidelines-special-member-functions)
 {
 public:
-	virtual ~IPool()                                                                           = default;
-	virtual void Work(std::promise<void>& initializePromise, std::promise<void>& startPromise) = 0;
+	virtual ~IPool()                   = default;
+	virtual void Work(std::stop_token) = 0;
 };
 
 class Thread
 {
-	NON_COPY_MOVABLE(Thread)
-
 public:
 	explicit Thread(IPool& pool)
-		: m_thread(&IPool::Work, std::ref(pool), std::ref(m_initializePromise), std::ref(m_startPromise))
+		: m_thread(std::bind_front(&IPool::Work, std::ref(pool)))
 	{
-		m_initializePromise.get_future().get();
-		m_startPromise.get_future().get();
-	}
-
-	~Thread()
-	{
-		if (m_thread.joinable())
-			m_thread.join();
 	}
 
 private:
-	std::promise<void> m_initializePromise;
-	std::promise<void> m_startPromise;
-	std::thread        m_thread;
+	std::jthread m_thread;
 };
 
 class Executor final
@@ -74,8 +62,6 @@ public:
 	~Executor() override
 	{
 		Stop();
-		PLOGD << std::format("{} thread(s) executor destroyed", std::size(m_threads));
-		m_threads.clear();
 		QTimer::singleShot(0, [forwarder = m_forwarder] {
 			delete forwarder;
 		});
@@ -89,43 +75,32 @@ private: // Util::IExecutor
 			std::lock_guard lock(m_tasksGuard);
 			m_tasks.insert_or_assign(priority ? priority : ++m_priority, std::move(task));
 		}
-		std::unique_lock lock(m_startMutex);
-		m_startCondition.notify_one();
+		std::unique_lock lock(m_tasksGuard);
+		m_condition.notify_one();
 
 		return id;
 	}
 
 	void Stop() override
 	{
-		m_running = false;
-		std::unique_lock lock(m_startMutex);
-		m_startCondition.notify_all();
+		PLOGD << std::format("stop {} thread(s) executor", std::size(m_threads));
+		m_threads.clear();
 	}
 
 private:
-	void Work(std::promise<void>& initializePromise, std::promise<void>& startPromise) override
+	void Work(const std::stop_token stop) override
 	{
-		initializePromise.set_value();
-		m_initializer.onCreate();
-
-		startPromise.set_value();
-		while (m_running)
+		while (!stop.stop_requested())
 		{
 			{
-				std::unique_lock lockStart(m_startMutex);
-				m_startCondition.wait(lockStart, [this]() {
-					if (!m_running)
-						return true;
-
-					std::lock_guard lockTasks(m_tasksGuard);
-					return !m_tasks.empty();
-				});
+				std::unique_lock lockStart(m_tasksGuard);
+				if (!m_condition.wait(lockStart, stop, [this]() {
+						return !m_tasks.empty();
+					}))
+					break;
 			}
 
-			if (!m_running)
-				continue;
-
-			auto task = [this]() {
+			auto task = [this] {
 				std::lock_guard lock(m_tasksGuard);
 				if (m_tasks.empty())
 					return Task {};
@@ -163,9 +138,7 @@ private:
 
 private:
 	const ExecutorInitializer            m_initializer;
-	std::atomic_bool                     m_running { true };
-	std::mutex                           m_startMutex;
-	std::condition_variable              m_startCondition;
+	std::condition_variable_any          m_condition;
 	std::mutex                           m_tasksGuard;
 	std::map<int, Task>                  m_tasks;
 	FunctorExecutionForwarder*           m_forwarder { nullptr };
