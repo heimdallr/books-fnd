@@ -60,6 +60,8 @@ inline void AddData(QCryptographicHash& hash, const char* data, qint64 length)
 
 	#define END_FILTER_CHANGE endFilterChange(Direction::Rows)
 
+	#define QT_CONST const
+
 #elif QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 
 using qsizetype_t   = int;
@@ -107,6 +109,8 @@ inline void AddData(QCryptographicHash& hash, const char* data, qint64 length)
 	#define BEGIN_FILTER_CHANGE (void)0
 
 	#define END_FILTER_CHANGE invalidateFilter()
+
+	#define QT_CONST
 
 Q_DECLARE_METATYPE(std::set<QString>)
 Q_DECLARE_METATYPE(std::unordered_set<QString>)
