@@ -185,7 +185,7 @@ CImg<unsigned char> nonMaxSupp(const CImg<unsigned char>& sFiltered, const CImg<
 			// cout << Tangent << ' ';
 			result(i - 1, j - 1) = sFiltered(i, j);
 			//Horizontal Edge
-			if (((-22.5 < Tangent) && (Tangent <= 22.5)) || ((157.5 < Tangent) && (Tangent <= -157.5)))
+			if (-22.5 < Tangent && Tangent <= 22.5)
 			{
 				if ((sFiltered(i, j) < sFiltered(i + 1, j)) || (sFiltered(i, j) < sFiltered(i - 1, j)))
 					result(i - 1, j - 1) = 0;

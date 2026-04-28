@@ -168,7 +168,7 @@ private:
 	std::condition_variable              m_startCondition;
 	std::mutex                           m_tasksGuard;
 	std::map<int, Task>                  m_tasks;
-	FunctorExecutionForwarder*           m_forwarder;
+	FunctorExecutionForwarder*           m_forwarder { nullptr };
 	int                                  m_priority { 1024 };
 	std::vector<std::unique_ptr<Thread>> m_threads;
 };

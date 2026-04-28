@@ -20,32 +20,7 @@ constexpr const char* IGNORED[] {
 	"QApplication::regClass: Registering window class",
 };
 
-}
-
-QtLogHandler* QtLogHandler::s_qtLogHandler = nullptr;
-
-QtLogHandler::QtLogHandler()
-	: m_qtLogHandlerPrev(qInstallMessageHandler(&QtLogHandler::HandleStatic))
-{
-	assert(!s_qtLogHandler && "once time only");
-	s_qtLogHandler = this;
-}
-
-QtLogHandler::~QtLogHandler()
-{
-	assert(s_qtLogHandler);
-	qInstallMessageHandler(*m_qtLogHandlerPrev);
-	s_qtLogHandler = nullptr;
-}
-
-void QtLogHandler::HandleStatic(const QtMsgType type, const QMessageLogContext& ctx, const QString& message)
-{
-	assert(s_qtLogHandler);
-	s_qtLogHandler->Handle(type, ctx, message);
-	s_qtLogHandler->m_qtLogHandlerPrev(type, ctx, message);
-}
-
-void QtLogHandler::Handle(const QtMsgType type, const QMessageLogContext& ctx, const QString& message) const
+void HandleImpl(const QtMsgType type, const QMessageLogContext& ctx, const QString& message)
 {
 	if (std::ranges::any_of(IGNORED, [&](const auto* item) {
 			return message.startsWith(item);
@@ -74,4 +49,29 @@ void QtLogHandler::Handle(const QtMsgType type, const QMessageLogContext& ctx, c
 		default: // NOLINT(clang-diagnostic-covered-switch-default)
 			assert(false);
 	}
+}
+
+} // namespace
+
+QtLogHandler* QtLogHandler::s_qtLogHandler = nullptr;
+
+QtLogHandler::QtLogHandler()
+	: m_qtLogHandlerPrev(qInstallMessageHandler(&QtLogHandler::HandleStatic))
+{
+	assert(!s_qtLogHandler && "once time only");
+	s_qtLogHandler = this;
+}
+
+QtLogHandler::~QtLogHandler()
+{
+	assert(s_qtLogHandler);
+	qInstallMessageHandler(*m_qtLogHandlerPrev);
+	s_qtLogHandler = nullptr;
+}
+
+void QtLogHandler::HandleStatic(const QtMsgType type, const QMessageLogContext& ctx, const QString& message)
+{
+	assert(s_qtLogHandler);
+	HandleImpl(type, ctx, message);
+	s_qtLogHandler->m_qtLogHandlerPrev(type, ctx, message);
 }

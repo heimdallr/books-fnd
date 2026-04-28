@@ -86,7 +86,7 @@ std::streambuf::int_type QStdStreamBuf::underflow()
 class QStdIStreamBuf : public QStdStreamBuf
 {
 public:
-	QStdIStreamBuf(QIODevice& dev)
+	explicit QStdIStreamBuf(QIODevice& dev)
 		: QStdStreamBuf(dev)
 	{
 	}
@@ -95,7 +95,7 @@ public:
 class QStdOStreamBuf : public QStdStreamBuf
 {
 public:
-	QStdOStreamBuf(QIODevice& dev)
+	explicit QStdOStreamBuf(QIODevice& dev)
 		: QStdStreamBuf(dev)
 	{
 	}

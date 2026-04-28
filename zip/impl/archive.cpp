@@ -287,8 +287,6 @@ private:
 			const auto it = m_properties.find(id);
 			return it != m_properties.end() ? it->second : QVariant {};
 		};
-		std::vector<const wchar_t*>        names;
-		std::vector<bit7z::BitPropVariant> values;
 
 		if (const auto value = getProperty(PropertyId::CompressionLevel); value.isValid() && format.hasFeature(bit7z::FormatFeatures::CompressionLevel))
 			m_archive->setCompressionLevel(static_cast<bit7z::BitCompressionLevel>(static_cast<uint32_t>(value.value<CompressionLevel>())));

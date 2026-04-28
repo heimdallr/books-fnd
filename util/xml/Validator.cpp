@@ -27,7 +27,7 @@ class StrX
 	NON_COPY_MOVABLE(StrX)
 
 public:
-	StrX(const XMLCh* const toTranscode)
+	explicit StrX(const XMLCh* const toTranscode)
 		: m_fLocalForm { xercesc::XMLString::transcode(toTranscode) }
 	{
 	}
@@ -71,19 +71,7 @@ private:
 	QStringList m_errors;
 };
 
-} // namespace
-
-class XmlValidator::Impl
-{
-private:
-	XMLPlatformInitializer m_initializer;
-};
-
-XmlValidator::XmlValidator() = default;
-
-XmlValidator::~XmlValidator() = default;
-
-QString XmlValidator::Validate(QIODevice& input) const
+QString ValidateImpl(QIODevice& input)
 {
 	static const XMLCh          gLS[]  = { xercesc::chLatin_L, xercesc::chLatin_S, xercesc::chNull };
 	xercesc::DOMImplementation* impl   = xercesc::DOMImplementationRegistry::getDOMImplementation(gLS);
@@ -104,4 +92,21 @@ QString XmlValidator::Validate(QIODevice& input) const
 	parser->release();
 
 	return errorHandler.GetErrors();
+}
+
+} // namespace
+
+class XmlValidator::Impl
+{
+private:
+	XMLPlatformInitializer m_initializer;
+};
+
+XmlValidator::XmlValidator() = default;
+
+XmlValidator::~XmlValidator() = default;
+
+QString XmlValidator::Validate(QIODevice& input) const
+{
+	return ValidateImpl(input);
 }
