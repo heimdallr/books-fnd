@@ -1,7 +1,8 @@
-#include <future>
+#include <condition_variable>
 #include <map>
 #include <memory>
 #include <mutex>
+#include <thread>
 
 #include <QTimer>
 
