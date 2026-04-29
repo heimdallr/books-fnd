@@ -13,10 +13,18 @@ namespace HomeCompa::Util
 class ThreadPool
 {
 public:
-	explicit ThreadPool(const int numThreads = static_cast<int>(std::thread::hardware_concurrency()))
+	struct Initializer
 	{
-		m_threads.reserve(static_cast<size_t>(numThreads));
-		std::ranges::transform(std::views::iota(0, numThreads), std::back_inserter(m_threads), [this](auto) {
+		unsigned int threadCount { std::thread::hardware_concurrency() };
+		size_t       maxQueueSize { std::numeric_limits<size_t>::max() };
+	};
+
+public:
+	explicit ThreadPool(const Initializer& initializer = {})
+		: m_maxQueueSize { initializer.maxQueueSize }
+	{
+		m_threads.reserve(initializer.threadCount);
+		std::ranges::transform(std::views::iota(decltype(initializer.threadCount) { 0 }, initializer.threadCount), std::back_inserter(m_threads), [this](auto) {
 			return std::jthread(std::bind_front(&ThreadPool::work, this));
 		});
 	}
@@ -25,6 +33,9 @@ public:
 	{
 		{
 			std::unique_lock lock(m_tasksGuard);
+			m_condition.wait(lock, [this] {
+				return m_tasks.size() < m_maxQueueSize;
+			});
 			m_tasks.emplace(std::move(task));
 		}
 
@@ -54,7 +65,7 @@ private:
 
 		auto task = std::move(m_tasks.front());
 		m_tasks.pop();
-		m_condition.notify_one();
+		m_condition.notify_all();
 
 		return task;
 	}
@@ -67,6 +78,7 @@ private:
 	}
 
 private:
+	const size_t                      m_maxQueueSize;
 	std::queue<std::function<void()>> m_tasks;
 	std::mutex                        m_tasksGuard;
 	std::condition_variable_any       m_condition;
