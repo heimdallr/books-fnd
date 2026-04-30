@@ -1,15 +1,15 @@
 #pragma once
 
+#include <QHash>
+
 #include <functional>
 
-#include <QtGlobal>
-
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-	#include <QHttpHeaders>
-#endif
+#include <QString>
 
 #include "fnd/NonCopyMovable.h"
 #include "fnd/memory.h"
+
+#include "headers.h"
 
 #include "export/network.h"
 
@@ -33,11 +33,7 @@ public:
 	~Downloader();
 
 public:
-	size_t Download(const QString& url, QIODevice& io, OnFinish callback, OnProgress progress = {} /*, const QHttpHeaders& headers = {}*/);
-
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-	size_t Download(const QString& url, const QHttpHeaders& headers, QIODevice& io, OnFinish callback, OnProgress progress = {});
-#endif
+	size_t Download(const QString& url, QIODevice& io, OnFinish callback, OnProgress progress = {}, const Headers& headers = {});
 
 private:
 	class Impl;

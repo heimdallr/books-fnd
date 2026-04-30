@@ -96,18 +96,9 @@ Downloader::~Downloader()
 	PLOGV << "Downloader destroyed";
 }
 
-size_t Downloader::Download(const QString& url, QIODevice& io, OnFinish callback, OnProgress progress)
-{
-	return m_impl->Download(QNetworkRequest(url), io, std::move(callback), std::move(progress));
-}
-
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-size_t Downloader::Download(const QString& url, const QHttpHeaders& headers, QIODevice& io, OnFinish callback, OnProgress progress)
+size_t Downloader::Download(const QString& url, QIODevice& io, OnFinish callback, OnProgress progress, const Headers& headers)
 {
 	QNetworkRequest request(url);
-	if (!headers.isEmpty())
-		request.setHeaders(headers);
-
+	headers.SetToRequest(request);
 	return m_impl->Download(request, io, std::move(callback), std::move(progress));
 }
-#endif
