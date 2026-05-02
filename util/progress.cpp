@@ -44,11 +44,9 @@ Progress::~Progress()
 
 void Progress::Increment(const size_t value, const std::string& comment)
 {
-	m_count.fetch_add(value);
-	const size_t     count      = m_count;
+	const size_t     count      = (m_count += value);
 	const auto       currentPct = static_cast<int>(count * 100 / m_total);
 	const ScopedCall guard([&] {
-		m_count      = count;
 		m_currentPct = currentPct;
 	});
 
