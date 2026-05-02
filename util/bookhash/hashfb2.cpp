@@ -408,6 +408,7 @@ void ParseFb2Hash(BookHashItem& bookHashItem, QCryptographicHash& cryptographicH
 		const auto number = item.file.toLongLong(&ok);
 		return ok ? QString("%1").arg(number, 16, 10, QChar { '0' }) : item.file;
 	});
+	bookHashItem.body.clear();
 }
 
 } // namespace HomeCompa::Util
