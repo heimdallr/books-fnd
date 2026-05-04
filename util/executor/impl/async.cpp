@@ -80,9 +80,8 @@ private: // Util::IExecutor
 				m_tasks.erase(priority);
 
 			m_tasks.emplace(priority, std::move(task));
+			m_condition.notify_one();
 		}
-		std::unique_lock lock(m_tasksGuard);
-		m_condition.notify_one();
 
 		return id;
 	}
@@ -98,43 +97,43 @@ private:
 	{
 		while (!stop.stop_requested())
 		{
-			{
-				std::unique_lock lockStart(m_tasksGuard);
-				if (!m_condition.wait(lockStart, stop, [this]() {
+			auto taskOpt = [&]() -> std::optional<Task> {
+				std::unique_lock lock(m_tasksGuard);
+				if (!m_condition.wait(lock, stop, [this]() {
 						return !m_tasks.empty();
 					}))
-					break;
-			}
+					return std::nullopt;
 
-			auto task = [this] {
-				std::lock_guard lock(m_tasksGuard);
-				if (m_tasks.empty())
-					return Task {};
-
+				assert(!m_tasks.empty());
 				const auto it           = m_tasks.begin();
 				auto       returnedTask = std::move(it->second);
 				m_tasks.erase(it);
 				return returnedTask;
 			}();
 
+			if (!taskOpt)
+				continue;
+
+			const auto& [name, task, id] = *taskOpt;
+
 			m_forwarder->Forward(m_initializer.beforeExecute);
 			try
 			{
-				PLOGD << task.name << " started";
-				auto taskResult = task.task();
-				PLOGD << task.name << " finished";
+				PLOGD << name << " started";
+				auto taskResult = task();
+				PLOGD << name << " finished";
 
-				m_forwarder->Forward([id = task.id, taskResult = std::move(taskResult)] {
+				m_forwarder->Forward([id, taskResult = std::move(taskResult)] {
 					taskResult(id);
 				});
 			}
 			catch (const std::exception& ex)
 			{
-				PLOGE << task.name << ": " << ex.what();
+				PLOGE << name << ": " << ex.what();
 			}
 			catch (...)
 			{
-				PLOGE << task.name << " failed";
+				PLOGE << name << " failed";
 			}
 			m_forwarder->Forward(m_initializer.afterExecute);
 		}
