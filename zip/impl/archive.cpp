@@ -254,6 +254,23 @@ protected:
 	{
 	}
 
+	void SetCallbacks() const
+	{
+		m_archive->setTotalCallback([this](const int64_t value) {
+			m_progress->OnStartWithTotal(value);
+		});
+
+		m_archive->setProgressCallback([this, total = int64_t{0}](const int64_t value) mutable {
+			m_progress->OnIncrement(value - total);
+			total = value;
+			return !m_progress->OnCheckBreak();
+		});
+
+		m_archive->setFileCallback([this](const auto& file) {
+			m_progress->OnFileDone(QString::fromStdWString(file));
+		});
+	}
+
 private: // IZip
 	void SetProperty(const PropertyId id, QVariant value) override
 	{
@@ -319,6 +336,7 @@ public:
 		, m_filename { std::move(filename) }
 	{
 		m_archive = CreateArchive(format, appendMode);
+		SetCallbacks();
 		UpdateFileList();
 	}
 
@@ -328,6 +346,7 @@ private: // IZip
 		AddFiles(zipFileProvider);
 		m_archive->compressTo(m_filename.toBit7zString());
 		UpdateFileList();
+		m_progress->OnDone();
 
 		return true;
 	}
@@ -405,6 +424,7 @@ public:
 		, m_stream { stream }
 	{
 		m_archive = std::make_unique<bit7z::BitArchiveWriter>(m_lib, std::vector<std::byte> {}, GetInOutFormat(format));
+		SetCallbacks();
 	}
 
 private: // IZip
@@ -414,6 +434,7 @@ private: // IZip
 		const auto stream = QStdOStream::create(m_stream);
 		m_archive->compressTo(*stream);
 		UpdateFileList();
+		m_progress->OnDone();
 
 		return true;
 	}
