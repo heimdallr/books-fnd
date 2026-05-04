@@ -1,8 +1,11 @@
 #pragma once
+
 #include <qmetatype.h>
 
 namespace HomeCompa::ZipDetails
 {
+
+constexpr auto INVALID_INDEX = std::numeric_limits<size_t>::max();
 
 enum class PropertyId
 {

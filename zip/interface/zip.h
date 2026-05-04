@@ -23,10 +23,11 @@ class IFile;
 class IZip // NOLINT(cppcoreguidelines-special-member-functions)
 {
 public:
-	virtual ~IZip()                                                                   = default;
-	[[nodiscard]] virtual QStringList      GetFileNameList() const                    = 0;
-	[[nodiscard]] virtual size_t           GetFileSize(const QString& filename) const = 0;
-	[[nodiscard]] virtual const QDateTime& GetFileTime(const QString& filename) const = 0;
+	virtual ~IZip()                                                                    = default;
+	[[nodiscard]] virtual QStringList      GetFileNameList() const                     = 0;
+	[[nodiscard]] virtual size_t           GetFileSize(const QString& filename) const  = 0;
+	[[nodiscard]] virtual const QDateTime& GetFileTime(const QString& filename) const  = 0;
+	[[nodiscard]] virtual size_t           GetFileIndex(const QString& filename) const = 0;
 
 	[[nodiscard]] virtual std::unique_ptr<IFile> Read(const QString& filename) const = 0;
 

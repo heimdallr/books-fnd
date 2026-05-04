@@ -27,6 +27,8 @@ public:
 	using CompressionLevel  = ZipDetails::CompressionLevel;
 	using CompressionMethod = ZipDetails::CompressionMethod;
 
+	static constexpr auto INVALID_INDEX = ZipDetails::INVALID_INDEX;
+
 	static Format  FormatFromString(const QString& str);
 	static QString FormatToString(Format format);
 
@@ -46,6 +48,7 @@ public:
 	[[nodiscard]] QStringList      GetFileNameList() const;
 	[[nodiscard]] size_t           GetFileSize(const QString& filename) const;
 	[[nodiscard]] const QDateTime& GetFileTime(const QString& filename) const;
+	[[nodiscard]] size_t           GetFileIndex(const QString& filename) const;
 
 	[[nodiscard]] std::unique_ptr<Stream> Read(const QString& filename) const;
 

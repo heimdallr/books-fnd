@@ -162,6 +162,11 @@ public:
 		return m_zip->GetFileTime(filename);
 	}
 
+	size_t GetFileIndex(const QString& filename) const
+	{
+		return m_zip->GetFileIndex(filename);
+	}
+
 private:
 	PropagateConstPtr<IZip>  m_zip;
 	PropagateConstPtr<IFile> m_file;
@@ -232,6 +237,11 @@ size_t Zip::GetFileSize(const QString& filename) const
 const QDateTime& Zip::GetFileTime(const QString& filename) const
 {
 	return m_impl->GetFileTime(filename);
+}
+
+size_t Zip::GetFileIndex(const QString& filename) const
+{
+	return m_impl->GetFileIndex(filename);
 }
 
 Zip::Format Zip::FormatFromString(const QString& str)

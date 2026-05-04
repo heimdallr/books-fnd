@@ -156,6 +156,14 @@ private: // IZip
 		return m_files.GetFile(filename).time;
 	}
 
+	size_t GetFileIndex(const QString& filename) const override
+	{
+		if (const auto it = m_files.index.find(filename); it != m_files.index.end())
+			return it->second;
+
+		return INVALID_INDEX;
+	}
+
 	std::unique_ptr<IFile> Read(const QString& /*filename*/) const override
 	{
 		assert(false && "Cannot read with writer");
@@ -260,7 +268,7 @@ protected:
 			m_progress->OnStartWithTotal(value);
 		});
 
-		m_archive->setProgressCallback([this, total = int64_t{0}](const int64_t value) mutable {
+		m_archive->setProgressCallback([this, total = int64_t { 0 }](const int64_t value) mutable {
 			m_progress->OnIncrement(value - total);
 			total = value;
 			return !m_progress->OnCheckBreak();
