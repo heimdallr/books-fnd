@@ -26,7 +26,7 @@ public:
 	}
 
 private: // Util::IExecutor
-	size_t operator()(Task&& task, int /*priority*/) override
+	size_t operator()(Task&& task, int /*priority*/, bool) override
 	{
 		m_initializer.beforeExecute();
 		PLOGD << task.name << " started";

@@ -33,11 +33,12 @@ public:
 	IExecutor& operator=(const IExecutor&)                   = delete;
 	IExecutor& operator=(IExecutor&&)                        = default;
 	virtual ~IExecutor()                                     = default;
-	virtual size_t operator()(Task&& task, int priority = 0) = 0;
 
-	size_t operator()(Task&& task, const int priority = 0) const
+	virtual size_t operator()(Task&& task, int priority = 0, bool displace = true) = 0;
+
+	size_t operator()(Task&& task, const int priority = 0, const bool displace = true) const
 	{
-		return (*const_cast<IExecutor*>(this))(std::move(task), priority);
+		return (*const_cast<IExecutor*>(this))(std::move(task), priority, displace);
 	}
 
 	virtual void Stop() = 0;

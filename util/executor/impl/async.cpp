@@ -69,12 +69,17 @@ public:
 	}
 
 private: // Util::IExecutor
-	size_t operator()(Task&& task, const int priority) override
+	size_t operator()(Task&& task, int priority, const bool displace) override
 	{
 		const auto id = task.id;
 		{
 			std::lock_guard lock(m_tasksGuard);
-			m_tasks.insert_or_assign(priority ? priority : ++m_priority, std::move(task));
+			if (!priority)
+				priority = 1024;
+			else if (displace)
+				m_tasks.erase(priority);
+
+			m_tasks.emplace(priority, std::move(task));
 		}
 		std::unique_lock lock(m_tasksGuard);
 		m_condition.notify_one();
@@ -141,9 +146,8 @@ private:
 	const ExecutorInitializer            m_initializer;
 	std::condition_variable_any          m_condition;
 	std::mutex                           m_tasksGuard;
-	std::map<int, Task>                  m_tasks;
+	std::multimap<int, Task>             m_tasks;
 	FunctorExecutionForwarder*           m_forwarder { nullptr };
-	int                                  m_priority { 1024 };
 	std::vector<std::unique_ptr<Thread>> m_threads;
 };
 
