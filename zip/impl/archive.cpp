@@ -275,7 +275,7 @@ protected:
 		});
 
 		m_archive->setFileCallback([this](const auto& file) {
-			m_progress->OnFileDone(QString::fromStdWString(file));
+            m_progress->OnFileDone(QString::fromBit7zString(file));
 		});
 	}
 
