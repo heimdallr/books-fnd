@@ -37,7 +37,7 @@ constexpr auto ANNOTATIONS                        = "annotations.7z";
 constexpr auto CONTENTS                           = "contents.7z";
 constexpr auto COMPILATIONS_JSON                  = "compilations.json";
 constexpr auto AUTHORS_FOLDER                     = "authors";
-constexpr auto INP_FIELDS_DESCRIPTION             = "AUTHOR;GENRE;TITLE;SERIES;SERNO;FILE;SIZE;LIBID;DEL;EXT;DATE;LANG;LIBRATE;KEYWORDS;YEAR;SOURCELIB";
+constexpr auto INP_FIELDS_DESCRIPTION             = "AUTHOR;GENRE;TITLE;SERIES;SERNO;FILE;SIZE;LIBID;DEL;EXT;DATE;INSNO;LANG;LIBRATE;KEYWORDS;YEAR;SOURCELIB";
 
 constexpr auto TIME = "time";
 constexpr auto NAME = "name";
