@@ -2,9 +2,6 @@
 
 #include <QStringList>
 
-#include "fnd/NonCopyMovable.h"
-#include "fnd/memory.h"
-
 #include "export/util.h"
 
 namespace HomeCompa
@@ -15,63 +12,21 @@ class Zip;
 }
 
 class QDateTime;
-class QIODevice;
 
-namespace HomeCompa::Util
+namespace HomeCompa::Util::Fb2InpxParser
 {
 
-class Fb2InpxParser
+static constexpr char LIST_SEPARATOR   = ':';
+static constexpr char NAMES_SEPARATOR  = ',';
+static constexpr char FIELDS_SEPARATOR = '\x04';
+
+struct ParseResult
 {
-	NON_COPY_MOVABLE(Fb2InpxParser)
-
-public:
-	static constexpr char LIST_SEPARATOR   = ':';
-	static constexpr char NAMES_SEPARATOR  = ',';
-	static constexpr char FIELDS_SEPARATOR = '\x04';
-
-public:
-	struct Data
-	{
-		struct Author
-		{
-			QString first;
-			QString last;
-			QString middle;
-		};
-
-		using Authors = std::vector<Author>;
-
-		Authors     authors;
-		QStringList genres;
-		QString     title;
-		QString     lang;
-		QString     series;
-		QString     keywords;
-		QString     seqNumber;
-		QString     year;
-
-		QStringList annotation;
-
-		QString error;
-	};
-
-	struct ParseResult
-	{
-		QString     line;
-		QStringList annotation;
-	};
-
-public:
-	UTIL_EXPORT static ParseResult Parse(const QString& folder, const Zip& zip, const QString& fileName, const QDateTime& zipDateTime, bool isDeleted);
-	UTIL_EXPORT static QString     GetSeqNumber(QString seqNumber);
-
-private:
-	Fb2InpxParser(QIODevice& stream, const QString& fileName);
-	~Fb2InpxParser();
-
-private:
-	class Impl;
-	PropagateConstPtr<Impl> m_impl;
+	QString     line;
+	QStringList annotation;
 };
 
-} // namespace HomeCompa::Util
+UTIL_EXPORT ParseResult Parse(const QString& folder, const Zip& zip, const QString& fileName, const QDateTime& zipDateTime, bool isDeleted);
+UTIL_EXPORT QString     GetSeqNumber(QString seqNumber);
+
+} // namespace HomeCompa::Util::Fb2InpxParser

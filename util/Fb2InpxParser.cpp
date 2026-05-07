@@ -12,6 +12,7 @@
 
 using namespace HomeCompa;
 using namespace Util;
+using namespace Fb2InpxParser;
 
 namespace
 {
@@ -35,27 +36,50 @@ constexpr auto SEQUENCE               = "FictionBook/description/title-info/sequ
 constexpr auto KEYWORDS               = "FictionBook/description/title-info/keywords";
 constexpr auto PUBLISH_INFO_YEAR      = "FictionBook/description/publish-info/year";
 
-QString AuthorsToString(const Fb2InpxParser::Data::Authors& authors)
+struct Data
+{
+	struct Author
+	{
+		QString first;
+		QString last;
+		QString middle;
+	};
+
+	using Authors = std::vector<Author>;
+
+	Authors     authors;
+	QStringList genres;
+	QString     title;
+	QString     lang;
+	QString     series;
+	QString     keywords;
+	QString     seqNumber;
+	QString     year;
+
+	QStringList annotation;
+
+	QString error;
+};
+
+QString AuthorsToString(const Data::Authors& authors)
 {
 	QStringList values;
 	values.reserve(static_cast<int>(authors.size()));
 	std::ranges::transform(authors, std::back_inserter(values), [](const auto& author) {
-		return (QStringList() << author.last << author.first << author.middle).join(Fb2InpxParser::NAMES_SEPARATOR);
+		return (QStringList() << author.last << author.first << author.middle).join(NAMES_SEPARATOR);
 	});
-	return values.join(Fb2InpxParser::LIST_SEPARATOR) + Fb2InpxParser::LIST_SEPARATOR;
+	return values.join(LIST_SEPARATOR) + LIST_SEPARATOR;
 }
 
 QString GenresToString(const QStringList& genres)
 {
-	return genres.empty() ? QString {} : genres.join(Fb2InpxParser::LIST_SEPARATOR) + Fb2InpxParser::LIST_SEPARATOR;
+	return genres.empty() ? QString {} : genres.join(LIST_SEPARATOR) + LIST_SEPARATOR;
 }
 
-} // namespace
-
-class Fb2InpxParser::Impl final : public SaxParser
+class Fb2InpxParserImpl final : public SaxParser
 {
 public:
-	Impl(QIODevice& stream, const QString& fileName)
+	Fb2InpxParserImpl(QIODevice& stream, const QString& fileName)
 		: SaxParser(stream, 512)
 		, m_fileName(fileName)
 	{
@@ -73,13 +97,13 @@ public:
 private: // SaxParser
 	bool OnStartElement(const QString& /*name*/, const QString& path, const XmlAttributes& attributes) override
 	{
-		using ParseElementFunction = bool (Impl::*)(const XmlAttributes&);
+		using ParseElementFunction = bool (Fb2InpxParserImpl::*)(const XmlAttributes&);
 		using ParseElementItem     = std::pair<const char*, ParseElementFunction>;
 		static constexpr ParseElementItem PARSERS[] {
-			{     AUTHOR,     &Impl::OnStartElementAuthor },
-			{ AUTHOR_DOC,  &Impl::OnStartElementAuthorDoc },
-			{   SEQUENCE,   &Impl::OnStartElementSequence },
-			{ ANNOTATION, &Impl::OnStartElementAnnotation },
+			{     AUTHOR,     &Fb2InpxParserImpl::OnStartElementAuthor },
+			{ AUTHOR_DOC,  &Fb2InpxParserImpl::OnStartElementAuthorDoc },
+			{   SEQUENCE,   &Fb2InpxParserImpl::OnStartElementSequence },
+			{ ANNOTATION, &Fb2InpxParserImpl::OnStartElementAnnotation },
 		};
 
 		return Parse(*this, PARSERS, path, attributes);
@@ -87,13 +111,13 @@ private: // SaxParser
 
 	bool OnEndElement(const QString& /*name*/, const QString& path) override
 	{
-		using ParseElementFunction = bool (Impl::*)();
+		using ParseElementFunction = bool (Fb2InpxParserImpl::*)();
 		using ParseElementItem     = std::pair<const char*, ParseElementFunction>;
 		static constexpr ParseElementItem PARSERS[] {
-			{ DESCRIPTION, &Impl::OnEndElementDescription },
-			{      AUTHOR,      &Impl::OnEndElementAuthor },
-			{  AUTHOR_DOC,      &Impl::OnEndElementAuthor },
-			{  ANNOTATION,  &Impl::OnEndElementAnnotation },
+			{ DESCRIPTION, &Fb2InpxParserImpl::OnEndElementDescription },
+			{      AUTHOR,      &Fb2InpxParserImpl::OnEndElementAuthor },
+			{  AUTHOR_DOC,      &Fb2InpxParserImpl::OnEndElementAuthor },
+			{  ANNOTATION,  &Fb2InpxParserImpl::OnEndElementAnnotation },
 		};
 
 		return Parse(*this, PARSERS, path);
@@ -101,20 +125,20 @@ private: // SaxParser
 
 	bool OnCharacters(const QString& path, const QString& value) override
 	{
-		using ParseCharacterFunction = bool (Impl::*)(const QString&);
+		using ParseCharacterFunction = bool (Fb2InpxParserImpl::*)(const QString&);
 		using ParseCharacterItem     = std::pair<const char*, ParseCharacterFunction>;
 		static constexpr ParseCharacterItem PARSERS[] {
-			{				  GENRE,            &Impl::ParseGenre },
-			{      AUTHOR_FIRST_NAME,  &Impl::ParseAuthorFirstName },
-			{       AUTHOR_LAST_NAME,   &Impl::ParseAuthorLastName },
-			{     AUTHOR_MIDDLE_NAME, &Impl::ParseAuthorMiddleName },
-			{  AUTHOR_FIRST_NAME_DOC,  &Impl::ParseAuthorFirstName },
-			{   AUTHOR_LAST_NAME_DOC,   &Impl::ParseAuthorLastName },
-			{ AUTHOR_MIDDLE_NAME_DOC, &Impl::ParseAuthorMiddleName },
-			{             BOOK_TITLE,        &Impl::ParseBookTitle },
-			{				   LANG,             &Impl::ParseLang },
-			{			   KEYWORDS,         &Impl::ParseKeywords },
-			{      PUBLISH_INFO_YEAR,      &Impl::ParsePublishYear },
+			{				  GENRE,            &Fb2InpxParserImpl::ParseGenre },
+			{      AUTHOR_FIRST_NAME,  &Fb2InpxParserImpl::ParseAuthorFirstName },
+			{       AUTHOR_LAST_NAME,   &Fb2InpxParserImpl::ParseAuthorLastName },
+			{     AUTHOR_MIDDLE_NAME, &Fb2InpxParserImpl::ParseAuthorMiddleName },
+			{  AUTHOR_FIRST_NAME_DOC,  &Fb2InpxParserImpl::ParseAuthorFirstName },
+			{   AUTHOR_LAST_NAME_DOC,   &Fb2InpxParserImpl::ParseAuthorLastName },
+			{ AUTHOR_MIDDLE_NAME_DOC, &Fb2InpxParserImpl::ParseAuthorMiddleName },
+			{             BOOK_TITLE,        &Fb2InpxParserImpl::ParseBookTitle },
+			{				   LANG,             &Fb2InpxParserImpl::ParseLang },
+			{			   KEYWORDS,         &Fb2InpxParserImpl::ParseKeywords },
+			{      PUBLISH_INFO_YEAR,      &Fb2InpxParserImpl::ParsePublishYear },
 		};
 
 		if (m_annotationMode)
@@ -250,21 +274,19 @@ private:
 	bool           m_annotationMode { false };
 };
 
-Fb2InpxParser::Fb2InpxParser(QIODevice& stream, const QString& fileName)
-	: m_impl(stream, fileName)
+} // namespace
+
+namespace HomeCompa::Util::Fb2InpxParser
 {
-}
 
-Fb2InpxParser::~Fb2InpxParser() = default;
-
-Fb2InpxParser::ParseResult Fb2InpxParser::Parse(const QString& folder, const Zip& zip, const QString& fileName, const QDateTime& zipDateTime, const bool isDeleted)
+ParseResult Parse(const QString& folder, const Zip& zip, const QString& fileName, const QDateTime& zipDateTime, const bool isDeleted)
 {
 	try
 	{
-		QFileInfo     fileInfo(fileName);
-		const auto    stream = zip.Read(fileName);
-		Fb2InpxParser parser(stream->GetStream(), fileName);
-		auto          parserData = parser.m_impl->GetData();
+		QFileInfo         fileInfo(fileName);
+		const auto        stream = zip.Read(fileName);
+		Fb2InpxParserImpl parser(stream->GetStream(), fileName);
+		auto              parserData = parser.GetData();
 
 		if (!parserData.error.isEmpty())
 		{
@@ -290,6 +312,7 @@ Fb2InpxParser::ParseResult Fb2InpxParser::Parse(const QString& folder, const Zip
 		const auto& fileDateTime = zip.GetFileTime(fileName);
 		auto        dateTime     = (fileDateTime.isValid() ? fileDateTime : zipDateTime).toString("yyyy-MM-dd");
 
+		//"AUTHOR;GENRE;TITLE;SERIES;SERNO;FILE;SIZE;LIBID;DEL;EXT;DATE;LANG;LIBRATE;KEYWORDS;YEAR;"
 		const auto values = QStringList() << AuthorsToString(parserData.authors) << GenresToString(parserData.genres) << parserData.title << parserData.series << parserData.seqNumber
 		                                  << fileInfo.completeBaseName() << QString::number(zip.GetFileSize(fileName)) << fileInfo.completeBaseName() << (isDeleted ? "1" : "0") << fileInfo.suffix()
 		                                  << std::move(dateTime) << parserData.lang << "0" << parserData.keywords << parserData.year;
@@ -308,10 +331,12 @@ Fb2InpxParser::ParseResult Fb2InpxParser::Parse(const QString& folder, const Zip
 	return {};
 }
 
-QString Fb2InpxParser::GetSeqNumber(QString seqNumber)
+QString GetSeqNumber(QString seqNumber)
 {
 	bool ok = false;
 	if (const auto value = seqNumber.toInt(&ok); ok && value > 0)
 		return seqNumber;
 	return QString {};
 }
+
+} // namespace HomeCompa::Util::Fb2InpxParser
