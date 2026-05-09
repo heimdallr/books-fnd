@@ -186,25 +186,28 @@ public:
 		OpfParser  parser(stream->GetStream(), parseImages);
 		auto       result = std::move(parser.m_result);
 
-		if (!parser.m_coverPath.isEmpty())
-			if (auto image = GetImageBody(zip, relativePath, parser.m_coverPath); !image.body.isEmpty())
-				result.images.emplace_back(std::move(image));
+		if (parseImages)
+		{
+			if (!parser.m_coverPath.isEmpty())
+				if (auto image = GetImageBody(zip, relativePath, parser.m_coverPath); !image.body.isEmpty())
+					result.images.emplace_back(std::move(image));
 
-		for (const auto& imagePath : parser.m_imagePaths | std::views::transform([](const auto& item) {
-										 return std::make_pair(item.second, item.first);
-									 }) | std::ranges::to<std::map<size_t, QString>>()
-		                                 | std::views::values)
-			if (auto image = GetImageBody(zip, relativePath, imagePath); !image.body.isEmpty())
-				result.images.emplace_back(std::move(image));
+			for (const auto& imagePath : parser.m_imagePaths | std::views::transform([](const auto& item) {
+											 return std::make_pair(item.second, item.first);
+										 }) | std::ranges::to<std::map<size_t, QString>>()
+			                                 | std::views::values)
+				if (auto image = GetImageBody(zip, relativePath, imagePath); !image.body.isEmpty())
+					result.images.emplace_back(std::move(image));
 
-		if (result.images.empty())
-			for (const auto& [id, path] : parser.m_manifest)
-				if (id.contains("cover") || id.contains("titlepage"))
-					if (auto image = GetImageBody(zip, relativePath, path); !image.body.isEmpty())
-					{
-						result.images.emplace_back(std::move(image));
-						break;
-					}
+			if (result.images.empty())
+				for (const auto& [id, path] : parser.m_manifest)
+					if (id.contains("cover") || id.contains("titlepage"))
+						if (auto image = GetImageBody(zip, relativePath, path); !image.body.isEmpty())
+						{
+							result.images.emplace_back(std::move(image));
+							break;
+						}
+		}
 
 		return result;
 	}
