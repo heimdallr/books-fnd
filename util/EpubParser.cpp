@@ -6,6 +6,7 @@
 #include "xml/SaxParser.h"
 #include "xml/XmlAttributes.h"
 
+#include "GenresLocalization.h"
 #include "log.h"
 #include "zip.h"
 
@@ -275,8 +276,8 @@ private:
 
 		if (name.endsWith("subject", Qt::CaseInsensitive))
 			return (void)(m_functor = [this](const QString&, const QString& value) {
-				if (QString genre = value.trimmed(); !genre.isEmpty())
-					m_result.genres.emplace_back(std::move(genre));
+				if (const QString genre = value.trimmed(); !genre.isEmpty())
+					m_result.genres.emplace_back(FixGenre(genre));
 			});
 
 		if (name.endsWith("creator", Qt::CaseInsensitive))
