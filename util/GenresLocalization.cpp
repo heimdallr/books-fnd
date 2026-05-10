@@ -55,15 +55,44 @@ private:
 	std::unordered_map<QString, QString> m_map;
 };
 
+using GenreFixer = const QString& (*)(const QString& src);
+
+std::unique_ptr<Fixer> GENRE_FIXER;
+
+const QString& FixGenreImpl(const QString& src)
+{
+	assert(GENRE_FIXER);
+	return GENRE_FIXER->Fix(src);
+}
+
+const QString& FixGenreStub(const QString& src)
+{
+	return src;
+}
+
+GenreFixer FIX_GENRE = &FixGenreStub;
+
 } // namespace
+
+GenreFixerInitializer::GenreFixerInitializer()
+{
+	GENRE_FIXER = std::make_unique<Fixer>();
+	FIX_GENRE   = &FixGenreImpl;
+}
+
+GenreFixerInitializer::~GenreFixerInitializer()
+{
+	FIX_GENRE = &FixGenreStub;
+	GENRE_FIXER.reset();
+}
+
 
 namespace HomeCompa::Util
 {
 
 const QString& FixGenre(const QString& src)
 {
-	static const Fixer fixer;
-	return fixer.Fix(src);
+	return FIX_GENRE(src);
 }
 
 }

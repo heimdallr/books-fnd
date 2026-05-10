@@ -1,5 +1,8 @@
 #pragma once
+
 #include <qttranslation.h>
+
+#include "fnd/NonCopyMovable.h"
 
 #include "export/util.h"
 
@@ -384,5 +387,14 @@ inline constexpr const char* GENRES[] {
 };
 
 UTIL_EXPORT const QString& FixGenre(const QString& src);
+
+class UTIL_EXPORT GenreFixerInitializer
+{
+	NON_COPY_MOVABLE(GenreFixerInitializer)
+
+public:
+	GenreFixerInitializer();
+	~GenreFixerInitializer();
+};
 
 } // namespace HomeCompa::Util
