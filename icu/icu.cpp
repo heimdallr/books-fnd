@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <format>
+#include <mutex>
 #include <stdexcept>
 
 #include <unicode/translit.h>
