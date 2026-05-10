@@ -8,6 +8,7 @@
 #include <libdjvu/ddjvuapi.h>
 
 #include "fnd/ScopedCall.h"
+#include "fnd/algorithm.h"
 
 #include "platform/DyLib.h"
 
@@ -120,7 +121,8 @@ public:
 		pageRect.x = 0;
 		pageRect.y = 0;
 
-		static constexpr auto maxImageSize = 1440;
+		static constexpr unsigned int maxImageSize = 1440;
+		Util::FixSize(pageRect.w, pageRect.h, maxImageSize);
 		if (pageRect.w > maxImageSize || pageRect.h > maxImageSize)
 		{
 			if (pageRect.w > pageRect.h)

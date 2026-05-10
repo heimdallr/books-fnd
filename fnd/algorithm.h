@@ -98,6 +98,24 @@ bool Intersect(const Container1& container1, const Container2& container2)
 }
 
 template <typename T>
+void FixSize(T& width, T& height, const T max)
+{
+	if (width > max || height > max)
+	{
+		if (width > height)
+		{
+			height = height * max / width;
+			width  = max;
+		}
+		else
+		{
+			width  = width * max / height;
+			height = max;
+		}
+	}
+}
+
+template <typename T>
 QString ToQString(const T& str) = delete;
 
 template <>
