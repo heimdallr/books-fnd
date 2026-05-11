@@ -22,6 +22,10 @@ QString CleanPath(const QString& relativePath, const QString& path)
 	result      = QDir::cleanPath(result);
 	if (result.startsWith('/'))
 		result = result.mid(1);
+
+	result.replace("%40", "@");
+	result.replace("%20", " ");
+
 	return result;
 }
 
@@ -126,6 +130,9 @@ EpubParser::Image GetImageBody(const Zip& zip, const QString& relativePath, cons
 	auto cleanPath = CleanPath(relativePath, imagePath);
 	if (imagePath.endsWith(".xhtml", Qt::CaseInsensitive) || imagePath.endsWith(".html", Qt::CaseInsensitive))
 		cleanPath = HtmlParser::GetImagePath(zip, cleanPath);
+
+	if (zip.GetFileIndex(cleanPath) == Zip::INVALID_INDEX)
+		return {};
 
 	return { .id = QFileInfo(cleanPath).fileName(), .body = zip.Read(cleanPath)->GetStream().readAll() };
 }
