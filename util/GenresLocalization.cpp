@@ -40,13 +40,13 @@ struct Fixer
 			);
 
 			for (const auto* genre : GENRES)
-				m_map.try_emplace(QCoreApplication::translate(GENRE, genre) , genre);
+				m_map.try_emplace(QCoreApplication::translate(GENRE, genre).toLower(), genre);
 		}
 	}
 
 	const QString& Fix(const QString& src) const
 	{
-		if (const auto it = m_map.find(src); it != m_map.end())
+		if (const auto it = m_map.find(src.toLower()); it != m_map.end())
 			return it->second;
 		return src;
 	}
@@ -85,7 +85,6 @@ GenreFixerInitializer::~GenreFixerInitializer()
 	FIX_GENRE = &FixGenreStub;
 	GENRE_FIXER.reset();
 }
-
 
 namespace HomeCompa::Util
 {
