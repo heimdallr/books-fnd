@@ -32,7 +32,6 @@ void SetKeyboardLayoutId(const QString& /*id*/)
 
 QString GetKeyboardLayoutId()
 {
-	assert(false);
 	return {};
 }
 
