@@ -11,6 +11,8 @@
 #include "FileItem.h"
 #include "QtTypes.h"
 
+#include "log.h"
+
 namespace HomeCompa::ZipDetails::SevenZip
 {
 
@@ -62,7 +64,20 @@ public:
 private: // IFile
 	std::unique_ptr<Stream> Read() override
 	{
-		return std::make_unique<StreamImpl>(m_zip, m_fileItem);
+		try
+		{
+			return std::make_unique<StreamImpl>(m_zip, m_fileItem);
+		}
+		catch(const std::exception& ex)
+		{
+			PLOGE << m_fileItem.name << " read error: " << ex.what();
+			throw;
+		}
+		catch (...)
+		{
+			PLOGE << m_fileItem.name << " read error: unknown error";
+			throw;
+		}
 	}
 
 	std::unique_ptr<Stream> Write() override

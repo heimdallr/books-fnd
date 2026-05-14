@@ -34,10 +34,18 @@ class ContainerParser final : SaxParser
 public:
 	static QString GetOpfPath(const Zip& zip)
 	{
-		const auto      stream = zip.Read("META-INF/container.xml");
+		static constexpr std::string_view container = "META-INF/container.xml";
+		const auto                        zipFiles  = zip.GetFileNameList();
+		const auto                        it        = std::ranges::find_if(zipFiles, [](const QString& fileName) {
+			return fileName.endsWith(container.data(), Qt::CaseInsensitive);
+		});
+		if (it == zipFiles.end())
+			throw std::invalid_argument(std::format("cannot find {}", container));
+
+		const auto      stream = zip.Read(*it);
 		ContainerParser parser(stream->GetStream());
 		auto            result = std::move(parser.m_opfPath);
-		return result;
+		return it->first(it->length() - static_cast<qsizetype>(container.size())) + result;
 	}
 
 private:
@@ -104,18 +112,17 @@ private: // SaxParser
 			}
 		}
 
-		if (path.endsWith("svg/image", Qt::CaseInsensitive))
+		for (const auto* node : { "image" })
 		{
-			if (auto imagePath = attributes.GetAttribute("xlink:href"); !imagePath.isEmpty())
-			{
-				m_imagePath = std::move(imagePath);
-				return false;
-			}
-			if (auto imagePath = attributes.GetAttribute("href"); !imagePath.isEmpty())
-			{
-				m_imagePath = std::move(imagePath);
-				return false;
-			}
+			if (!path.endsWith(node, Qt::CaseInsensitive))
+				return true;
+
+			for (const auto* attr : { "xlink:href", "href" })
+				if (auto imagePath = attributes.GetAttribute(attr); !imagePath.isEmpty())
+				{
+					m_imagePath = std::move(imagePath);
+					return false;
+				}
 		}
 
 		return true;
@@ -187,6 +194,25 @@ public:
 		std::list<EpubParser::ContentItem> images;
 		const auto                         coverPath = parser.m_coverPath.isEmpty() ? QString {} : CleanPath(relativePath, parser.m_coverPath);
 
+		const auto getBody = [&](const QString& id) -> QByteArray {
+			try
+			{
+				if (const auto imageStream = zip.Read(id))
+					return imageStream->GetStream().readAll();
+			}
+			catch (const std::exception& ex)
+			{
+				PLOGE << id << ": " << ex.what();
+				throw;
+			}
+			catch (...)
+			{
+				PLOGE << id << ": unknown error";
+				throw;
+			}
+			return {};
+		};
+
 		for (auto&& id : zip.GetFileNameList())
 		{
 			if (!!(mode & EpubParser::Mode::Images))
@@ -194,55 +220,46 @@ public:
 				if (id.endsWith(".png") || id.endsWith(".jpg") || id.endsWith(".jpeg"))
 				{
 					const auto isCover = id == coverPath;
-					if (isCover)
-						result.coverExists = true;
-
-					if (const auto imageStream = zip.Read(id))
+					if (auto body = getBody(id); !body.isEmpty())
 					{
-						auto                    body = imageStream->GetStream().readAll();
 						EpubParser::ContentItem contentItem { std::move(id), std::move(body) };
-						isCover ? images.push_front(std::move(contentItem)) : images.push_back(contentItem);
+						isCover ? (result.coverExists = true, images.push_front(std::move(contentItem))) : images.push_back(contentItem);
 						continue;
 					}
 				}
 			}
 
 			if (!!(mode & EpubParser::Mode::Texts))
-			{
-				if (const auto textStream = zip.Read(id))
-				{
-					auto body = textStream->GetStream().readAll();
+				if (auto body = getBody(id); !body.isEmpty())
 					result.texts.emplace_back(std::move(id), std::move(body));
-				}
-			}
 		}
 
 		if (!!(mode & EpubParser::Mode::Images))
 		{
-			const auto findCover = [&](const QString& path) {
-				auto cleanPath = CleanPath(relativePath, path);
-				if (cleanPath.endsWith(".xhtml", Qt::CaseInsensitive) || cleanPath.endsWith(".html", Qt::CaseInsensitive))
-					cleanPath = HtmlParser::GetImagePath(zip, cleanPath);
-				if (cleanPath.isEmpty())
-					return;
-				if (const auto it = std::ranges::find(
-						images,
-						cleanPath,
-						[](const auto& item) {
-							return item.id;
-						}
-					);
-				    it != images.end())
-				{
-					auto cover = std::move(*it);
-					images.erase(it);
-					images.push_front(std::move(cover));
-					result.coverExists = true;
-				}
-			};
-
 			if (!result.coverExists)
 			{
+				const auto findCover = [&](const QString& path) {
+					auto cleanPath = CleanPath(relativePath, path);
+					if (cleanPath.endsWith(".xhtml", Qt::CaseInsensitive) || cleanPath.endsWith(".html", Qt::CaseInsensitive))
+						cleanPath = HtmlParser::GetImagePath(zip, cleanPath);
+					if (cleanPath.isEmpty())
+						return;
+					if (const auto it = std::ranges::find(
+							images,
+							cleanPath,
+							[](const auto& item) {
+								return item.id;
+							}
+						);
+					    it != images.end())
+					{
+						auto cover = std::move(*it);
+						images.erase(it);
+						images.push_front(std::move(cover));
+						result.coverExists = true;
+					}
+				};
+
 				if (!parser.m_coverPath.isEmpty())
 					findCover(parser.m_coverPath);
 
@@ -261,9 +278,30 @@ public:
 			std::ranges::move(images | std::views::as_rvalue, std::back_inserter(result.images));
 		}
 
-		if (result.coverExists && result.images.empty())
+		if (!result.texts.empty())
 		{
-			PLOGI << "here";
+			while (true)
+			{
+				const auto delimiterPosition = result.texts.front().id.indexOf('/');
+				if (delimiterPosition < 0)
+					break;
+
+				const auto prefix          = result.texts.front().id.first(delimiterPosition + 1);
+				const auto startWithPrefix = [&](const auto& items) {
+					return std::ranges::all_of(items, [&](const auto& item) {
+						return item.id.startsWith(prefix, Qt::CaseInsensitive);
+					});
+				};
+				const auto cut = [&](auto& items) {
+					for (auto&& item : items)
+						item.id = item.id.mid(delimiterPosition + 1);
+				};
+				if (!startWithPrefix(result.texts) || !startWithPrefix(result.images))
+					break;
+
+				cut(result.texts);
+				cut(result.images);
+			}
 		}
 
 		return result;
