@@ -1,10 +1,12 @@
 #include "EpubParser.h"
 
+#include <QBuffer>
 #include <QDir>
 #include <QFileInfo>
 
 #include "xml/SaxParser.h"
 #include "xml/XmlAttributes.h"
+#include "xml/XmlUtil.h"
 
 #include "GenresLocalization.h"
 #include "log.h"
@@ -42,8 +44,11 @@ public:
 		if (it == zipFiles.end())
 			throw std::invalid_argument(std::format("cannot find {}", container));
 
-		const auto      stream = zip.Read(*it);
-		ContainerParser parser(stream->GetStream());
+		auto    bytes = RemoveDocType(zip.Read(*it)->GetStream().readAll());
+		QBuffer stream(&bytes);
+		stream.open(QIODevice::ReadOnly);
+
+		ContainerParser parser(stream);
 		auto            result = std::move(parser.m_opfPath);
 		return it->first(it->length() - static_cast<qsizetype>(container.size())) + result;
 	}
@@ -78,8 +83,11 @@ public:
 	{
 		try
 		{
-			const auto stream = zip.Read(htmlPath);
-			HtmlParser parser(stream->GetStream());
+			auto    bytes = RemoveDocType(zip.Read(htmlPath)->GetStream().readAll());
+			QBuffer stream(&bytes);
+			stream.open(QIODevice::ReadOnly);
+
+			HtmlParser parser(stream);
 			return parser.m_imagePath.isEmpty() ? QString {} : CleanPath(QFileInfo(htmlPath).dir().path() + "/", parser.m_imagePath);
 		}
 		catch (const std::exception& ex)
@@ -184,8 +192,11 @@ public:
 		else
 			relativePath.append('/');
 
-		const auto stream = zip.Read(opfPath);
-		OpfParser  parser(stream->GetStream(), mode);
+		auto    bytes = RemoveDocType(zip.Read(opfPath)->GetStream().readAll());
+		QBuffer stream(&bytes);
+		stream.open(QIODevice::ReadOnly);
+
+		OpfParser  parser(stream, mode);
 		auto       result = std::move(parser.m_result);
 
 		if (mode == EpubParser::Mode::None)
