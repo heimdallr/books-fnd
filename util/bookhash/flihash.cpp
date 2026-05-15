@@ -16,7 +16,7 @@
 #include "fnd/FindPair.h"
 
 #include "Constant.h"
-#include "hashfb2.h"
+#include "hashbook.h"
 #include "hashxml.h"
 #include "log.h"
 #include "zip.h"
@@ -62,7 +62,7 @@ BookHashItem GetHash_7z(const QString& path, const QString& file)
 {
 	QCryptographicHash md5 { QCryptographicHash::Md5 };
 	auto               bookHashItem = BookHashItemProvider(path).Get(file);
-	ParseFb2Hash(bookHashItem, md5);
+	ParseBookHash(bookHashItem, md5);
 	return bookHashItem;
 }
 

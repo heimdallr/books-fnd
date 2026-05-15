@@ -1,122 +1,27 @@
-#include "hashfb2.h"
+#include <QCryptographicHash>
 
-#include <ranges>
 #include <set>
 
-// clang-format off
-#include "QtTypes.h"
-
-#include <QBuffer>
-#include <QCryptographicHash>
-#include <QPixmap>
-
-#include <CImg.h> // conflicts with #include <QBuffer>
-// clang-format on
-
 #include "fnd/IsOneOf.h"
-#include "fnd/ScopedCall.h"
 
 #include "xml/SaxParser.h"
 #include "xml/XmlAttributes.h"
 
-#include "ImageUtil.h"
+#include "QtTypes.h"
 #include "StrUtil.h"
-#include "canny.h"
+#include "hashbook.h"
 #include "log.h"
+#include "parser.h"
 
 using namespace HomeCompa::Util;
 using namespace HomeCompa;
-using namespace cimg_library;
 
 namespace
 {
 
-CImg<float> GetDctMatrix(const int N)
-{
-	const auto  n = static_cast<float>(N);
-	CImg<float> matrix(N, N, 1, 1, 1 / std::sqrt(n));
-	const auto  c1 = std::sqrt(2.0f / n);
-	for (int x = 0; x < N; ++x)
-		for (int y = 1; y < N; ++y)
-			matrix(x, y) = c1 * static_cast<float>(std::cos((cimg::PI / 2.0 / N) * y * (2.0 * x + 1)));
-	return matrix;
-}
-
-const CImg<float> DCT   = GetDctMatrix(32);
-const CImg<float> DCT_T = DCT.get_transpose();
-const CImg<float> MEAN_FILTER(7, 7, 1, 1, 1);
-
-uint64_t GetPHash(const ImageHashItem& item)
-{
-	auto pixmap = Decode(item.body);
-	if (pixmap.isNull())
-		return 0;
-
-	auto       image    = pixmap.toImage();
-	const auto hasAlpha = image.pixelFormat().alphaUsage() == QPixelFormat::UsesAlpha;
-	image.convertTo(hasAlpha ? QImage::Format_RGBA8888 : QImage::Format_Grayscale8);
-
-	auto          data = new uint8_t[static_cast<size_t>(image.width()) * image.height()];
-	CImg<uint8_t> img(data, image.width(), image.height(), 1, 1, true);
-	img._is_shared = false;
-
-	if (hasAlpha)
-	{
-		auto* dst = img.data();
-		for (auto h = 0, szh = image.height(), szw = image.width(); h < szh; ++h)
-		{
-			const auto* src = image.scanLine(h);
-			for (auto w = 0; w < szw; ++w, ++dst, src += 4)
-				*dst = static_cast<uint8_t>(std::lround((0.299 * src[0] + 0.587 * src[1] + 0.114 * src[2]) * src[3] / 255.0 + (255.0 - src[3])));
-		}
-	}
-	else
-	{
-		auto* dst = img.data();
-		for (auto h = 0, szh = image.height(), szw = image.width(); h < szh; ++h, dst += szw)
-			memcpy(dst, image.scanLine(h), szw);
-	}
-
-	const Canny canny;
-	const auto  cropRect = canny.Process(img);
-	static_assert(sizeof(cropRect) == sizeof(uint64_t));
-
-	if (cropRect.width() > img.width() / 2 && cropRect.height() > img.height() / 2)
-		img.crop(cropRect.left, cropRect.top, cropRect.right - 1, cropRect.bottom - 1);
-
-	const auto resized = img.get_convolve(MEAN_FILTER).resize(32, 32);
-	const auto dct     = (DCT * resized * DCT_T).crop(1, 1, 8, 8);
-
-#ifndef NDEBUG
-	QString          str;
-	const ScopedCall strGuard([&] {
-		PLOGV << item.file << ": " << str;
-	});
-#endif
-
-	return std::accumulate(dct._data, dct._data + 64, uint64_t { 0 }, [&, median = dct.median()](const uint64_t init, const float value) {
-		auto result = init << 1;
-		if (value > median)
-			result |= 1;
-
-#ifndef NDEBUG
-		str.append(value > median ? "1" : "0");
-#endif
-
-		return result;
-	});
-}
-
-void SetHash(ImageHashItem& item, QCryptographicHash& cryptographicHash)
-{
-	cryptographicHash.reset();
-	cryptographicHash.addData(item.body);
-	item.hash  = QString::fromUtf8(cryptographicHash.result().toHex());
-	item.pHash = GetPHash(item);
-	item.body.clear();
-}
-
-class Fb2Parser final : public SaxParser
+class Fb2Parser final
+	: public SaxParser
+	, public BookHash::IParser
 {
 	static constexpr auto BODY            = "FictionBook/body";
 	static constexpr auto BINARY          = "FictionBook/binary";
@@ -128,59 +33,22 @@ class Fb2Parser final : public SaxParser
 	static constexpr auto ID      = "id";
 	static constexpr auto SECTION = "section";
 
-	struct HistComparer
-	{
-		using ItemType = std::pair<size_t, QString>;
-
-		bool operator()(const ItemType& lhs, const ItemType& rhs) const
-		{
-			return ToComparable(lhs) > ToComparable(rhs);
-		}
-
-	private:
-		static ItemType ToComparable(const ItemType& item)
-		{
-			auto result   = item;
-			result.first |= (1llu << (32 + std::min(static_cast<int>(item.second.length()), 8)));
-			return result;
-		}
-	};
-
 	struct Section
 	{
-		using HashValues = std::vector<std::pair<size_t, QString>>;
-
 		Section* parent { nullptr };
 		int      depth { 0 };
 		size_t   size { 0 };
 
-		std::unordered_map<QString, size_t>   hist;
+		Hist                                  hist;
 		QString                               hash;
 		std::vector<std::unique_ptr<Section>> children;
 
-		HashValues CalculateHash()
+		HashValues GetHashValues()
 		{
-			auto               hashValues = GetHashValues();
-			QCryptographicHash md5 { QCryptographicHash::Md5 };
-			for (const auto& word : hashValues | std::views::values)
-				md5.addData(word.toUtf8());
-
-			hash = QString::fromUtf8(md5.result().toHex());
-			size = hist.size();
-			hist.clear();
-
+			auto [hashValues, h, s] = CalculateHash(hist);
+			hash                    = std::move(h);
+			size                    = s;
 			return hashValues;
-		}
-
-	private:
-		std::vector<std::pair<size_t, QString>> GetHashValues() const
-		{
-			std::set<std::pair<size_t, QString>, HistComparer> counter(HistComparer {});
-			std::ranges::transform(hist, std::inserter(counter, counter.begin()), [](const auto& item) {
-				return std::make_pair(item.second, item.first);
-			});
-
-			return counter | std::views::take(10) | std::ranges::to<std::vector<std::pair<size_t, QString>>>();
 		}
 	};
 
@@ -192,7 +60,8 @@ public:
 		//		assert(m_tags.empty());
 	}
 
-	HashParseResult GetResult()
+private: // BookHash::IParser
+	HashParseResult GetResult() override
 	{
 		QStringList sections;
 		const auto  enumerate = [&](const Section& parent, const auto& r) -> void {
@@ -202,7 +71,7 @@ public:
 				r(*child, r);
 		};
 
-		auto hashValues = m_section.CalculateHash();
+		auto hashValues = m_section.GetHashValues();
 		enumerate(m_section, enumerate);
 
 		return { .id           = QString::fromUtf8(m_md5.result().toHex()),
@@ -213,13 +82,13 @@ public:
 			     .hashValues   = std::move(hashValues) };
 	}
 
-	ImageHashItem GetCover()
+	ImageHashItem GetCover() override
 	{
 		auto result = std::move(m_cover);
 		return result;
 	}
 
-	ImageHashItems GetImages()
+	ImageHashItems GetImages() override
 	{
 		auto result = std::move(m_images);
 		return result;
@@ -287,7 +156,7 @@ private: // Util::SaxParser
 		}
 		else if (name == SECTION)
 		{
-			m_currentSection->CalculateHash();
+			m_currentSection->GetHashValues();
 			m_currentSection = m_currentSection->parent;
 			assert(m_currentSection);
 		}
@@ -381,34 +250,12 @@ private:
 
 } // namespace
 
-namespace HomeCompa::Util
+namespace HomeCompa::Util::BookHash
 {
 
-void ParseFb2Hash(BookHashItem& bookHashItem, QCryptographicHash& cryptographicHash)
+std::unique_ptr<IParser> create_fb2_parser(QIODevice& stream)
 {
-	QBuffer buffer(&bookHashItem.body);
-	buffer.open(QIODevice::ReadOnly);
-	Fb2Parser parser(buffer);
-	bookHashItem.parseResult = parser.GetResult();
-
-	if (auto cover = parser.GetCover(); !cover.file.isEmpty())
-		bookHashItem.cover = std::move(cover);
-
-	if (auto images = parser.GetImages(); !images.empty())
-		bookHashItem.images = std::move(images);
-
-	if (!bookHashItem.cover.body.isEmpty())
-		SetHash(bookHashItem.cover, cryptographicHash);
-
-	std::ranges::for_each(bookHashItem.images, [&](auto& item) {
-		SetHash(item, cryptographicHash);
-	});
-	std::ranges::sort(bookHashItem.images, {}, [](const auto& item) {
-		auto       ok     = false;
-		const auto number = item.file.toLongLong(&ok);
-		return ok ? QString("%1").arg(number, 16, 10, QChar { '0' }) : item.file;
-	});
-	bookHashItem.body.clear();
+	return std::make_unique<Fb2Parser>(stream);
 }
 
-} // namespace HomeCompa::Util
+} // namespace HomeCompa::Util::BookHash
