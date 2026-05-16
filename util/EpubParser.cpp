@@ -3,11 +3,15 @@
 #include <QBuffer>
 #include <QDir>
 #include <QFileInfo>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 #include "xml/SaxParser.h"
 #include "xml/XmlAttributes.h"
 #include "xml/XmlUtil.h"
 
+#include "Constant.h"
 #include "GenresLocalization.h"
 #include "log.h"
 #include "zip.h"
@@ -29,6 +33,35 @@ QString CleanPath(const QString& relativePath, const QString& path)
 	result.replace("%20", " ");
 
 	return result;
+}
+
+EpubParser::ParseResult::ImageIndex GetImageIndex(const Zip& zip)
+{
+	if (zip.GetFileIndex(Epub::IMAGE_INDEX_FILE_NAME) == Zip::INVALID_INDEX)
+		return {};
+
+	const auto      stream = zip.Read(Epub::IMAGE_INDEX_FILE_NAME);
+	QJsonParseError parseError;
+	const auto      doc = QJsonDocument::fromJson(stream->GetStream().readAll(), &parseError);
+	if (parseError.error != QJsonParseError::NoError)
+	{
+		PLOGW << parseError.errorString();
+		return {};
+	}
+
+	if (!doc.isArray())
+	{
+		PLOGW << Epub::IMAGE_INDEX_FILE_NAME << " must be json array";
+		return {};
+	}
+
+	return doc.array() | std::views::transform([](const auto& item) {
+			   return item.toObject();
+		   })
+	     | std::views::transform([](const auto& item) {
+			   return std::make_pair(item[Epub::IMAGE_INDEX_ID].toString(), item[Epub::IMAGE_INDEX_NUM].toInt());
+		   })
+	     | std::ranges::to<std::vector>();
 }
 
 class ContainerParser final : SaxParser
@@ -196,8 +229,8 @@ public:
 		QBuffer stream(&bytes);
 		stream.open(QIODevice::ReadOnly);
 
-		OpfParser  parser(stream, mode);
-		auto       result = std::move(parser.m_result);
+		OpfParser parser(stream, mode);
+		auto      result = std::move(parser.m_result);
 
 		if (mode == EpubParser::Mode::None)
 			return result;
@@ -246,48 +279,7 @@ public:
 		}
 
 		if (!!(mode & EpubParser::Mode::Images))
-		{
-			if (!result.coverExists)
-			{
-				const auto findCover = [&](const QString& path) {
-					auto cleanPath = CleanPath(relativePath, path);
-					if (cleanPath.endsWith(".xhtml", Qt::CaseInsensitive) || cleanPath.endsWith(".html", Qt::CaseInsensitive))
-						cleanPath = HtmlParser::GetImagePath(zip, cleanPath);
-					if (cleanPath.isEmpty())
-						return;
-					if (const auto it = std::ranges::find(
-							images,
-							cleanPath,
-							[](const auto& item) {
-								return item.id;
-							}
-						);
-					    it != images.end())
-					{
-						auto cover = std::move(*it);
-						images.erase(it);
-						images.push_front(std::move(cover));
-						result.coverExists = true;
-					}
-				};
-
-				if (!parser.m_coverPath.isEmpty())
-					findCover(parser.m_coverPath);
-
-				if (!result.coverExists)
-					for (const auto& [id, path] : parser.m_manifest)
-					{
-						if (id.contains("cover") || id.contains("titlepage"))
-						{
-							findCover(path);
-							if (result.coverExists)
-								break;
-						}
-					}
-			}
-
-			std::ranges::move(images | std::views::as_rvalue, std::back_inserter(result.images));
-		}
+			ProcessImages(zip, relativePath, parser, std::move(images), result);
 
 		if (!result.texts.empty())
 		{
@@ -316,6 +308,57 @@ public:
 		}
 
 		return result;
+	}
+
+	static void ProcessImages(const Zip& zip, const QString& relativePath, const OpfParser& parser, std::list<EpubParser::ContentItem> images, EpubParser::ParseResult& result)
+	{
+		ProcessCover(zip, relativePath, parser, images, result);
+		std::ranges::move(images | std::views::as_rvalue, std::back_inserter(result.images));
+		result.imageIndex = GetImageIndex(zip);
+	}
+
+	static void ProcessCover(const Zip& zip, const QString& relativePath, const OpfParser& parser, std::list<EpubParser::ContentItem>& images, EpubParser::ParseResult& result)
+	{
+		if (result.coverExists)
+			return;
+
+		const auto findCover = [&](const QString& path) {
+			auto cleanPath = CleanPath(relativePath, path);
+			if (cleanPath.endsWith(".xhtml", Qt::CaseInsensitive) || cleanPath.endsWith(".html", Qt::CaseInsensitive))
+				cleanPath = HtmlParser::GetImagePath(zip, cleanPath);
+			if (cleanPath.isEmpty())
+				return;
+			if (const auto it = std::ranges::find(
+					images,
+					cleanPath,
+					[](const auto& item) {
+						return item.id;
+					}
+				);
+			    it != images.end())
+			{
+				auto cover = std::move(*it);
+				images.erase(it);
+				images.push_front(std::move(cover));
+				result.coverExists = true;
+			}
+		};
+
+		if (!parser.m_coverPath.isEmpty())
+			findCover(parser.m_coverPath);
+
+		if (!result.coverExists)
+		{
+			for (const auto& [id, path] : parser.m_manifest)
+			{
+				if (id.contains("cover") || id.contains("titlepage"))
+				{
+					findCover(path);
+					if (result.coverExists)
+						break;
+				}
+			}
+		}
 	}
 
 public:

@@ -35,6 +35,8 @@ enum class Mode
 
 struct ParseResult
 {
+	using ImageIndex = std::vector<std::pair<QString, int>>;
+
 	QString                  title;
 	QString                  language;
 	QStringList              genres;
@@ -43,6 +45,7 @@ struct ParseResult
 	bool                     coverExists { false };
 	std::vector<ContentItem> images;
 	std::vector<ContentItem> texts;
+	ImageIndex               imageIndex;
 };
 
 UTIL_EXPORT ParseResult Parse(QIODevice& stream, Mode mode = Mode::None);
