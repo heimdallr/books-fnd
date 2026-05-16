@@ -37,6 +37,7 @@ class Fb2Parser final
 	{
 		Section* parent { nullptr };
 		int      depth { 0 };
+		size_t   count { 0 };
 		size_t   size { 0 };
 
 		Hist                                  hist;
@@ -45,9 +46,10 @@ class Fb2Parser final
 
 		HashValues GetHashValues()
 		{
-			auto [hashValues, h, s] = CalculateHash(hist);
-			hash                    = std::move(h);
-			size                    = s;
+			auto [hashValues, h, c, s] = CalculateHash(hist);
+			hash                       = std::move(h);
+			count                      = c;
+			size                       = s;
 			return hashValues;
 		}
 	};
@@ -65,7 +67,7 @@ private: // BookHash::IParser
 	{
 		QStringList sections;
 		const auto  enumerate = [&](const Section& parent, const auto& r) -> void {
-			sections << QString("%1%2\t%3").arg(QString(parent.depth, '\t')).arg(parent.hash).arg(parent.size);
+			sections << QString("%1\t%2\t%3\t%4").arg(parent.depth).arg(parent.hash).arg(parent.count).arg(parent.size);
 
 			for (const auto& child : parent.children)
 				r(*child, r);

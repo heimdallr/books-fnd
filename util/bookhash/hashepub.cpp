@@ -97,12 +97,12 @@ private: // BookHash::IParser
 			for (const auto& [word, count] : parser.hist)
 				hist[word] += count;
 
-			auto [hashValues, hash, size] = CalculateHash(parser.hist);
-			sections << QString("\t%1\t%2").arg(hash).arg(size);
+			auto [hashValues, hash, count, size] = CalculateHash(parser.hist);
+			sections << QString("1\t%1\t%2\t%3").arg(hash).arg(count).arg(size);
 		}
 
-		auto [hashValues, hash, size] = CalculateHash(hist);
-		sections.push_front(QString("%1\t%2").arg(hash).arg(size));
+		auto [hashValues, hash, count, size] = CalculateHash(hist);
+		sections.push_front(QString("0\t%1\t%2\t%3").arg(hash).arg(count).arg(size));
 
 		HashParseResult result {
 			.id           = QString::fromUtf8(md5.result().toHex()),

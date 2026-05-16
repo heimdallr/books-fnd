@@ -149,14 +149,19 @@ private:
 	}
 };
 
-std::vector<std::pair<size_t, QString>> GetHashValues(const Hist& hist)
+std::pair<std::vector<std::pair<size_t, QString>>, size_t> GetHashValues(const Hist& hist)
 {
 	std::set<std::pair<size_t, QString>, HistComparer> counter(HistComparer {});
 	std::ranges::transform(hist, std::inserter(counter, counter.begin()), [](const auto& item) {
 		return std::make_pair(item.second, item.first);
 	});
 
-	return counter | std::views::take(10) | std::ranges::to<std::vector<std::pair<size_t, QString>>>();
+	return std::make_pair(
+		counter | std::views::take(10) | std::ranges::to<std::vector<std::pair<size_t, QString>>>(),
+		std::accumulate(hist.cbegin(), hist.cend(), size_t { 0 }, [](const auto init, const auto& item) {
+			return init + item.first.length() * item.second;
+		})
+	);
 }
 
 } // namespace
@@ -179,14 +184,14 @@ CalculateHashResult CalculateHash(Hist& hist)
 
 	cryptographicHash.reset();
 	auto hashValues = GetHashValues(hist);
-	for (const auto& word : hashValues | std::views::values)
+	for (const auto& word : hashValues.first | std::views::values)
 		cryptographicHash.addData(word.toUtf8());
 
-	auto hash = QString::fromUtf8(cryptographicHash.result().toHex());
-	const auto size = hist.size();
+	auto       hash  = QString::fromUtf8(cryptographicHash.result().toHex());
+	const auto count = hist.size();
 	hist.clear();
 
-	return { .hashValues = std::move(hashValues), .hash = std::move(hash), .size = size };
+	return { .hashValues = std::move(hashValues.first), .hash = std::move(hash), .count = count, .size = hashValues.second };
 }
 
 void ParseBookHash(BookHashItem& bookHashItem, QCryptographicHash& cryptographicHash)
