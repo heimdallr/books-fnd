@@ -53,3 +53,12 @@ constexpr auto COVERED     = "covered";
 constexpr auto PART        = "part";
 
 } // namespace HomeCompa::Inpx
+
+namespace HomeCompa::Epub
+{
+
+constexpr auto IMAGE_INDEX_FILE_NAME = "FLibraryImageIndex.json";
+constexpr auto IMAGE_INDEX_ID        = "id";
+constexpr auto IMAGE_INDEX_NUM       = "num";
+
+}
