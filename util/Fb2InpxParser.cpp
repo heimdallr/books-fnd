@@ -4,6 +4,7 @@
 
 #include "fnd/FindPair.h"
 
+#include "GenresLocalization.h"
 #include "util/xml/SaxParser.h"
 #include "util/xml/XmlAttributes.h"
 
@@ -218,7 +219,7 @@ private:
 
 	bool ParseGenre(const QString& value)
 	{
-		m_data.genres.push_back(value);
+		m_data.genres.push_back(FixGenre(value));
 		return true;
 	}
 

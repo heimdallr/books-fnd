@@ -67,6 +67,7 @@ const QString& FixGenreImpl(const QString& src)
 
 const QString& FixGenreStub(const QString& src)
 {
+	assert(false);
 	return src;
 }
 
