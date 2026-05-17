@@ -2,6 +2,8 @@
 
 #include <utility>
 
+#include <QString>
+
 #include "export/util.h"
 
 class QByteArray;
@@ -19,6 +21,6 @@ inline constexpr auto PNG        = "png";
 UTIL_EXPORT QImage  HasAlpha(const QImage& image, const char* data);
 UTIL_EXPORT QPixmap Decode(const QByteArray& bytes);
 UTIL_EXPORT std::pair<QByteArray, const char*> Recode(const QByteArray& bytes);
-UTIL_EXPORT std::pair<QByteArray, const char*> Encode(const QImage& image);
+UTIL_EXPORT std::pair<QByteArray, const char*> Encode(const QImage& image, const QString& format = {});
 
 }

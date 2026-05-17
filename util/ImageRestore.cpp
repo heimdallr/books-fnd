@@ -72,7 +72,7 @@ void ConvertToGrayscale(QImage& image)
 	image.setAlphaChannel(alpha);
 }
 
-std::pair<QByteArray, const char*> RecodeImage(const bool isCover, const ImageProcessing imageProcessing, const QByteArray& body)
+std::pair<QByteArray, const char*> RecodeImage(const bool isCover, const ImageProcessing imageProcessing, const QByteArray& body, const QString& format = {})
 {
 	if (body.isEmpty() || (isCover && !!(imageProcessing & ImageProcessing::RemoveCovers)) || (!isCover && !!(imageProcessing & ImageProcessing::RemoveImages)))
 		return {};
@@ -84,7 +84,7 @@ std::pair<QByteArray, const char*> RecodeImage(const bool isCover, const ImagePr
 	if ((isCover && !!(imageProcessing & ImageProcessing::GrayscaleCovers)) || (!isCover && !!(imageProcessing & ImageProcessing::GrayscaleImages)))
 		ConvertToGrayscale(image);
 
-	return Encode(image);
+	return Encode(image, format);
 }
 
 class BinaryParser final : public SaxParser
@@ -383,6 +383,11 @@ QByteArray PrepareToExport_epub(QIODevice& stream, Covers covers, std::unique_pt
 	                      | std::ranges::to<std::unordered_map>();
 	const auto zipFiles   = Zip::CreateZipFileController();
 
+	auto addImage = [&](const QString& id, const QByteArray& body, const bool isCover) {
+		if (const auto [bytes, _] = RecodeImage(isCover, imageProcessing, body, QFileInfo(id).suffix()); !bytes.isEmpty())
+			zipFiles->AddFile(id, bytes);
+	};
+
 	for (auto&& [id, cover] : covers)
 	{
 		auto&& [isCover, body] = cover;
@@ -392,10 +397,7 @@ QByteArray PrepareToExport_epub(QIODevice& stream, Covers covers, std::unique_pt
 					return it != imageIndex.end() ? it->second : QString {};
 				}();
 		    !name.isEmpty())
-		{
-			if (const auto [bytes, _] = RecodeImage(isCover, imageProcessing, body); !bytes.isEmpty())
-				zipFiles->AddFile(name, bytes);
-		}
+			addImage(name, body, isCover);
 	}
 
 	const auto zipFileNames = input.GetFileNameList();
@@ -428,15 +430,10 @@ QByteArray PrepareToExport_epub(QIODevice& stream, Covers covers, std::unique_pt
 	{
 		stream.seek(0);
 		auto parseResult = Parse(stream, EpubParser::Mode::Images);
-		auto add   = [&](auto&& item, const bool isCover) {
-			if (const auto [bytes, _] = RecodeImage(isCover, imageProcessing, item.body); !bytes.isEmpty())
-				zipFiles->AddFile(item.id, bytes);
-		};
 		if (parseResult.coverExists)
-			add(std::move(parseResult.images.front()), true);
-		std::ranges::for_each(parseResult.images | std::views::as_rvalue | std::views::drop(parseResult.coverExists ? 1 : 0), [&](auto&& item) {
-			add(std::forward<decltype(item)>(item), false);
-		});
+			addImage(parseResult.images.front().id, parseResult.images.front().body, true);
+		for (const auto& [id, body] : parseResult.images | std::views::as_rvalue | std::views::drop(parseResult.coverExists ? 1 : 0))
+			addImage(id, body, false);
 	}
 
 	QByteArray result;

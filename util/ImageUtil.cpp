@@ -14,6 +14,17 @@ namespace
 using Decoder = QPixmap (*)(const QByteArray&);
 using Recoder = std::pair<QByteArray, const char*> (*)(const QByteArray& bytes, const char* type);
 
+std::pair<QByteArray, const char*> QtEncoder(const QImage& image, const QString& format)
+{
+	QByteArray bytes;
+	{
+		QBuffer buffer(&bytes);
+		buffer.open(QIODevice::WriteOnly);
+		image.save(&buffer, format.toUtf8().constData());
+	}
+	return std::make_pair(std::move(bytes), nullptr);
+}
+
 std::pair<QByteArray, const char*> QtEncoder(const QImage& image)
 {
 	std::pair<QByteArray, const char*> result;
@@ -121,9 +132,9 @@ QImage HasAlpha(const QImage& image, const char* data)
 	return image.convertToFormat(QImage::Format_RGB888);
 }
 
-std::pair<QByteArray, const char*> Encode(const QImage& image)
+std::pair<QByteArray, const char*> Encode(const QImage& image, const QString& format)
 {
-	return QtEncoder(image);
+	return format.isEmpty() ? QtEncoder(image) : QtEncoder(image, format);
 }
 
 } // namespace HomeCompa::Util
