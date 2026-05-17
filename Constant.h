@@ -57,6 +57,8 @@ constexpr auto PART        = "part";
 namespace HomeCompa::Epub
 {
 
+constexpr std::string_view CONTAINER_FILE_NAME = "META-INF/container.xml";
+
 constexpr auto IMAGE_INDEX_FILE_NAME = "FLibraryImageIndex.json";
 constexpr auto IMAGE_INDEX_ID        = "id";
 constexpr auto IMAGE_INDEX_NUM       = "num";

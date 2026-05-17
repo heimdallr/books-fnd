@@ -1,5 +1,7 @@
 #include "ImageRestore.h"
 
+#include <expected>
+
 #include <QBuffer>
 #include <QDir>
 #include <QFileInfo>
@@ -15,6 +17,7 @@
 
 #include "BookUtil.h"
 #include "Constant.h"
+#include "EpubParser.h"
 #include "ISettings.h"
 #include "ImageUtil.h"
 #include "QtTypes.h"
@@ -67,6 +70,21 @@ void ConvertToGrayscale(QImage& image)
 
 	image.convertTo(QImage::Format::Format_Grayscale8);
 	image.setAlphaChannel(alpha);
+}
+
+std::pair<QByteArray, const char*> RecodeImage(const bool isCover, const ImageProcessing imageProcessing, const QByteArray& body)
+{
+	if (body.isEmpty() || (isCover && !!(imageProcessing & ImageProcessing::RemoveCovers)) || (!isCover && !!(imageProcessing & ImageProcessing::RemoveImages)))
+		return {};
+
+	auto image = Decode(body).toImage();
+	if (image.isNull())
+		return {};
+
+	if ((isCover && !!(imageProcessing & ImageProcessing::GrayscaleCovers)) || (!isCover && !!(imageProcessing & ImageProcessing::GrayscaleImages)))
+		ConvertToGrayscale(image);
+
+	return Encode(image);
 }
 
 class BinaryParser final : public SaxParser
@@ -328,17 +346,7 @@ private:
 
 	void WriteImage(const QString& name, const bool isCover, const QByteArray& body)
 	{
-		if (body.isEmpty())
-			return;
-
-		auto image = Decode(body).toImage();
-		if (image.isNull())
-			return;
-
-		if ((isCover && !!(m_imageProcessing & ImageProcessing::GrayscaleCovers)) || (!isCover && !!(m_imageProcessing & ImageProcessing::GrayscaleImages)))
-			ConvertToGrayscale(image);
-
-		if (const auto [bytes, mediaType] = Encode(image); !bytes.isEmpty())
+		if (const auto [bytes, mediaType] = RecodeImage(isCover, m_imageProcessing, body); !bytes.isEmpty())
 			m_writer.WriteStartElement(BINARY).WriteAttribute(ID, name).WriteAttribute(CONTENT_TYPE, mediaType).WriteCharacters(QString::fromUtf8(bytes.toBase64())).WriteEndElement();
 	}
 
@@ -352,7 +360,12 @@ private:
 	bool                                 m_specialNode { false };
 };
 
-QByteArray PrepareToExportImpl(QIODevice& stream, Covers covers, std::unique_ptr<const ExtractedBook> metadataReplacement, const ImageProcessing imageProcessing)
+QByteArray PrepareToExport_stub(QIODevice& stream, Covers, std::unique_ptr<const ExtractedBook>, ImageProcessing)
+{
+	return stream.readAll();
+}
+
+QByteArray PrepareToExport_fb2(QIODevice& stream, Covers covers, std::unique_ptr<const ExtractedBook> metadataReplacement, const ImageProcessing imageProcessing)
 {
 	QByteArray byteArray;
 	QBuffer    buffer(&byteArray);
@@ -360,6 +373,90 @@ QByteArray PrepareToExportImpl(QIODevice& stream, Covers covers, std::unique_ptr
 	const SaxPrinter saxPrinter(stream, buffer, std::move(covers), std::move(metadataReplacement), imageProcessing);
 	return saxPrinter.HasError() ? QByteArray {} : byteArray;
 }
+
+QByteArray PrepareToExport_epub(QIODevice& stream, Covers covers, std::unique_ptr<const ExtractedBook> /*metadataReplacement*/, const ImageProcessing imageProcessing)
+{
+	const Zip  input(stream);
+	auto       imageIndex = EpubParser::GetImageIndex(input) | std::views::as_rvalue | std::views::transform([](auto&& item) {
+						  return std::make_pair(item.second, std::move(item.first));
+							})
+	                      | std::ranges::to<std::unordered_map>();
+	const auto zipFiles   = Zip::CreateZipFileController();
+
+	for (auto&& [id, cover] : covers)
+	{
+		auto&& [isCover, body] = cover;
+		if (const auto name =
+		        [&] {
+					const auto it = imageIndex.find(isCover ? -1 : id.toInt());
+					return it != imageIndex.end() ? it->second : QString {};
+				}();
+		    !name.isEmpty())
+		{
+			if (const auto [bytes, _] = RecodeImage(isCover, imageProcessing, body); !bytes.isEmpty())
+				zipFiles->AddFile(name, bytes);
+		}
+	}
+
+	const auto zipFileNames = input.GetFileNameList();
+	const auto prefix       = [&]() -> std::expected<QString, QString> {
+		const auto it = std::ranges::find_if(zipFileNames, [container = QString { Epub::CONTAINER_FILE_NAME.data() }](const QString& fileName) {
+			return fileName.endsWith(container, Qt::CaseInsensitive);
+		});
+		if (it != zipFileNames.end())
+			return First(*it, it->length() - static_cast<qsizetype>(Epub::CONTAINER_FILE_NAME.size()));
+
+		return std::unexpected(QString("cannot find %1").arg(Epub::CONTAINER_FILE_NAME));
+	}();
+
+	if (!prefix.has_value())
+	{
+		PLOGE << prefix.error();
+		return {};
+	}
+
+	const auto& prefixPath = prefix.value();
+
+	for (const auto& name : zipFileNames | std::views::filter([&](const QString& item) {
+								return item.startsWith(prefixPath);
+							}))
+		if (!EpubParser::IsImage(name))
+			if (const auto inputStream = input.Read(name))
+				zipFiles->AddFile(name.mid(prefixPath.length()), inputStream->GetStream().readAll());
+
+	if (covers.empty())
+	{
+		stream.seek(0);
+		auto parseResult = Parse(stream, EpubParser::Mode::Images);
+		auto add   = [&](auto&& item, const bool isCover) {
+			if (const auto [bytes, _] = RecodeImage(isCover, imageProcessing, item.body); !bytes.isEmpty())
+				zipFiles->AddFile(item.id, bytes);
+		};
+		if (parseResult.coverExists)
+			add(std::move(parseResult.images.front()), true);
+		std::ranges::for_each(parseResult.images | std::views::as_rvalue | std::views::drop(parseResult.coverExists ? 1 : 0), [&](auto&& item) {
+			add(std::forward<decltype(item)>(item), false);
+		});
+	}
+
+	QByteArray result;
+	{
+		QBuffer buffer(&result);
+		buffer.open(QIODevice::WriteOnly);
+		Zip output(buffer, Zip::Format::Zip);
+		output.Write(*zipFiles);
+	}
+	return result;
+}
+
+using ExportPrepares = QByteArray (*)(QIODevice&, Covers, std::unique_ptr<const ExtractedBook>, ImageProcessing);
+
+constexpr std::pair<const char*, ExportPrepares> EXPORT_PREPARERS[] {
+#define ITEM(NAME) {"."#NAME, &PrepareToExport_##NAME}
+	ITEM(fb2),
+	ITEM(epub),
+#undef ITEM
+};
 
 QByteArray PrepareToExportImpl(QIODevice& stream, const QString& folder, const QString& fileName, const ISettings& settings, std::unique_ptr<const ExtractedBook> metadataReplacement)
 {
@@ -378,10 +475,17 @@ QByteArray PrepareToExportImpl(QIODevice& stream, const QString& folder, const Q
 	if (imageProcessing != ImageProcessing::None || !!metadataReplacement)
 		BinaryParser(stream, covers, imageProcessing);
 
-	if (covers.empty() && !metadataReplacement)
+	if (covers.empty() && imageProcessing == ImageProcessing::None && !metadataReplacement)
 		return stream.readAll();
 
-	if (auto byteArray = PrepareToExportImpl(stream, std::move(covers), std::move(metadataReplacement), imageProcessing); !byteArray.isEmpty())
+	const auto preparer = [&] {
+		const auto it = std::ranges::find_if(EXPORT_PREPARERS, [&](const auto& item) {
+			return fileName.endsWith(item.first, Qt::CaseInsensitive);
+		});
+		return it != std::end(EXPORT_PREPARERS) ? it->second : &PrepareToExport_stub;
+	}();
+
+	if (auto byteArray = std::invoke(preparer, stream, std::move(covers), std::move(metadataReplacement), imageProcessing); !byteArray.isEmpty())
 		return byteArray;
 
 	stream.seek(0);

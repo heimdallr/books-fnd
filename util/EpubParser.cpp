@@ -35,47 +35,17 @@ QString CleanPath(const QString& relativePath, const QString& path)
 	return result;
 }
 
-EpubParser::ParseResult::ImageIndex GetImageIndex(const Zip& zip)
-{
-	if (zip.GetFileIndex(Epub::IMAGE_INDEX_FILE_NAME) == Zip::INVALID_INDEX)
-		return {};
-
-	const auto      stream = zip.Read(Epub::IMAGE_INDEX_FILE_NAME);
-	QJsonParseError parseError;
-	const auto      doc = QJsonDocument::fromJson(stream->GetStream().readAll(), &parseError);
-	if (parseError.error != QJsonParseError::NoError)
-	{
-		PLOGW << parseError.errorString();
-		return {};
-	}
-
-	if (!doc.isArray())
-	{
-		PLOGW << Epub::IMAGE_INDEX_FILE_NAME << " must be json array";
-		return {};
-	}
-
-	return doc.array() | std::views::transform([](const auto& item) {
-			   return item.toObject();
-		   })
-	     | std::views::transform([](const auto& item) {
-			   return std::make_pair(item[Epub::IMAGE_INDEX_ID].toString(), item[Epub::IMAGE_INDEX_NUM].toInt());
-		   })
-	     | std::ranges::to<std::vector>();
-}
-
 class ContainerParser final : SaxParser
 {
 public:
 	static QString GetOpfPath(const Zip& zip)
 	{
-		static constexpr std::string_view container = "META-INF/container.xml";
-		const auto                        zipFiles  = zip.GetFileNameList();
-		const auto                        it        = std::ranges::find_if(zipFiles, [](const QString& fileName) {
-			return fileName.endsWith(container.data(), Qt::CaseInsensitive);
+		const auto zipFiles = zip.GetFileNameList();
+		const auto it       = std::ranges::find_if(zipFiles, [container = QString { Epub::CONTAINER_FILE_NAME.data() }](const QString& fileName) {
+			return fileName.endsWith(container, Qt::CaseInsensitive);
 		});
 		if (it == zipFiles.end())
-			throw std::invalid_argument(std::format("cannot find {}", container));
+			throw std::invalid_argument(std::format("cannot find {}", Epub::CONTAINER_FILE_NAME));
 
 		auto    bytes = RemoveDocType(zip.Read(*it)->GetStream().readAll());
 		QBuffer stream(&bytes);
@@ -83,7 +53,7 @@ public:
 
 		ContainerParser parser(stream);
 		auto            result = std::move(parser.m_opfPath);
-		return it->first(it->length() - static_cast<qsizetype>(container.size())) + result;
+		return it->first(it->length() - static_cast<qsizetype>(Epub::CONTAINER_FILE_NAME.size())) + result;
 	}
 
 private:
@@ -261,7 +231,7 @@ public:
 		{
 			if (!!(mode & EpubParser::Mode::Images))
 			{
-				if (id.endsWith(".png") || id.endsWith(".jpg") || id.endsWith(".jpeg"))
+				if (EpubParser::IsImage(id))
 				{
 					const auto isCover = id == coverPath;
 					if (auto body = getBody(id); !body.isEmpty())
@@ -314,7 +284,6 @@ public:
 	{
 		ProcessCover(zip, relativePath, parser, images, result);
 		std::ranges::move(images | std::views::as_rvalue, std::back_inserter(result.images));
-		result.imageIndex = GetImageIndex(zip);
 	}
 
 	static void ProcessCover(const Zip& zip, const QString& relativePath, const OpfParser& parser, std::list<EpubParser::ContentItem>& images, EpubParser::ParseResult& result)
@@ -550,6 +519,40 @@ ParseResult Parse(const Zip& zip, const QString& fileName, const Mode mode)
 {
 	const auto stream = zip.Read(fileName);
 	return Parse(stream->GetStream(), mode);
+}
+
+ImageIndex GetImageIndex(const Zip& zip)
+{
+	if (zip.GetFileIndex(Epub::IMAGE_INDEX_FILE_NAME) == Zip::INVALID_INDEX)
+		return {};
+
+	const auto      stream = zip.Read(Epub::IMAGE_INDEX_FILE_NAME);
+	QJsonParseError parseError;
+	const auto      doc = QJsonDocument::fromJson(stream->GetStream().readAll(), &parseError);
+	if (parseError.error != QJsonParseError::NoError)
+	{
+		PLOGW << parseError.errorString();
+		return {};
+	}
+
+	if (!doc.isArray())
+	{
+		PLOGW << Epub::IMAGE_INDEX_FILE_NAME << " must be json array";
+		return {};
+	}
+
+	return doc.array() | std::views::transform([](const auto& item) {
+			   return item.toObject();
+		   })
+	     | std::views::transform([](const auto& item) {
+			   return std::make_pair(item[Epub::IMAGE_INDEX_ID].toString(), item[Epub::IMAGE_INDEX_NUM].toInt());
+		   })
+	     | std::ranges::to<std::vector>();
+}
+
+bool IsImage(const QString& id)
+{
+	return id.endsWith(".png") || id.endsWith(".jpg") || id.endsWith(".jpeg");
 }
 
 } // namespace HomeCompa::Util::EpubParser
