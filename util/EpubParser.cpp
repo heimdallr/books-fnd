@@ -552,7 +552,7 @@ ImageIndex GetImageIndex(const Zip& zip)
 
 bool IsImage(const QString& id)
 {
-	return id.endsWith(".png") || id.endsWith(".jpg") || id.endsWith(".jpeg");
+	return id.endsWith(".png") || id.endsWith(".jpg") || id.endsWith(".jpeg") || id.endsWith(".gif");
 }
 
 } // namespace HomeCompa::Util::EpubParser
