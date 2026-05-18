@@ -170,6 +170,12 @@ private: // IZip
 		throw std::runtime_error("Cannot read with writer");
 	}
 
+	std::unordered_map<QString, QByteArray> ReadAll() const override
+	{
+		assert(false && "Cannot read with writer");
+		throw std::runtime_error("Cannot read with writer");
+	}
+
 	bool Write(const IZipFileProvider& /*zipFileProvider*/) override
 	{
 		assert(false && "Cannot write with reader");
@@ -214,6 +220,16 @@ private: // IZip
 			return !m_progress->OnCheckBreak();
 		});
 		return File::Read(*m_archive, m_files.GetFile(filename));
+	}
+
+	std::unordered_map<QString, QByteArray> ReadAll() const override
+	{
+		std::map<bit7z::tstring, std::vector<bit7z::byte_t>> output;
+		m_archive->extractTo(output);
+		return output | std::views::transform([](auto& item) {
+				   return std::make_pair(QDir::fromNativeSeparators(QString::fromBit7zString(item.first)), QByteArray {reinterpret_cast<const char*>(item.second.data()), static_cast<qsizetype>(item.second.size()) });
+			   })
+		     | std::ranges::to<std::unordered_map>();
 	}
 
 protected:
@@ -275,7 +291,7 @@ protected:
 		});
 
 		m_archive->setFileCallback([this](const auto& file) {
-            m_progress->OnFileDone(QString::fromBit7zString(file));
+			m_progress->OnFileDone(QString::fromBit7zString(file));
 		});
 	}
 

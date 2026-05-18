@@ -142,6 +142,11 @@ public:
 		return m_file->Read();
 	}
 
+	std::unordered_map<QString, QByteArray> ReadAll() const
+	{
+		return m_zip->ReadAll();
+	}
+
 	bool Write(const IZipFileProvider& zipFileProvider)
 	{
 		return m_zip->Write(zipFileProvider);
@@ -212,6 +217,11 @@ void Zip::SetProperty(const PropertyId id, QVariant value)
 std::unique_ptr<Stream> Zip::Read(const QString& filename) const
 {
 	return m_impl->Read(filename);
+}
+
+std::unordered_map<QString, QByteArray> Zip::ReadAll() const
+{
+	return m_impl->ReadAll();
 }
 
 QStringList Zip::GetFileNameList() const

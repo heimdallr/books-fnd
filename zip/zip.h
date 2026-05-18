@@ -50,7 +50,8 @@ public:
 	[[nodiscard]] const QDateTime& GetFileTime(const QString& filename) const;
 	[[nodiscard]] size_t           GetFileIndex(const QString& filename) const;
 
-	[[nodiscard]] std::unique_ptr<Stream> Read(const QString& filename) const;
+	[[nodiscard]] std::unique_ptr<Stream>                 Read(const QString& filename) const;
+	[[nodiscard]] std::unordered_map<QString, QByteArray> ReadAll() const;
 
 	void SetProperty(PropertyId id, QVariant value);
 	bool Write(const IZipFileProvider& zipFileProvider);
