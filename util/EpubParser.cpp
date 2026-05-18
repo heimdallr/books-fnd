@@ -8,7 +8,6 @@
 #include <QJsonObject>
 
 #include "fnd/StrUtil.h"
-#include "fnd/linear.h"
 
 #include "xml/SaxParser.h"
 #include "xml/XmlAttributes.h"
@@ -37,54 +36,6 @@ QString CleanPath(const QString& relativePath, const QString& path)
 
 	return result;
 }
-
-class ZipProgressController final : public Zip::ProgressCallback
-{
-	bool OnCheckBreak() override
-	{
-		return false;
-	}
-
-	void OnDone() override
-	{
-#ifdef ADDITIONAL_LOG_ENABLED
-		PLOGV << "extracting done";
-#endif
-	}
-
-	void OnFileDone([[maybe_unused]]const QString& filePath) override
-	{
-#ifdef ADDITIONAL_LOG_ENABLED
-		PLOGV << "extracting done: " << filePath;
-#endif
-	}
-
-	void OnIncrement(int64_t /*bytes*/) override
-	{
-	}
-
-	void OnSetCompleted([[maybe_unused]] const int64_t bytes) override
-	{
-#ifdef ADDITIONAL_LOG_ENABLED
-		if (const auto pct = m_l(bytes); pct != m_currentPct)
-		{
-			m_currentPct = pct;
-			PLOGV << "extracting progress: " << m_currentPct << "%";
-		}
-#endif
-	}
-
-	void OnStartWithTotal([[maybe_unused]] const int64_t totalBytes) override
-	{
-#ifdef ADDITIONAL_LOG_ENABLED
-		m_l = Linear<int64_t, int> { 0, 0, totalBytes, 100 };
-#endif
-	}
-
-private:
-	Linear<int64_t, int> m_l { 0, 0, 100, 100 };
-	int                  m_currentPct { -1 };
-};
 
 class ContainerParser final : SaxParser
 {
@@ -561,7 +512,7 @@ namespace HomeCompa::Util::EpubParser
 
 ParseResult Parse(QIODevice& stream, const Mode mode)
 {
-	const Zip epub(stream, std::make_shared<ZipProgressController>());
+	const Zip epub(stream);
 	return OpfParser::Parse(epub, mode);
 }
 
