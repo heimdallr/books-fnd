@@ -7,17 +7,67 @@
 #include <QVariant>
 
 #include "fnd/FindPair.h"
+#include "fnd/linear.h"
 #include "fnd/memory.h"
 
 #include "impl/archive.h"
 #include "zip/interface/file.h"
 #include "zip/interface/zip.h"
 
+#include "log.h"
+
 using namespace HomeCompa;
 using namespace ZipDetails;
 
 namespace
 {
+
+class ProgressCallbackStub final : public ProgressCallback
+{
+public:
+	void OnStartWithTotal(const int64_t totalBytes) override
+	{
+		m_l = Linear<int64_t, int> { 0, 0, totalBytes, 100 };
+	}
+
+	void OnIncrement(int64_t) override
+	{
+	}
+
+	void OnSetCompleted(const int64_t bytes) override
+	{
+		if (const auto pct = m_l(bytes); pct != m_currentPct)
+		{
+			m_currentPct = pct;
+#ifdef ADDITIONAL_LOG_ENABLED
+			PLOGV << "extracting progress: " << m_currentPct << "%";
+#endif
+		}
+	}
+
+	void OnDone() override
+	{
+#ifdef ADDITIONAL_LOG_ENABLED
+		PLOGV << "extracting done";
+#endif
+	}
+
+	void OnFileDone(const QString& filePath) override
+	{
+#ifdef ADDITIONAL_LOG_ENABLED
+		PLOGV << "extracting done: " << filePath;
+#endif
+	}
+
+	bool OnCheckBreak() override
+	{
+		return false;
+	}
+
+private:
+	Linear<int64_t, int> m_l { 0, 0, 100, 100 };
+	int                  m_currentPct { 0 };
+};
 
 std::shared_ptr<ProgressCallback> GetProgress(std::shared_ptr<ProgressCallback> progress)
 {

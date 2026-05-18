@@ -47,33 +47,4 @@ public:
 	virtual bool OnCheckBreak()                       = 0;
 };
 
-class ProgressCallbackStub final : public ProgressCallback
-{
-public:
-	void OnStartWithTotal(int64_t) override
-	{
-	}
-
-	void OnIncrement(int64_t) override
-	{
-	}
-
-	void OnSetCompleted(int64_t) override
-	{
-	}
-
-	void OnDone() override
-	{
-	}
-
-	void OnFileDone(const QString&) override
-	{
-	}
-
-	bool OnCheckBreak() override
-	{
-		return false;
-	}
-};
-
 } // namespace HomeCompa::ZipDetails
