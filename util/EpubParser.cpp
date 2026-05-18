@@ -52,7 +52,7 @@ class ZipProgressController final : public Zip::ProgressCallback
 #endif
 	}
 
-	void OnFileDone(const QString& filePath) override
+	void OnFileDone([[maybe_unused]]const QString& filePath) override
 	{
 #ifdef ADDITIONAL_LOG_ENABLED
 		PLOGV << "extracting done: " << filePath;
@@ -63,20 +63,22 @@ class ZipProgressController final : public Zip::ProgressCallback
 	{
 	}
 
-	void OnSetCompleted(const int64_t bytes) override
+	void OnSetCompleted([[maybe_unused]] const int64_t bytes) override
 	{
+#ifdef ADDITIONAL_LOG_ENABLED
 		if (const auto pct = m_l(bytes); pct != m_currentPct)
 		{
 			m_currentPct = pct;
-#ifdef ADDITIONAL_LOG_ENABLED
 			PLOGV << "extracting progress: " << m_currentPct << "%";
-#endif
 		}
+#endif
 	}
 
-	void OnStartWithTotal(const int64_t totalBytes) override
+	void OnStartWithTotal([[maybe_unused]] const int64_t totalBytes) override
 	{
+#ifdef ADDITIONAL_LOG_ENABLED
 		m_l = Linear<int64_t, int> { 0, 0, totalBytes, 100 };
+#endif
 	}
 
 private:
@@ -269,6 +271,12 @@ public:
 
 		for (auto&& [id, body] : zipData)
 		{
+			if (id.endsWith(Epub::IMAGE_INDEX_FILE_NAME, Qt::CaseInsensitive))
+			{
+				result.imageIndex = std::move(body);
+				continue;
+			}
+
 			if (!!(mode & EpubParser::Mode::Images))
 			{
 				if (EpubParser::IsImage(id))
@@ -563,14 +571,10 @@ ParseResult Parse(const Zip& zip, const QString& fileName, const Mode mode)
 	return Parse(stream->GetStream(), mode);
 }
 
-ImageIndex GetImageIndex(const Zip& zip)
+ImageIndex GetImageIndex(const QByteArray& bytes)
 {
-	if (zip.GetFileIndex(Epub::IMAGE_INDEX_FILE_NAME) == Zip::INVALID_INDEX)
-		return {};
-
-	const auto      stream = zip.Read(Epub::IMAGE_INDEX_FILE_NAME);
 	QJsonParseError parseError;
-	const auto      doc = QJsonDocument::fromJson(stream->GetStream().readAll(), &parseError);
+	const auto      doc = QJsonDocument::fromJson(bytes, &parseError);
 	if (parseError.error != QJsonParseError::NoError)
 	{
 		PLOGW << parseError.errorString();

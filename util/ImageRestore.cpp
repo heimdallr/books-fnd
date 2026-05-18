@@ -376,65 +376,41 @@ QByteArray PrepareToExport_fb2(QIODevice& stream, Covers covers, std::unique_ptr
 
 QByteArray PrepareToExport_epub(QIODevice& stream, Covers covers, std::unique_ptr<const ExtractedBook> /*metadataReplacement*/, const ImageProcessing imageProcessing)
 {
-	const Zip  input(stream);
-	auto       imageIndex = EpubParser::GetImageIndex(input) | std::views::as_rvalue | std::views::transform([](auto&& item) {
-						  return std::make_pair(item.second, std::move(item.first));
-							})
-	                      | std::ranges::to<std::unordered_map>();
-	const auto zipFiles   = Zip::CreateZipFileController();
+	auto parseResult = Parse(stream, EpubParser::Mode::All);
+
+	const auto zipFiles = Zip::CreateZipFileController();
 
 	auto addImage = [&](const QString& id, const QByteArray& body, const bool isCover) {
 		if (const auto [bytes, _] = RecodeImage(isCover, imageProcessing, body, QFileInfo(id).suffix()); !bytes.isEmpty())
 			zipFiles->AddFile(id, bytes);
 	};
 
-	for (auto&& [id, cover] : covers)
+	if (!parseResult.imageIndex.isEmpty())
 	{
-		auto&& [isCover, body] = cover;
-		if (const auto name =
-		        [&] {
-					const auto it = imageIndex.find(isCover ? -1 : id.toInt());
-					return it != imageIndex.end() ? it->second : QString {};
-				}();
-		    !name.isEmpty())
-			addImage(name, body, isCover);
+		auto imageIndex = EpubParser::GetImageIndex(parseResult.imageIndex) | std::views::as_rvalue | std::views::transform([](auto&& item) {
+							  return std::make_pair(item.second, std::move(item.first));
+						  })
+		                | std::ranges::to<std::unordered_map>();
+
+		for (auto&& [id, cover] : covers)
+		{
+			auto&& [isCover, body] = cover;
+			if (const auto name =
+			        [&] {
+						const auto it = imageIndex.find(isCover ? -1 : id.toInt());
+						return it != imageIndex.end() ? it->second : QString {};
+					}();
+			    !name.isEmpty())
+				addImage(name, body, isCover);
+		}
 	}
 
-	const auto zipFileNames = input.GetFileNameList();
-	const auto prefix       = [&]() -> std::expected<QString, QString> {
-		const auto it = std::ranges::find_if(zipFileNames, [container = QString { Epub::CONTAINER_FILE_NAME.data() }](const QString& fileName) {
-			return fileName.endsWith(container, Qt::CaseInsensitive);
-		});
-		if (it != zipFileNames.end())
-			return First(*it, it->length() - static_cast<qsizetype>(Epub::CONTAINER_FILE_NAME.size()));
-
-		return std::unexpected(QString("cannot find %1").arg(Epub::CONTAINER_FILE_NAME));
-	}();
-
-	if (!prefix.has_value())
-	{
-		PLOGE << prefix.error();
-		return {};
-	}
-
-	const auto& prefixPath = prefix.value();
-
-	for (const auto& name : zipFileNames | std::views::filter([&](const QString& item) {
-								return item.startsWith(prefixPath);
-							}))
-		if (!EpubParser::IsImage(name))
-			if (const auto inputStream = input.Read(name))
-				zipFiles->AddFile(name.mid(prefixPath.length()), inputStream->GetStream().readAll());
-
-	if (covers.empty())
-	{
-		stream.seek(0);
-		auto parseResult = Parse(stream, EpubParser::Mode::Images);
-		if (parseResult.coverExists)
-			addImage(parseResult.images.front().id, parseResult.images.front().body, true);
-		for (const auto& [id, body] : parseResult.images | std::views::as_rvalue | std::views::drop(parseResult.coverExists ? 1 : 0))
-			addImage(id, body, false);
-	}
+	for (auto&& [name, body] : parseResult.texts)
+		zipFiles->AddFile(name, body);
+	if (parseResult.coverExists)
+		addImage(parseResult.images.front().id, parseResult.images.front().body, true);
+	for (const auto& [id, body] : parseResult.images | std::views::as_rvalue | std::views::drop(parseResult.coverExists ? 1 : 0))
+		addImage(id, body, false);
 
 	QByteArray result;
 	{

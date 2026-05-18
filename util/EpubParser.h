@@ -42,14 +42,16 @@ struct ParseResult
 	QStringList              genres;
 	std::vector<QStringList> authors;
 	QString                  annotation;
+	QByteArray               imageIndex;
 	bool                     coverExists { false };
 	std::vector<ContentItem> images;
 	std::vector<ContentItem> texts;
+	std::vector<ContentItem> others;
 };
 
 UTIL_EXPORT ParseResult Parse(QIODevice& stream, Mode mode = Mode::None);
 UTIL_EXPORT ParseResult Parse(const Zip& zip, const QString& fileName, Mode mode = Mode::None);
-UTIL_EXPORT ImageIndex  GetImageIndex(const Zip& zip);
+UTIL_EXPORT ImageIndex  GetImageIndex(const QByteArray& bytes);
 UTIL_EXPORT bool        IsImage(const QString& id);
 
 } // namespace HomeCompa::Util::EpubParser
