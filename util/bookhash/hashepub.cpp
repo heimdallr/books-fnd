@@ -89,6 +89,10 @@ private: // BookHash::IParser
 								   });
 							   }))
 		{
+#ifdef ADDITIONAL_LOG_ENABLED
+			PLOGV << "process " << id;
+#endif
+
 			body = RemoveDocType(std::move(body));
 			QBuffer buffer(&body);
 			buffer.open(QIODevice::ReadOnly);

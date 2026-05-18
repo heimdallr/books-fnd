@@ -176,6 +176,9 @@ void SetHash(ImageHashItem& item, QCryptographicHash& cryptographicHash)
 	item.hash  = QString::fromUtf8(cryptographicHash.result().toHex());
 	item.pHash = GetPHash(item);
 	item.body.clear();
+#ifdef ADDITIONAL_LOG_ENABLED
+	PLOGV << item.file;
+#endif
 }
 
 CalculateHashResult CalculateHash(Hist& hist)
