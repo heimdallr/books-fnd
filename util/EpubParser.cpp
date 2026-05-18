@@ -7,6 +7,9 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
+#include "fnd/StrUtil.h"
+#include "fnd/linear.h"
+
 #include "xml/SaxParser.h"
 #include "xml/XmlAttributes.h"
 #include "xml/XmlUtil.h"
@@ -35,25 +38,69 @@ QString CleanPath(const QString& relativePath, const QString& path)
 	return result;
 }
 
+class ZipProgressController final : public Zip::ProgressCallback
+{
+	bool OnCheckBreak() override
+	{
+		return false;
+	}
+
+	void OnDone() override
+	{
+#ifdef ADDITIONAL_LOG_ENABLED
+		PLOGV << "extracting done";
+#endif
+	}
+
+	void OnFileDone(const QString& filePath) override
+	{
+#ifdef ADDITIONAL_LOG_ENABLED
+		PLOGV << "extracting done: " << filePath;
+#endif
+	}
+
+	void OnIncrement(int64_t /*bytes*/) override
+	{
+	}
+
+	void OnSetCompleted(const int64_t bytes) override
+	{
+		if (const auto pct = m_l(bytes); pct != m_currentPct)
+		{
+			m_currentPct = pct;
+#ifdef ADDITIONAL_LOG_ENABLED
+			PLOGV << "extracting progress: " << m_currentPct << "%";
+#endif
+		}
+	}
+
+	void OnStartWithTotal(const int64_t totalBytes) override
+	{
+		m_l = Linear<int64_t, int> { 0, 0, totalBytes, 100 };
+	}
+
+private:
+	Linear<int64_t, int> m_l { 0, 0, 100, 100 };
+	int                  m_currentPct { -1 };
+};
+
 class ContainerParser final : SaxParser
 {
 public:
-	static QString GetOpfPath(const Zip& zip)
+	static QString GetOpfPath(std::unordered_map<QString, QByteArray>& zipData)
 	{
-		const auto zipFiles = zip.GetFileNameList();
-		const auto it       = std::ranges::find_if(zipFiles, [container = QString { Epub::CONTAINER_FILE_NAME.data() }](const QString& fileName) {
-			return fileName.endsWith(container, Qt::CaseInsensitive);
+		const auto it = std::ranges::find_if(zipData, [container = QString { Epub::CONTAINER_FILE_NAME.data() }](const auto& item) {
+			return item.first.endsWith(container, Qt::CaseInsensitive);
 		});
-		if (it == zipFiles.end())
+		if (it == zipData.end())
 			throw std::invalid_argument(std::format("cannot find {}", Epub::CONTAINER_FILE_NAME));
 
-		auto    bytes = RemoveDocType(zip.Read(*it)->GetStream().readAll());
-		QBuffer stream(&bytes);
+		QBuffer stream(&it->second);
 		stream.open(QIODevice::ReadOnly);
 
 		ContainerParser parser(stream);
 		auto            result = std::move(parser.m_opfPath);
-		return it->first(it->length() - static_cast<qsizetype>(Epub::CONTAINER_FILE_NAME.size())) + result;
+		return it->first.first(it->first.length() - static_cast<qsizetype>(Epub::CONTAINER_FILE_NAME.size())) + result;
 	}
 
 private:
@@ -82,11 +129,18 @@ private:
 class HtmlParser final : SaxParser
 {
 public:
-	static QString GetImagePath(const Zip& zip, const QString& htmlPath)
+	static QString GetImagePath(std::unordered_map<QString, QByteArray>& zipData, const QString& htmlPath)
 	{
 		try
 		{
-			auto    bytes = RemoveDocType(zip.Read(htmlPath)->GetStream().readAll());
+			const auto it = zipData.find(htmlPath);
+			if (it == zipData.end())
+			{
+				PLOGW << "cannot find " << htmlPath;
+				return {};
+			}
+
+			auto    bytes = RemoveDocType(it->second);
 			QBuffer stream(&bytes);
 			stream.open(QIODevice::ReadOnly);
 
@@ -186,7 +240,9 @@ class OpfParser final : SaxParser
 public:
 	static EpubParser::ParseResult Parse(const Zip& zip, const EpubParser::Mode mode)
 	{
-		const auto      opfPath = ContainerParser::GetOpfPath(zip);
+		auto zipData = zip.ReadAll();
+
+		const auto      opfPath = ContainerParser::GetOpfPath(zipData);
 		const QFileInfo fileInfo(opfPath);
 
 		auto relativePath = fileInfo.path();
@@ -195,7 +251,10 @@ public:
 		else
 			relativePath.append('/');
 
-		auto    bytes = RemoveDocType(zip.Read(opfPath)->GetStream().readAll());
+		const auto itOpf = zipData.find(opfPath);
+		if (itOpf == zipData.end())
+			throw std::runtime_error(std::format("cannot find opf: ", opfPath));
+		auto    bytes = RemoveDocType(itOpf->second);
 		QBuffer stream(&bytes);
 		stream.open(QIODevice::ReadOnly);
 
@@ -208,35 +267,16 @@ public:
 		std::list<EpubParser::ContentItem> images;
 		const auto                         coverPath = parser.m_coverPath.isEmpty() ? QString {} : CleanPath(relativePath, parser.m_coverPath);
 
-		const auto getBody = [&](const QString& id) -> QByteArray {
-			try
-			{
-				if (const auto imageStream = zip.Read(id))
-					return imageStream->GetStream().readAll();
-			}
-			catch (const std::exception& ex)
-			{
-				PLOGE << id << ": " << ex.what();
-				throw;
-			}
-			catch (...)
-			{
-				PLOGE << id << ": unknown error";
-				throw;
-			}
-			return {};
-		};
-
-		for (auto&& id : zip.GetFileNameList())
+		for (auto&& [id, body] : zipData)
 		{
 			if (!!(mode & EpubParser::Mode::Images))
 			{
 				if (EpubParser::IsImage(id))
 				{
 					const auto isCover = id == coverPath;
-					if (auto body = getBody(id); !body.isEmpty())
+					if (!body.isEmpty())
 					{
-						EpubParser::ContentItem contentItem { std::move(id), std::move(body) };
+						EpubParser::ContentItem contentItem { id, std::move(body) };
 						isCover ? (result.coverExists = true, images.push_front(std::move(contentItem))) : images.push_back(contentItem);
 						continue;
 					}
@@ -244,12 +284,12 @@ public:
 			}
 
 			if (!!(mode & EpubParser::Mode::Texts))
-				if (auto body = getBody(id); !body.isEmpty())
-					result.texts.emplace_back(std::move(id), std::move(body));
+				if (!body.isEmpty())
+					result.texts.emplace_back(id, std::move(body));
 		}
 
 		if (!!(mode & EpubParser::Mode::Images))
-			ProcessImages(zip, relativePath, parser, std::move(images), result);
+			ProcessImages(zipData, relativePath, parser, std::move(images), result);
 
 		if (!result.texts.empty())
 		{
@@ -280,13 +320,15 @@ public:
 		return result;
 	}
 
-	static void ProcessImages(const Zip& zip, const QString& relativePath, const OpfParser& parser, std::list<EpubParser::ContentItem> images, EpubParser::ParseResult& result)
+	static void
+	ProcessImages(std::unordered_map<QString, QByteArray>& zipData, const QString& relativePath, const OpfParser& parser, std::list<EpubParser::ContentItem> images, EpubParser::ParseResult& result)
 	{
-		ProcessCover(zip, relativePath, parser, images, result);
+		ProcessCover(zipData, relativePath, parser, images, result);
 		std::ranges::move(images | std::views::as_rvalue, std::back_inserter(result.images));
 	}
 
-	static void ProcessCover(const Zip& zip, const QString& relativePath, const OpfParser& parser, std::list<EpubParser::ContentItem>& images, EpubParser::ParseResult& result)
+	static void
+	ProcessCover(std::unordered_map<QString, QByteArray>& zipData, const QString& relativePath, const OpfParser& parser, std::list<EpubParser::ContentItem>& images, EpubParser::ParseResult& result)
 	{
 		if (result.coverExists)
 			return;
@@ -294,7 +336,7 @@ public:
 		const auto findCover = [&](const QString& path) {
 			auto cleanPath = CleanPath(relativePath, path);
 			if (cleanPath.endsWith(".xhtml", Qt::CaseInsensitive) || cleanPath.endsWith(".html", Qt::CaseInsensitive))
-				cleanPath = HtmlParser::GetImagePath(zip, cleanPath);
+				cleanPath = HtmlParser::GetImagePath(zipData, cleanPath);
 			if (cleanPath.isEmpty())
 				return;
 			if (const auto it = std::ranges::find(
@@ -511,7 +553,7 @@ namespace HomeCompa::Util::EpubParser
 
 ParseResult Parse(QIODevice& stream, const Mode mode)
 {
-	const Zip epub(stream);
+	const Zip epub(stream, std::make_shared<ZipProgressController>());
 	return OpfParser::Parse(epub, mode);
 }
 

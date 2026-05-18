@@ -68,6 +68,14 @@ public:
 private:
 	std::function<void(T&)> getTask(const std::stop_token& stop)
 	{
+		auto task = getTaskImpl(stop);
+		m_condition.notify_all();
+
+		return task;
+	}
+
+	std::function<void(T&)> getTaskImpl(const std::stop_token& stop)
+	{
 		std::unique_lock lock(m_tasksGuard);
 		if (!m_condition.wait(lock, stop, [this] {
 				return !m_tasks.empty();
@@ -76,7 +84,6 @@ private:
 
 		auto task = std::move(m_tasks.front());
 		m_tasks.pop();
-		m_condition.notify_all();
 
 		return task;
 	}

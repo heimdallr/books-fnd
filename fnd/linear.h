@@ -27,8 +27,8 @@ public:
 	}
 
 private:
-	const X m_x0, m_x1;
-	const Y m_y0, m_y1;
+	X m_x0, m_x1;
+	Y m_y0, m_y1;
 };
 
 } // namespace HomeCompa

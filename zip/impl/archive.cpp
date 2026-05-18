@@ -224,6 +224,17 @@ private: // IZip
 
 	std::unordered_map<QString, QByteArray> ReadAll() const override
 	{
+		m_archive->setTotalCallback([this](const uint64_t total) {
+			m_progress->OnStartWithTotal(static_cast<int64_t>(total));
+		});
+		m_archive->setProgressCallback([this](const uint64_t progress) {
+			m_progress->OnSetCompleted(static_cast<int64_t>(progress));
+			return !m_progress->OnCheckBreak();
+		});
+
+#ifdef ADDITIONAL_LOG_ENABLED
+		PLOGV << "extracting...";
+#endif
 		std::map<bit7z::tstring, std::vector<bit7z::byte_t>> output;
 		m_archive->extractTo(output);
 		return output | std::views::transform([](auto& item) {
