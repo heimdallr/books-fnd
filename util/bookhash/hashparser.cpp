@@ -54,6 +54,7 @@ private: // Util::SaxParser
 		{
 			auto& section    = m_currentSection->children.try_emplace(attributes.GetAttribute("id"), std::make_unique<HashParser::Section>()).first->second;
 			section->count   = attributes.GetAttribute("count").toULongLong();
+			section->size    = attributes.GetAttribute("size").toULongLong();
 			section->parent  = m_currentSection;
 			m_currentSection = section.get();
 		}
@@ -90,7 +91,7 @@ private: // Util::SaxParser
 				))
 				return false;
 
-#define HASH_PARSER_CALLBACK_ITEM(NAME) m_##NAME = QString{};
+#define HASH_PARSER_CALLBACK_ITEM(NAME) m_##NAME = QString {};
 			HASH_PARSER_CALLBACK_ITEMS_X_MACRO
 #undef HASH_PARSER_CALLBACK_ITEM
 

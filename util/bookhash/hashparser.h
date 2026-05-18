@@ -31,6 +31,7 @@ struct HashParser
 	{
 		Section* parent { nullptr };
 		size_t   count { 0 };
+		size_t   size { 0 };
 		using Ptr = std::unique_ptr<Section>;
 		std::unordered_map<QString, Ptr> children;
 	};
