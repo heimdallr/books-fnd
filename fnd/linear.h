@@ -26,6 +26,16 @@ public:
 		return m_y0 + (x - m_x0) * (m_y1 - m_y0) / (m_x1 - m_x0);
 	}
 
+	constexpr std::pair<X, X> x() const noexcept
+	{
+		return std::make_pair(m_x0, m_x1);
+	}
+
+	constexpr std::pair<Y, Y> y() const noexcept
+	{
+		return std::make_pair(m_y0, m_y1);
+	}
+
 private:
 	X m_x0, m_x1;
 	Y m_y0, m_y1;

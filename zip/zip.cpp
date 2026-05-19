@@ -28,6 +28,7 @@ public:
 	void OnStartWithTotal(const int64_t totalBytes) override
 	{
 #ifdef ADDITIONAL_LOG_ENABLED
+		m_currentPct = 0;
 		m_l = Linear<int64_t, int> { 0, 0, std::max(totalBytes, int64_t { 1 }), 100 };
 #endif
 	}
@@ -39,10 +40,13 @@ public:
 	void OnSetCompleted(const int64_t bytes) override
 	{
 #ifdef ADDITIONAL_LOG_ENABLED
+		if (!m_needLog && bytes && bytes * 4 < m_l.x().second)
+			m_needLog = true;
+
 		if (const auto pct = m_l(bytes); pct != m_currentPct)
 		{
 			m_currentPct = pct;
-			PLOGV << "extracting progress: " << m_currentPct << "%";
+			PLOGV_IF(m_needLog) << "extracting progress: " << m_currentPct << "%";
 		}
 #endif
 	}
@@ -50,14 +54,14 @@ public:
 	void OnDone() override
 	{
 #ifdef ADDITIONAL_LOG_ENABLED
-		PLOGV << "extracting done";
+		PLOGV_IF(m_needLog) << "extracting done";
 #endif
 	}
 
 	void OnFileDone(const QString& filePath) override
 	{
 #ifdef ADDITIONAL_LOG_ENABLED
-		PLOGV << "extracting done: " << filePath;
+		PLOGV_IF(m_needLog) << "extracting done: " << filePath;
 #endif
 	}
 
@@ -69,6 +73,7 @@ public:
 private:
 	Linear<int64_t, int> m_l { 0, 0, 100, 100 };
 	int                  m_currentPct { 0 };
+	bool                 m_needLog { false };
 };
 
 std::shared_ptr<ProgressCallback> GetProgress(std::shared_ptr<ProgressCallback> progress)
