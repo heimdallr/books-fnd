@@ -40,7 +40,7 @@ QString CleanPath(const QString& relativePath, const QString& path)
 class ContainerParser final : SaxParser
 {
 public:
-	static QString GetOpfPath(std::unordered_map<QString, QByteArray>& zipData)
+	static QString GetOpfPath(const std::unordered_map<QString, QByteArray>& zipData)
 	{
 		const auto it = std::ranges::find_if(zipData, [container = QString { Epub::CONTAINER_FILE_NAME.data() }](const auto& item) {
 			return item.first.endsWith(container, Qt::CaseInsensitive);
@@ -48,7 +48,8 @@ public:
 		if (it == zipData.end())
 			throw std::invalid_argument(std::format("cannot find {}", Epub::CONTAINER_FILE_NAME));
 
-		QBuffer stream(&it->second);
+		auto    body = RemoveDocType(it->second);
+		QBuffer stream(&body);
 		stream.open(QIODevice::ReadOnly);
 
 		ContainerParser parser(stream);
