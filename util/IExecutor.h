@@ -27,12 +27,12 @@ public:
 	};
 
 public:
-	IExecutor()                                              = default;
-	IExecutor(const IExecutor&)                              = delete;
-	IExecutor(IExecutor&&)                                   = default;
-	IExecutor& operator=(const IExecutor&)                   = delete;
-	IExecutor& operator=(IExecutor&&)                        = default;
-	virtual ~IExecutor()                                     = default;
+	IExecutor()                            = default;
+	IExecutor(const IExecutor&)            = delete;
+	IExecutor(IExecutor&&)                 = default;
+	IExecutor& operator=(const IExecutor&) = delete;
+	IExecutor& operator=(IExecutor&&)      = default;
+	virtual ~IExecutor()                   = default;
 
 	virtual size_t operator()(Task&& task, int priority = 0, bool displace = true) = 0;
 

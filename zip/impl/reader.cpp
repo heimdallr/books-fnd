@@ -10,7 +10,6 @@
 
 #include "FileItem.h"
 #include "QtTypes.h"
-
 #include "log.h"
 
 namespace HomeCompa::ZipDetails::SevenZip
@@ -68,7 +67,7 @@ private: // IFile
 		{
 			return std::make_unique<StreamImpl>(m_zip, m_fileItem);
 		}
-		catch(const std::exception& ex)
+		catch (const std::exception& ex)
 		{
 			PLOGE << m_fileItem.name << " read error: " << ex.what();
 			throw;
