@@ -1,70 +1,19 @@
 #include <QCryptographicHash>
-#include <QtTypes.h>
 
 #include <ranges>
 
 #include <QBuffer>
 
-#include "xml/SaxParser.h"
-
 #include "EpubParser.h"
-#include "StrUtil.h"
 #include "hashbook.h"
 #include "log.h"
 #include "parser.h"
-#include "xml/XmlUtil.h"
 
 using namespace HomeCompa::Util;
 using namespace HomeCompa;
 
 namespace
 {
-
-struct HtmlParser final : private SaxParser
-{
-	std::unordered_map<QString, size_t> hist;
-
-	HtmlParser(QIODevice& input, QCryptographicHash& md5)
-		: SaxParser(input, 512)
-		, m_md5 { md5 }
-	{
-		Parse();
-	}
-
-private: // SaxParser
-	bool OnCharacters(const QString&, const QString& value) override
-	{
-		auto valueCopy = value;
-
-		PrepareTitle(valueCopy);
-		for (auto&& word : valueCopy.split(' ', Qt::SkipEmptyParts))
-		{
-			UpdateHash(word);
-
-			RemoveIf(word, [](const QChar ch) {
-				const auto category = ch.category();
-				return category < QChar::Letter_Lowercase || category > QChar::Letter_Other;
-			});
-			if (word.isEmpty())
-				continue;
-
-			++hist[word];
-		}
-		return true;
-	}
-
-private:
-	void UpdateHash(QString value) const
-	{
-		RemoveIf(value, [](const QChar ch) {
-			return ch.category() != QChar::Letter_Lowercase;
-		});
-		m_md5.addData(value.toUtf8());
-	}
-
-private:
-	QCryptographicHash& m_md5;
-};
 
 class EpubParserImpl final : public BookHash::IParser
 {
@@ -93,15 +42,12 @@ private: // BookHash::IParser
 			PLOGV << "process " << id;
 #endif
 
-			body = RemoveDocType(std::move(body));
-			QBuffer buffer(&body);
-			buffer.open(QIODevice::ReadOnly);
-			HtmlParser parser(buffer, md5);
+			auto sectionHist = CollectHistogram(body, md5);
 
-			for (const auto& [word, count] : parser.hist)
+			for (const auto& [word, count] : sectionHist)
 				hist[word] += count;
 
-			auto [hashValues, hash, count, size] = CalculateHash(parser.hist);
+			auto [hashValues, hash, count, size] = CalculateHash(sectionHist);
 			sections << QString("1\t%1\t%2\t%3").arg(hash).arg(count).arg(size);
 		}
 

@@ -4,10 +4,12 @@
 
 #include "fnd/FindPair.h"
 
-#include "GenresLocalization.h"
 #include "util/xml/SaxParser.h"
 #include "util/xml/XmlAttributes.h"
 
+#include "GenresLocalization.h"
+#include "QtTypes.h"
+#include "StrUtil.h"
 #include "log.h"
 #include "zip.h"
 
@@ -20,7 +22,6 @@ namespace
 
 constexpr auto NAME                   = "name";
 constexpr auto NUMBER                 = "number";
-constexpr auto DESCRIPTION            = "FictionBook/description";
 constexpr auto GENRE                  = "FictionBook/description/title-info/genre";
 constexpr auto AUTHOR                 = "FictionBook/description/title-info/author";
 constexpr auto AUTHOR_FIRST_NAME      = "FictionBook/description/title-info/author/first-name";
@@ -56,6 +57,7 @@ struct Data
 	QString     keywords;
 	QString     seqNumber;
 	QString     year;
+	size_t      size { 0 };
 
 	QStringList annotation;
 
@@ -115,10 +117,9 @@ private: // SaxParser
 		using ParseElementFunction = bool (Fb2InpxParserImpl::*)();
 		using ParseElementItem     = std::pair<const char*, ParseElementFunction>;
 		static constexpr ParseElementItem PARSERS[] {
-			{ DESCRIPTION, &Fb2InpxParserImpl::OnEndElementDescription },
-			{      AUTHOR,      &Fb2InpxParserImpl::OnEndElementAuthor },
-			{  AUTHOR_DOC,      &Fb2InpxParserImpl::OnEndElementAuthor },
-			{  ANNOTATION,  &Fb2InpxParserImpl::OnEndElementAnnotation },
+			{     AUTHOR,     &Fb2InpxParserImpl::OnEndElementAuthor },
+			{ AUTHOR_DOC,     &Fb2InpxParserImpl::OnEndElementAuthor },
+			{ ANNOTATION, &Fb2InpxParserImpl::OnEndElementAnnotation },
 		};
 
 		return Parse(*this, PARSERS, path);
@@ -144,6 +145,16 @@ private: // SaxParser
 
 		if (m_annotationMode)
 			m_data.annotation << value.trimmed();
+
+		{
+			auto valueCopy = value;
+			PrepareTitle(valueCopy);
+			RemoveIf(valueCopy, [](const QChar ch) {
+				const auto category = ch.category();
+				return category < QChar::Letter_Lowercase || category > QChar::Letter_Other;
+			});
+			m_data.size += valueCopy.length();
+		}
 
 		return Parse(*this, PARSERS, path, value.trimmed());
 	}
@@ -190,11 +201,6 @@ private:
 	{
 		m_annotationMode = true;
 		return true;
-	}
-
-	bool OnEndElementDescription()
-	{
-		return false;
 	}
 
 	bool OnEndElementAuthor()
@@ -315,7 +321,7 @@ ParseResult Parse(const QString& folder, const Zip& zip, const QString& fileName
 
 		//"AUTHOR;GENRE;TITLE;SERIES;SERNO;FILE;SIZE;LIBID;DEL;EXT;DATE;LANG;LIBRATE;KEYWORDS;YEAR;"
 		const auto values = QStringList() << AuthorsToString(parserData.authors) << GenresToString(parserData.genres) << parserData.title << parserData.series << parserData.seqNumber
-		                                  << fileInfo.completeBaseName() << QString::number(zip.GetFileSize(fileName)) << fileInfo.completeBaseName() << (isDeleted ? "1" : "0") << fileInfo.suffix()
+		                                  << fileInfo.completeBaseName() << QString::number(parserData.size) << fileInfo.completeBaseName() << (isDeleted ? "1" : "0") << fileInfo.suffix()
 		                                  << std::move(dateTime) << parserData.lang << "0" << parserData.keywords << parserData.year;
 
 		return { .line = values.join(FIELDS_SEPARATOR), .annotation = std::move(parserData.annotation) };

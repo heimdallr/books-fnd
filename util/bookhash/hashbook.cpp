@@ -12,7 +12,12 @@
 
 #include "fnd/ScopedCall.h"
 
+#include "xml/SaxParser.h"
+#include "xml/XmlUtil.h"
+
 #include "ImageUtil.h"
+#include "QtTypes.h"
+#include "StrUtil.h"
 #include "canny.h"
 #include "log.h"
 #include "parser.h"
@@ -164,6 +169,52 @@ std::pair<std::vector<std::pair<size_t, QString>>, size_t> GetHashValues(const H
 	);
 }
 
+struct HtmlParser final : private SaxParser
+{
+	std::unordered_map<QString, size_t> hist;
+
+	HtmlParser(QIODevice& input, QCryptographicHash& md5)
+		: SaxParser(input, 512)
+		, m_md5 { md5 }
+	{
+		Parse();
+	}
+
+private: // SaxParser
+	bool OnCharacters(const QString&, const QString& value) override
+	{
+		auto valueCopy = value;
+
+		PrepareTitle(valueCopy);
+		for (auto&& word : valueCopy.split(' ', Qt::SkipEmptyParts))
+		{
+			UpdateHash(word);
+
+			RemoveIf(word, [](const QChar ch) {
+				const auto category = ch.category();
+				return category < QChar::Letter_Lowercase || category > QChar::Letter_Other;
+			});
+			if (word.isEmpty())
+				continue;
+
+			++hist[word];
+		}
+		return true;
+	}
+
+private:
+	void UpdateHash(QString value) const
+	{
+		RemoveIf(value, [](const QChar ch) {
+			return ch.category() != QChar::Letter_Lowercase;
+		});
+		m_md5.addData(value.toUtf8());
+	}
+
+private:
+	QCryptographicHash& m_md5;
+};
+
 } // namespace
 
 namespace HomeCompa::Util
@@ -222,6 +273,17 @@ void ParseBookHash(BookHashItem& bookHashItem, QCryptographicHash& cryptographic
 		return ok ? QString("%1").arg(number, 16, 10, QChar { '0' }) : item.file;
 	});
 	bookHashItem.body.clear();
+}
+
+Hist CollectHistogram(QByteArray body, QCryptographicHash& md5)
+{
+	body = RemoveDocType(std::move(body));
+	QBuffer buffer(&body);
+	buffer.open(QIODevice::ReadOnly);
+	HtmlParser parser(buffer, md5);
+
+	auto result = std::move(parser.hist);
+	return result;
 }
 
 } // namespace HomeCompa::Util

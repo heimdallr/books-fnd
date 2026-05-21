@@ -9,12 +9,11 @@ class QCryptographicHash;
 namespace HomeCompa::Util
 {
 
-UTIL_EXPORT void ParseBookHash(BookHashItem& bookHashItem, QCryptographicHash& cryptographicHash);
-
-void SetHash(ImageHashItem& item, QCryptographicHash& cryptographicHash);
-
 using HashValues = std::vector<std::pair<size_t, QString>>;
 using Hist       = std::unordered_map<QString, size_t>;
+
+UTIL_EXPORT void ParseBookHash(BookHashItem& bookHashItem, QCryptographicHash& cryptographicHash);
+UTIL_EXPORT Hist CollectHistogram(QByteArray body, QCryptographicHash& md5);
 
 struct CalculateHashResult
 {
@@ -24,6 +23,8 @@ struct CalculateHashResult
 	size_t     size;
 };
 
-CalculateHashResult CalculateHash(Hist& hist);
+UTIL_EXPORT CalculateHashResult CalculateHash(Hist& hist);
+
+void SetHash(ImageHashItem& item, QCryptographicHash& cryptographicHash);
 
 }
