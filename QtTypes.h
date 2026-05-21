@@ -58,7 +58,7 @@ inline void AddData(QCryptographicHash& hash, const char* data, qint64 length)
 
 inline void Erase(QByteArray& bytes, const QByteArray::iterator begin, const QByteArray::iterator end)
 {
-	bytes.erase(std::next(bytes.begin(), begin), std::next(bytes.begin(), end + 1));
+	bytes.erase(begin, end);
 }
 
 inline void Resize(QStringList& list, const qsizetype_t size)
