@@ -25,11 +25,11 @@ namespace
 class ProgressCallbackStub final : public ProgressCallback
 {
 public:
-	void OnStartWithTotal(const int64_t totalBytes) override
+	void OnStartWithTotal([[maybe_unused]] const int64_t totalBytes) override
 	{
 #ifdef ADDITIONAL_LOG_ENABLED
 		m_currentPct = 0;
-		m_l = Linear<int64_t, int> { 0, 0, std::max(totalBytes, int64_t { 1 }), 100 };
+		m_l          = Linear<int64_t, int> { 0, 0, std::max(totalBytes, int64_t { 1 }), 100 };
 #endif
 	}
 
@@ -37,10 +37,10 @@ public:
 	{
 	}
 
-	void OnSetCompleted(const int64_t bytes) override
+	void OnSetCompleted([[maybe_unused]] const int64_t bytes) override
 	{
 #ifdef ADDITIONAL_LOG_ENABLED
-		if (!m_needLog && bytes && bytes * 4 < m_l.x().second)
+		if (!m_needLog && bytes && bytes * 10 < m_l.x().second)
 			m_needLog = true;
 
 		if (const auto pct = m_l(bytes); pct != m_currentPct)
@@ -58,7 +58,7 @@ public:
 #endif
 	}
 
-	void OnFileDone(const QString& filePath) override
+	void OnFileDone([[maybe_unused]] const QString& filePath) override
 	{
 #ifdef ADDITIONAL_LOG_ENABLED
 		PLOGV_IF(m_needLog) << "extracting done: " << filePath;
@@ -71,9 +71,11 @@ public:
 	}
 
 private:
+#ifdef ADDITIONAL_LOG_ENABLED
 	Linear<int64_t, int> m_l { 0, 0, 100, 100 };
 	int                  m_currentPct { 0 };
 	bool                 m_needLog { false };
+#endif
 };
 
 std::shared_ptr<ProgressCallback> GetProgress(std::shared_ptr<ProgressCallback> progress)
