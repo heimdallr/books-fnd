@@ -15,6 +15,7 @@
 
 #include "Constant.h"
 #include "GenresLocalization.h"
+#include "QtTypes.h"
 #include "log.h"
 #include "zip.h"
 
@@ -54,7 +55,7 @@ public:
 
 		ContainerParser parser(stream);
 		auto            result = std::move(parser.m_opfPath);
-		return it->first.first(it->first.length() - static_cast<qsizetype>(Epub::CONTAINER_FILE_NAME.size())) + result;
+		return First(it->first, it->first.length() - static_cast<qsizetype>(Epub::CONTAINER_FILE_NAME.size())) + result;
 	}
 
 private:
@@ -259,7 +260,7 @@ public:
 				if (delimiterPosition < 0)
 					break;
 
-				const auto prefix          = result.texts.front().id.first(delimiterPosition + 1);
+				const auto prefix          = First(result.texts.front().id, delimiterPosition + 1);
 				const auto startWithPrefix = [&](const auto& items) {
 					return std::ranges::all_of(items, [&](const auto& item) {
 						return item.id.startsWith(prefix, Qt::CaseInsensitive);
@@ -400,7 +401,7 @@ private:
 		if (name.endsWith("subject", Qt::CaseInsensitive))
 			return (void)(m_functor = [this](const QString&, const QString& value) {
 				if (const QString genre = value.trimmed(); !genre.isEmpty())
-					m_result.genres.emplace_back(FixGenre(genre));
+					m_result.genres << FixGenre(genre);
 			});
 
 		if (name.endsWith("creator", Qt::CaseInsensitive))
@@ -417,9 +418,9 @@ private:
 						auto middleName = std::move(author.front());
 						author.pop_front();
 						auto lastName = author.join(' ');
-						author        = { std::move(lastName), std::move(firstName), std::move(middleName) };
+						author        = QStringList { std::move(lastName), std::move(firstName), std::move(middleName) };
 					}
-					author.resize(3);
+					Resize(author, 3);
 				}
 			});
 

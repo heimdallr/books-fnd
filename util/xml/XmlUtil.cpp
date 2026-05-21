@@ -1,5 +1,7 @@
 #include "XmlUtil.h"
 
+#include "QtTypes.h"
+
 namespace HomeCompa::Util
 {
 
@@ -15,7 +17,7 @@ QByteArray RemoveDocType(QByteArray bytesSrc)
 	if (end < 0)
 		return bytes;
 
-	bytes.erase(std::next(bytes.begin(), begin), std::next(bytes.begin(), end + 1));
+	Erase(bytes, std::next(bytes.begin(), begin), std::next(bytes.begin(), end + 1));
 	return bytes;
 }
 

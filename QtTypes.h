@@ -56,6 +56,16 @@ inline void AddData(QCryptographicHash& hash, const char* data, qint64 length)
 	hash.addData(QByteArrayView { data, length });
 }
 
+inline void Erase(QByteArray& bytes, const QByteArray::iterator begin, const QByteArray::iterator end)
+{
+	bytes.erase(std::next(bytes.begin(), begin), std::next(bytes.begin(), end + 1));
+}
+
+inline void Resize(QStringList& list, const qsizetype_t size)
+{
+	list.resize(size);
+}
+
 	#define BEGIN_FILTER_CHANGE beginFilterChange()
 
 	#define END_FILTER_CHANGE endFilterChange(Direction::Rows)
@@ -104,6 +114,21 @@ inline int TypeId(const QVariant& var)
 inline void AddData(QCryptographicHash& hash, const char* data, qint64 length)
 {
 	hash.addData(data, length);
+}
+
+inline void Erase(QByteArray& bytes, const QByteArray::iterator begin, const QByteArray::iterator end)
+{
+	QByteArray result(bytes.constBegin(), std::distance(bytes.begin(), begin));
+	result.append(bytes.constBegin() + std::distance(bytes.begin(), end), std::distance(end, bytes.end()));
+	bytes = std::move(result);
+}
+
+inline void Resize(QStringList& list, const qsizetype_t size)
+{
+	while (list.size() > size)
+		list.pop_back();
+	while (list.size() < size)
+		list << QString {};
 }
 
 	#define BEGIN_FILTER_CHANGE (void)0

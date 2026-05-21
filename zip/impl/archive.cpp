@@ -24,6 +24,7 @@
 #include "zip/interface/zip.h"
 
 #include "FileItem.h"
+#include "QtTypes.h"
 #include "log.h"
 #include "reader.h"
 
@@ -238,7 +239,10 @@ private: // IZip
 		std::map<bit7z::tstring, std::vector<bit7z::byte_t>> output;
 		m_archive->extractTo(output);
 		return output | std::views::transform([](auto& item) {
-				   return std::make_pair(QDir::fromNativeSeparators(QString::fromBit7zString(item.first)), QByteArray {reinterpret_cast<const char*>(item.second.data()), static_cast<qsizetype>(item.second.size()) });
+				   return std::make_pair(
+					   QDir::fromNativeSeparators(QString::fromBit7zString(item.first)),
+					   QByteArray { reinterpret_cast<const char*>(item.second.data()), static_cast<qsizetype_t>(item.second.size()) }
+				   );
 			   })
 		     | std::ranges::to<std::unordered_map>();
 	}
