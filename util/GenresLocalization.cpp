@@ -72,6 +72,11 @@ const QString& FixGenreStub(const QString& src)
 
 GenreFixer FIX_GENRE = &FixGenreStub;
 
+const QString& FixGenre(const QString& src)
+{
+	return FIX_GENRE(src);
+}
+
 } // namespace
 
 GenreFixerInitializer::GenreFixerInitializer()
@@ -89,9 +94,17 @@ GenreFixerInitializer::~GenreFixerInitializer()
 namespace HomeCompa::Util
 {
 
-const QString& FixGenre(const QString& src)
+void ParseGenresString(QStringList& dst, QString src)
 {
-	return FIX_GENRE(src);
+	src.replace(':', QChar { 0xA789 });
+	src.replace(',', '/');
+	src.replace(';', '/');
+	for (const auto& genre : src.split('/') | std::views::transform([](const auto& item) {
+								 return item.trimmed();
+							 }) | std::views::filter([](const auto& item) {
+								 return item.length() > 2;
+							 }))
+		dst << FixGenre(genre);
 }
 
 }

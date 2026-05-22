@@ -400,13 +400,7 @@ private:
 
 		if (name.endsWith("subject", Qt::CaseInsensitive))
 			return (void)(m_functor = [this](const QString&, const QString& value) {
-				if (QString genre = value.trimmed(); !genre.isEmpty())
-				{
-					genre.replace(':', QChar { 0x2236 });
-					genre.replace(',', '/');
-					for (const auto& item : genre.split('/'))
-						m_result.genres << FixGenre(item.trimmed());
-				}
+				ParseGenresString(m_result.genres, value);
 			});
 
 		if (name.endsWith("creator", Qt::CaseInsensitive))

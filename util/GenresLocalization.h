@@ -386,8 +386,6 @@ inline constexpr const char* GENRES[] {
 	QT_TRANSLATE_NOOP("Genre", "foreign_sf"),
 };
 
-UTIL_EXPORT const QString& FixGenre(const QString& src);
-
 class UTIL_EXPORT GenreFixerInitializer
 {
 	NON_COPY_MOVABLE(GenreFixerInitializer)
@@ -396,5 +394,7 @@ public:
 	GenreFixerInitializer();
 	~GenreFixerInitializer();
 };
+
+void ParseGenresString(QStringList& dst, QString src);
 
 } // namespace HomeCompa::Util

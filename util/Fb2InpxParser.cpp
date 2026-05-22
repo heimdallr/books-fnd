@@ -225,11 +225,7 @@ private:
 
 	bool ParseGenre(const QString& value)
 	{
-		auto genre = value;
-		genre.replace(':', QChar { 0x2236 });
-		genre.replace(',', '/');
-		for (const auto& item : genre.split('/'))
-			m_data.genres.push_back(FixGenre(item.trimmed()));
+		ParseGenresString(m_data.genres, value);
 		return true;
 	}
 
