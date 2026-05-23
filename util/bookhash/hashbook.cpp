@@ -2,10 +2,10 @@
 
 // clang-format off
 #include <QBuffer>
-#include <QCryptographicHash>
 #include <QPixmap>
+#include "QtTypes.h"
 
-#include <CImg.h> // conflicts with #include <QBuffer>
+#include "canny.h"
 // clang-format on
 
 #include <set>
@@ -16,9 +16,7 @@
 #include "xml/XmlUtil.h"
 
 #include "ImageUtil.h"
-#include "QtTypes.h"
 #include "StrUtil.h"
-#include "canny.h"
 #include "log.h"
 #include "parser.h"
 

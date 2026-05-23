@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "CImg.h"
+#include <CImg.h>
 
 namespace HomeCompa::Util
 {

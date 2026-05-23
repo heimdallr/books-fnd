@@ -1,11 +1,10 @@
 #pragma once
 
-#include <QCryptographicHash>
-
 #include <ranges>
 #include <set>
 #include <unordered_set>
 
+#include <QCryptographicHash>
 #include <QString>
 #include <QVariant>
 #include <QtGlobal>
