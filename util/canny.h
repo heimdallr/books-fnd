@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
-
 #include <CImg.h>
+
+#include <vector>
 
 namespace HomeCompa::Util
 {
