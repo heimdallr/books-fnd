@@ -52,7 +52,6 @@ struct ParseResult
 UTIL_EXPORT ParseResult Parse(QIODevice& stream, Mode mode = Mode::None);
 UTIL_EXPORT ParseResult Parse(const Zip& zip, const QString& fileName, Mode mode = Mode::None);
 UTIL_EXPORT ImageIndex  GetImageIndex(const QByteArray& bytes);
-UTIL_EXPORT bool        IsImage(const QString& id);
 
 } // namespace HomeCompa::Util::EpubParser
 

@@ -22,5 +22,6 @@ UTIL_EXPORT QImage  HasAlpha(const QImage& image, const char* data);
 UTIL_EXPORT QPixmap Decode(const QByteArray& bytes);
 UTIL_EXPORT std::pair<QByteArray, const char*> Recode(const QByteArray& bytes);
 UTIL_EXPORT std::pair<QByteArray, const char*> Encode(const QImage& image, const QString& format = {});
+UTIL_EXPORT bool                               IsImage(const QString& fileName);
 
 }

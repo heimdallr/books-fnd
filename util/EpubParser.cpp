@@ -15,6 +15,7 @@
 
 #include "Constant.h"
 #include "GenresLocalization.h"
+#include "ImageUtil.h"
 #include "QtTypes.h"
 #include "log.h"
 #include "zip.h"
@@ -232,7 +233,7 @@ public:
 
 			if (!!(mode & EpubParser::Mode::Images))
 			{
-				if (EpubParser::IsImage(id))
+				if (IsImage(id))
 				{
 					const auto isCover = id == coverPath;
 					if (!body.isEmpty())
@@ -546,11 +547,6 @@ ImageIndex GetImageIndex(const QByteArray& bytes)
 			   return std::make_pair(item[Epub::IMAGE_INDEX_ID].toString(), item[Epub::IMAGE_INDEX_NUM].toInt());
 		   })
 	     | std::ranges::to<std::vector>();
-}
-
-bool IsImage(const QString& id)
-{
-	return id.endsWith(".png") || id.endsWith(".jpg") || id.endsWith(".jpeg") || id.endsWith(".gif");
 }
 
 } // namespace HomeCompa::Util::EpubParser

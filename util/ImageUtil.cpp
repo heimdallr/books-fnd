@@ -137,4 +137,12 @@ std::pair<QByteArray, const char*> Encode(const QImage& image, const QString& fo
 	return format.isEmpty() ? QtEncoder(image) : QtEncoder(image, format);
 }
 
+bool IsImage(const QString& fileName)
+{
+	static constexpr const char* extensions[] { ".png", ".jpg", ".jpeg", ".gif", ".tiff", ".webp" };
+	return std::ranges::any_of(extensions, [&](const char* item) {
+		return fileName.endsWith(item, Qt::CaseInsensitive);
+	});
+}
+
 } // namespace HomeCompa::Util
