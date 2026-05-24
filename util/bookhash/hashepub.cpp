@@ -1,8 +1,7 @@
-#include <QCryptographicHash>
-
 #include <ranges>
 
 #include <QBuffer>
+#include <QCryptographicHash>
 
 #include "EpubParser.h"
 #include "hashbook.h"

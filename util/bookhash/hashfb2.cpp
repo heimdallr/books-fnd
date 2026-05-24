@@ -1,6 +1,6 @@
-#include <QCryptographicHash>
-
 #include <set>
+
+#include <QCryptographicHash>
 
 #include "fnd/IsOneOf.h"
 

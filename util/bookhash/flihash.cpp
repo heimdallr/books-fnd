@@ -1,11 +1,10 @@
 #include "flihash.h"
 
-#include <QCryptographicHash>
-
 #include <ranges>
 #include <set>
 #include <unordered_set>
 
+#include <QCryptographicHash>
 #include <QDir>
 #include <QFileInfo>
 #include <QJsonArray>

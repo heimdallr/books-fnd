@@ -1,9 +1,8 @@
 #pragma once
 
-#include <QHash>
-
 #include <functional>
 
+#include <QHash>
 #include <QString>
 
 #include "fnd/NonCopyMovable.h"
