@@ -1,7 +1,6 @@
 #include "GenresLocalization.h"
 
-#include <QHash>
-
+#include <ranges>
 #include <unordered_map>
 
 #include <QCoreApplication>

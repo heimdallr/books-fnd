@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QStringList>
 #include <QtGlobal>
 
 #include "fnd/NonCopyMovable.h"
