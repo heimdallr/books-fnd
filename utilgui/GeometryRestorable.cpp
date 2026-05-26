@@ -1,6 +1,5 @@
 #include "GeometryRestorable.h"
 
-#include <QGuiApplication>
 #include <QScreen>
 #include <QSplitter>
 #include <QTimer>
@@ -8,9 +7,10 @@
 #include "fnd/algorithm.h"
 
 #include "platformgui/PlatformGuiUtil.h"
-#include "util/ISettingsObserver.h"
-#include "util/UiTimer.h"
-#include "util/serializer/Font.h"
+#include "settings/ISettingsObserver.h"
+
+#include "Font.h"
+#include "UiTimer.h"
 
 using namespace HomeCompa::Util;
 using namespace HomeCompa;
