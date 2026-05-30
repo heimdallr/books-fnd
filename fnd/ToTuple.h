@@ -7,7 +7,8 @@
 #include <boost/preprocessor/punctuation/comma_if.hpp>
 #include <boost/preprocessor/repetition/repeat.hpp>
 
-namespace HomeCompa::Util {
+namespace HomeCompa::Util
+{
 
 #ifdef TO_TUPLE_OVERRIDE_MAX_STRUCT_MEMBERS
 	#define MAX_STRUCT_MEMBERS TO_TUPLE_OVERRIDE_MAX_STRUCT_MEMBERS
@@ -31,7 +32,8 @@ namespace HomeCompa::Util {
 		}                                                                                                                  \
 	};
 
-namespace ToTupleDetails {
+namespace ToTupleDetails
+{
 
 template <std::size_t N>
 struct to_tuple_ref_t;
@@ -62,16 +64,16 @@ struct UniversalType
 template <typename T>
 consteval std::size_t MemberCounter(auto... Members)
 {
-	if constexpr (requires { T{Members...}; } == false)
+	if constexpr (requires { T { Members... }; } == false)
 		return sizeof...(Members) - 1;
 	else
-		return MemberCounter<T> (Members..., UniversalType {});
+		return MemberCounter<T>(Members..., UniversalType {});
 }
 
 } // namespace ToTupleDetails
 
 template <class S>
-constexpr auto ToTupleRef(S &s)
+constexpr auto ToTupleRef(S& s)
 {
 	return ToTupleDetails::to_tuple_ref_t<ToTupleDetails::MemberCounter<S>()>::convert(s);
 }
@@ -80,4 +82,4 @@ constexpr auto ToTupleRef(S &s)
 #undef TYPECELL
 #undef DCREPEAT
 
-} // namespace Util
+} // namespace HomeCompa::Util
