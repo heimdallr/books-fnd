@@ -11,6 +11,7 @@
 #include "fnd/IsOneOf.h"
 #include "fnd/try.h"
 
+#include "settings/ISettings.h"
 #include "xml/SaxParser.h"
 #include "xml/XmlAttributes.h"
 #include "xml/XmlWriter.h"
@@ -18,7 +19,6 @@
 #include "BookUtil.h"
 #include "Constant.h"
 #include "EpubParser.h"
-#include "ISettings.h"
 #include "ImageUtil.h"
 #include "QtTypes.h"
 #include "zip.h"

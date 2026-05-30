@@ -7,10 +7,9 @@
 #include "fnd/algorithm.h"
 
 #include "platformgui/PlatformGuiUtil.h"
+#include "settings/Font.h"
 #include "settings/ISettingsObserver.h"
-
-#include "Font.h"
-#include "UiTimer.h"
+#include "settings/UiTimer.h"
 
 using namespace HomeCompa::Util;
 using namespace HomeCompa;

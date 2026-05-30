@@ -8,4 +8,5 @@ AddTarget(utilgui shared_lib
 	LINK_TARGETS
 		logging
 		platformgui
+		settings
 )
