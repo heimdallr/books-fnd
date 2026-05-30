@@ -10,6 +10,18 @@ constexpr auto PICTURES = "pictures";
 constexpr int APP_FAILED  = 1;
 constexpr int RESTART_APP = 1234;
 
+const auto INFO = [] {
+	static constexpr char32_t info = 0x0001F6C8;
+	return QString::fromUcs4(&info, 1);
+}();
+
+}
+
+namespace HomeCompa::Preferences
+{
+
+constexpr auto PREFER_HIDE_SCROLLBARS_KEY = "Preferences/hideScrollBars";
+
 }
 
 namespace HomeCompa::Export
