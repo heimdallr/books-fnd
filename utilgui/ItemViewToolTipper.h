@@ -4,7 +4,7 @@
 
 #include "export/utilgui.h"
 
-namespace HomeCompa::Flibrary
+namespace HomeCompa::Util
 {
 
 class UTILGUI_EXPORT ItemViewToolTipper final : public QObject

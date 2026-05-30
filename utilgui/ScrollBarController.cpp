@@ -10,7 +10,7 @@
 
 #include "Constant.h"
 
-using namespace HomeCompa::Flibrary;
+using namespace HomeCompa::Util;
 
 ScrollBarController::ScrollBarController(const std::shared_ptr<const ISettings>& settings, QObject* parent)
 	: QObject(parent)

@@ -10,7 +10,7 @@
 class QAbstractScrollArea;
 class QTimer;
 
-namespace HomeCompa::Flibrary
+namespace HomeCompa::Util
 {
 
 class UTILGUI_EXPORT ScrollBarController final : public QObject

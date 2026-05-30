@@ -6,7 +6,7 @@
 
 #include "Constant.h"
 
-using namespace HomeCompa::Flibrary;
+using namespace HomeCompa::Util;
 
 ItemViewToolTipper::ItemViewToolTipper(QObject* parent)
 	: QObject(parent)
