@@ -12,6 +12,9 @@
 #include "settings/ISettingsObserver.h"
 #include "settings/UiTimer.h"
 
+#include "Constant.h"
+#include "log.h"
+
 using namespace HomeCompa::Util;
 using namespace HomeCompa;
 
@@ -21,7 +24,6 @@ namespace
 constexpr auto STATE_KEY_TEMPLATE    = "ui/%1/State";
 constexpr auto GEOMETRY_KEY_TEMPLATE = "ui/%1/Geometry";
 constexpr auto SPLITTER_KEY_TEMPLATE = "ui/%1/%2";
-constexpr auto FONT_KEY              = "ui/Font";
 
 void InitSplitter(QSplitter* splitter)
 {
@@ -153,20 +155,25 @@ private: // QObject
 private: // ISettingsObserver
 	void HandleValueChanged(const QString& key, const QVariant&) override
 	{
-		if (key.startsWith(FONT_KEY))
+		if (key.startsWith(Global::FONT_KEY))
 			m_fontTimer->start();
 	}
 
 private:
 	void OnFontChanged()
 	{
-		const SettingsGroup group(*m_settings, FONT_KEY);
+		const SettingsGroup group(*m_settings, Global::FONT_KEY);
 		auto                font = m_observer.GetWidget().font();
 		Deserialize(font, *m_settings);
+		const auto sizeFactor = font.pointSizeF() / Global::FONT_SIZE_DEFAULT;
 
-		EnumerateWidgets(m_observer.GetWidget(), [&](QWidget& widget) {
-			widget.setFont(font);
-		});
+		for (auto& [widget, pointSize] : CollectWidgets())
+		{
+			auto f = widget->font();
+			f.setPointSizeF(pointSize * sizeFactor);
+			f.setFamily(font.family());
+			widget->setFont(f);
+		}
 
 		m_observer.OnFontChanged(font);
 	}
@@ -174,8 +181,17 @@ private:
 	static void EnumerateWidgets(QWidget& parent, const std::function<void(QWidget&)>& f)
 	{
 		f(parent);
-		for (auto* widget : parent.findChildren<QWidget*>())
-			f(*widget);
+		for (auto* widget : parent.findChildren<QWidget*>(Qt::FindDirectChildrenOnly))
+			EnumerateWidgets(*widget, f);
+	}
+
+	std::vector<std::pair<QWidget*, qreal>>& CollectWidgets()
+	{
+		if (m_widgets.empty())
+			EnumerateWidgets(m_observer.GetWidget(), [&](QWidget& widget) {
+				m_widgets.emplace_back(&widget, widget.font().pointSizeF());
+			});
+		return m_widgets;
 	}
 
 private:
@@ -183,7 +199,9 @@ private:
 	PropagateConstPtr<ISettings, std::shared_ptr> m_settings;
 	const QString                                 m_name;
 	bool                                          m_initialized { false };
-	PropagateConstPtr<QTimer>                     m_fontTimer { CreateUiTimer([&] {
+	std::vector<std::pair<QWidget*, qreal>>       m_widgets;
+
+	PropagateConstPtr<QTimer> m_fontTimer { CreateUiTimer([&] {
 		OnFontChanged();
 	}) };
 };

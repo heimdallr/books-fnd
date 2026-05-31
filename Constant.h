@@ -15,6 +15,10 @@ const auto INFO = [] {
 	return QString::fromUcs4(&info, 1);
 }();
 
+constexpr auto FONT_KEY          = "ui/Font";
+constexpr auto FONT_SIZE_KEY     = "ui/Font/pointSizeF";
+constexpr auto FONT_SIZE_DEFAULT = 9;
+
 }
 
 namespace HomeCompa::Preferences
