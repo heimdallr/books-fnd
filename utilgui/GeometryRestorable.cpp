@@ -181,7 +181,7 @@ private:
 	static void EnumerateWidgets(QWidget& parent, const std::function<void(QWidget&)>& f)
 	{
 		f(parent);
-		for (auto* widget : parent.findChildren<QWidget*>(QString{}, Qt::FindDirectChildrenOnly))
+		for (auto* widget : parent.findChildren<QWidget*>(QString {}, Qt::FindDirectChildrenOnly))
 			EnumerateWidgets(*widget, f);
 	}
 
