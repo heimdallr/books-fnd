@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QSettings>
 
+#include "fnd/memory.h"
 #include "fnd/observable.h"
 
 #include "ISettingsObserver.h"
@@ -95,6 +96,95 @@ private: // ISettings
 
 private:
 	mutable std::recursive_mutex m_mutex;
+};
+
+class SettingsDecorator final : public AbstractSettings
+{
+public:
+	SettingsDecorator(std::shared_ptr<ISettings> impl, std::unordered_map<QString, QVariant> replacement)
+		: m_impl { std::move(impl) }
+		, m_replacement { std::move(replacement) }
+	{
+	}
+
+private: // ISettings
+	[[nodiscard]] QVariant Get(const QString& key, const QVariant& defaultValue) const override
+	{
+		if (const auto it = m_replacement.find(key); it != m_replacement.end())
+			return it->second;
+
+		return m_impl->Get(key, defaultValue);
+	}
+
+	void Set(const QString& key, const QVariant& value, const bool sync) override
+	{
+		if (auto it = m_replacement.find(key); it != m_replacement.end())
+			return (void)(it->second = value);
+
+		return m_impl->Set(key, value, sync);
+	}
+
+	[[nodiscard]] bool HasKey(const QString& key) const override
+	{
+		return m_replacement.contains(key) || m_impl->HasKey(key);
+	}
+
+	[[nodiscard]] bool HasGroup(const QString& group) const override
+	{
+		return m_impl->HasGroup(group);
+	}
+
+	[[nodiscard]] QStringList GetKeys() const override
+	{
+		auto keys = m_impl->GetKeys() | std::ranges::to<std::unordered_set>();
+		std::ranges::copy(m_replacement | std::views::keys, std::inserter(keys, keys.end()));
+		return keys | std::ranges::to<QStringList>();
+	}
+
+	[[nodiscard]] QStringList GetGroups() const override
+	{
+		return m_impl->GetGroups();
+	}
+
+	void Remove(const QString& key) override
+	{
+		m_impl->Remove(key);
+		m_replacement.erase(key);
+	}
+
+	void Save(const QString& path) const override
+	{
+		m_impl->Save(path);
+	}
+
+	void Load(const QString& path) override
+	{
+		m_impl->Load(path);
+	}
+
+	std::recursive_mutex& BeginGroup(const QString&) const override
+	{
+		return m_mutex;
+	}
+
+	void EndGroup() const override
+	{
+	}
+
+	void RegisterObserver(ISettingsObserver* observer) override
+	{
+		m_impl->RegisterObserver(observer);
+	}
+
+	void UnregisterObserver(ISettingsObserver* observer) override
+	{
+		m_impl->UnregisterObserver(observer);
+	}
+
+private:
+	mutable std::recursive_mutex                  m_mutex;
+	PropagateConstPtr<ISettings, std::shared_ptr> m_impl;
+	std::unordered_map<QString, QVariant>         m_replacement;
 };
 
 class Settings final
@@ -231,6 +321,11 @@ std::unique_ptr<AbstractSettings> Create(const QString& fileName)
 std::unique_ptr<AbstractSettings> Create(const QString& organization, const QString& application)
 {
 	return std::make_unique<Settings>(organization, application);
+}
+
+std::unique_ptr<AbstractSettings> CreateDecorator(std::shared_ptr<ISettings> impl, std::unordered_map<QString, QVariant> replacement)
+{
+	return std::make_unique<SettingsDecorator>(std::move(impl), std::move(replacement));
 }
 
 } // namespace HomeCompa::SettingsFactory
