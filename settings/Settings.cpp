@@ -1,5 +1,7 @@
 #include "Settings.h"
 
+#include <ranges>
+
 #include <QFile>
 #include <QSettings>
 
