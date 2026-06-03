@@ -46,7 +46,6 @@ struct ParseResult
 	bool                     coverExists { false };
 	std::vector<ContentItem> images;
 	std::vector<ContentItem> texts;
-	std::vector<ContentItem> others;
 };
 
 UTIL_EXPORT ParseResult Parse(QIODevice& stream, Mode mode = Mode::None);
