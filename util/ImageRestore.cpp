@@ -367,6 +367,9 @@ QByteArray PrepareToExport_stub(QIODevice& stream, Covers, std::unique_ptr<const
 
 QByteArray PrepareToExport_fb2(QIODevice& stream, Covers covers, std::unique_ptr<const ExtractedBook> metadataReplacement, const ImageProcessing imageProcessing)
 {
+	if (covers.empty() && imageProcessing == ImageProcessing::None && !metadataReplacement)
+		return stream.readAll();
+
 	QByteArray byteArray;
 	QBuffer    buffer(&byteArray);
 	buffer.open(QIODevice::WriteOnly);
@@ -447,9 +450,6 @@ QByteArray PrepareToExportImpl(QIODevice& stream, const QString& folder, const Q
 
 	if (imageProcessing != ImageProcessing::None || !!metadataReplacement)
 		BinaryParser(stream, covers, imageProcessing);
-
-	if (covers.empty() && imageProcessing == ImageProcessing::None && !metadataReplacement)
-		return stream.readAll();
 
 	const auto preparer = [&] {
 		const auto it = std::ranges::find_if(EXPORT_PREPARERS, [&](const auto& item) {
