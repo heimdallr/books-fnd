@@ -11,6 +11,7 @@ namespace HomeCompa::Util
 {
 
 inline constexpr auto GENRE = "Genre";
+inline constexpr auto UNORDERED_GENRE = QT_TRANSLATE_NOOP("Genre", "unordered");
 
 inline constexpr const char* GENRES[] {
 	QT_TRANSLATE_NOOP("Genre", "sf_all_root"),
@@ -345,7 +346,6 @@ inline constexpr const char* GENRES[] {
 	QT_TRANSLATE_NOOP("Genre", "diafilm"),
 	QT_TRANSLATE_NOOP("Genre", "fanfiction"),
 	QT_TRANSLATE_NOOP("Genre", "unfinished"),
-	QT_TRANSLATE_NOOP("Genre", "unordered"),
 	QT_TRANSLATE_NOOP("Genre", "other"),
 	QT_TRANSLATE_NOOP("Genre", "child_tale_foreign_writers"),
 	QT_TRANSLATE_NOOP("Genre", "child_det_children_detectives"),

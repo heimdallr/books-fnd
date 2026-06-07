@@ -19,6 +19,8 @@ constexpr auto FONT_KEY          = "ui/Font";
 constexpr auto FONT_SIZE_KEY     = "ui/Font/pointSizeF";
 constexpr auto FONT_SIZE_DEFAULT = 9;
 
+constexpr auto AUTHOR_UNKNOWN = QT_TRANSLATE_NOOP("Global", "Unknown author");
+
 }
 
 namespace HomeCompa::Preferences
