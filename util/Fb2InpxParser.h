@@ -16,7 +16,6 @@ class QDateTime;
 namespace HomeCompa::Util::Fb2InpxParser
 {
 
-static constexpr char LIST_SEPARATOR   = ':';
 static constexpr char NAMES_SEPARATOR  = ',';
 static constexpr char FIELDS_SEPARATOR = '\x04';
 

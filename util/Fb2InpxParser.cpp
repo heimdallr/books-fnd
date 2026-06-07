@@ -7,6 +7,7 @@
 #include "util/xml/SaxParser.h"
 #include "util/xml/XmlAttributes.h"
 
+#include "Constant.h"
 #include "GenresLocalization.h"
 #include "QtTypes.h"
 #include "StrUtil.h"
@@ -71,12 +72,12 @@ QString AuthorsToString(const Data::Authors& authors)
 	std::ranges::transform(authors, std::back_inserter(values), [](const auto& author) {
 		return (QStringList() << author.last << author.first << author.middle).join(NAMES_SEPARATOR);
 	});
-	return values.join(LIST_SEPARATOR) + LIST_SEPARATOR;
+	return values.join(Inpx::LIST_SEPARATOR) + Inpx::LIST_SEPARATOR;
 }
 
 QString GenresToString(const QStringList& genres)
 {
-	return genres.empty() ? QString {} : genres.join(LIST_SEPARATOR) + LIST_SEPARATOR;
+	return genres.empty() ? QString {} : genres.join(Inpx::LIST_SEPARATOR) + Inpx::LIST_SEPARATOR;
 }
 
 class Fb2InpxParserImpl final : public SaxParser

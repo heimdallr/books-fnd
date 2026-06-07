@@ -44,6 +44,8 @@ constexpr auto CONVERT_IMAGES_KEY   = "ui/Export/ConvertImagesToJpegPng";
 namespace HomeCompa::Inpx
 {
 
+constexpr char LIST_SEPARATOR = ':';
+
 constexpr auto STRUCTURE_INFO                     = "structure.info";
 constexpr auto VERSION_INFO                       = "version.info";
 constexpr auto COLLECTION_INFO                    = "collection.info";
