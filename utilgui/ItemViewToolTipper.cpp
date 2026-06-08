@@ -29,25 +29,24 @@ bool ItemViewToolTipper::eventFilter(QObject* obj, QEvent* event)
 	if (!index.isValid())
 		return false;
 
-	const auto& model       = *view->model();
-	const auto  itemTooltip = model.data(index, Qt::ToolTipRole).toString();
+	const auto itemTooltip = index.data(Qt::ToolTipRole).toString();
 	if (itemTooltip.isEmpty())
 		return false;
 
-	const auto itemText             = model.data(index).toString();
+	const auto itemText             = index.data().toString();
 	const auto authorAnnotationMode = itemText == Global::INFO;
 
 	auto font = view->font();
 	font.setPointSizeF(font.pointSizeF() * (authorAnnotationMode ? 0.8 : 1.2));
 
-	if (!authorAnnotationMode)
+	if (!authorAnnotationMode && !m_showForceColumns.contains(index.column()))
 	{
 		const int itemTextWidth = QFontMetrics(font).horizontalAdvance(itemText);
 
 		const auto rect      = view->visualRect(index);
 		auto       rectWidth = rect.width();
 
-		if (model.flags(index) & Qt::ItemIsUserCheckable)
+		if (index.flags() & Qt::ItemIsUserCheckable)
 			rectWidth -= rect.height();
 
 		if (itemTextWidth <= rectWidth)
@@ -60,7 +59,12 @@ bool ItemViewToolTipper::eventFilter(QObject* obj, QEvent* event)
 	return true;
 }
 
-void ItemViewToolTipper::SetScrollArea(QAbstractScrollArea* area)
+void ItemViewToolTipper::SetScrollArea(const QAbstractScrollArea* area)
 {
 	area->viewport()->installEventFilter(this);
+}
+
+void ItemViewToolTipper::SetShowForceColumns(std::set<int> columns)
+{
+	m_showForceColumns = std::move(columns);
 }
