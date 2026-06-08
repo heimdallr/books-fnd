@@ -23,6 +23,7 @@ void ScrollBarController::SetScrollArea(QAbstractScrollArea* area)
 {
 	m_area = area;
 	m_area->setMouseTracking(m_timerV);
+	m_area->viewport()->installEventFilter(this);
 
 	if (m_timerV)
 		return;

@@ -59,3 +59,8 @@ bool ItemViewToolTipper::eventFilter(QObject* obj, QEvent* event)
 
 	return true;
 }
+
+void ItemViewToolTipper::SetScrollArea(QAbstractScrollArea* area)
+{
+	area->viewport()->installEventFilter(this);
+}
