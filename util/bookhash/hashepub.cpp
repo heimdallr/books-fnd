@@ -18,7 +18,7 @@ class EpubParserImpl final : public BookHash::IParser
 {
 public:
 	explicit EpubParserImpl(QIODevice& stream)
-		: m_result { Parse(stream, EpubParser::Mode::All) }
+		: m_result { EpubParser::Parse(stream, CommonParser::Mode::All) }
 	{
 	}
 
@@ -83,7 +83,7 @@ private: // BookHash::IParser
 	}
 
 private:
-	EpubParser::ParseResult m_result;
+	CommonParser::ParseResult m_result;
 };
 
 } // namespace

@@ -379,7 +379,7 @@ QByteArray PrepareToExport_fb2(QIODevice& stream, Covers covers, std::unique_ptr
 
 QByteArray PrepareToExport_epub(QIODevice& stream, Covers covers, std::unique_ptr<const ExtractedBook> /*metadataReplacement*/, const ImageProcessing imageProcessing)
 {
-	auto parseResult = Parse(stream, EpubParser::Mode::All);
+	auto parseResult = EpubParser::Parse(stream, CommonParser::Mode::All);
 
 	const auto zipFiles = Zip::CreateZipFileController();
 

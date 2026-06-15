@@ -20,6 +20,7 @@
 #include "log.h"
 #include "zip.h"
 
+using namespace HomeCompa::Util::CommonParser;
 using namespace HomeCompa::Util;
 using namespace HomeCompa;
 
@@ -194,7 +195,7 @@ class OpfParser final : SaxParser
 	};
 
 public:
-	static EpubParser::ParseResult Parse(const Zip& zip, const EpubParser::Mode mode)
+	static ParseResult Parse(const Zip& zip, const Mode mode)
 	{
 		auto zipData = zip.ReadAll();
 
@@ -217,11 +218,11 @@ public:
 		OpfParser parser(stream, mode);
 		auto      result = std::move(parser.m_result);
 
-		if (mode == EpubParser::Mode::None)
+		if (mode == Mode::None)
 			return result;
 
-		std::list<EpubParser::ContentItem> images;
-		const auto                         coverPath = parser.m_coverPath.isEmpty() ? QString {} : CleanPath(relativePath, parser.m_coverPath);
+		std::list<ContentItem> images;
+		const auto             coverPath = parser.m_coverPath.isEmpty() ? QString {} : CleanPath(relativePath, parser.m_coverPath);
 
 		for (auto&& [id, body] : zipData)
 		{
@@ -231,26 +232,26 @@ public:
 				continue;
 			}
 
-			if (!!(mode & EpubParser::Mode::Images))
+			if (!!(mode & Mode::Images))
 			{
 				if (IsImage(id))
 				{
 					const auto isCover = id == coverPath;
 					if (!body.isEmpty())
 					{
-						EpubParser::ContentItem contentItem { id, std::move(body) };
+						ContentItem contentItem { id, std::move(body) };
 						isCover ? (result.coverExists = true, images.push_front(std::move(contentItem))) : images.push_back(contentItem);
 						continue;
 					}
 				}
 			}
 
-			if (!!(mode & EpubParser::Mode::Texts))
+			if (!!(mode & Mode::Texts))
 				if (!body.isEmpty())
 					result.texts.emplace_back(id, std::move(body));
 		}
 
-		if (!!(mode & EpubParser::Mode::Images))
+		if (!!(mode & Mode::Images))
 			ProcessImages(zipData, relativePath, parser, std::move(images), result);
 
 		if (!result.texts.empty())
@@ -282,15 +283,13 @@ public:
 		return result;
 	}
 
-	static void
-	ProcessImages(std::unordered_map<QString, QByteArray>& zipData, const QString& relativePath, const OpfParser& parser, std::list<EpubParser::ContentItem> images, EpubParser::ParseResult& result)
+	static void ProcessImages(std::unordered_map<QString, QByteArray>& zipData, const QString& relativePath, const OpfParser& parser, std::list<ContentItem> images, ParseResult& result)
 	{
 		ProcessCover(zipData, relativePath, parser, images, result);
 		std::ranges::move(images | std::views::as_rvalue, std::back_inserter(result.images));
 	}
 
-	static void
-	ProcessCover(std::unordered_map<QString, QByteArray>& zipData, const QString& relativePath, const OpfParser& parser, std::list<EpubParser::ContentItem>& images, EpubParser::ParseResult& result)
+	static void ProcessCover(std::unordered_map<QString, QByteArray>& zipData, const QString& relativePath, const OpfParser& parser, std::list<ContentItem>& images, ParseResult& result)
 	{
 		if (result.coverExists)
 			return;
@@ -335,7 +334,7 @@ public:
 	}
 
 public:
-	OpfParser(QIODevice& stream, const EpubParser::Mode mode)
+	OpfParser(QIODevice& stream, const Mode mode)
 		: SaxParser(stream)
 		, m_mode { mode }
 	{
@@ -361,7 +360,7 @@ private: // SaxParser
 	{
 		const auto cleanPath = RemoveNS(path);
 
-		if (!(m_mode & EpubParser::Mode::Images) && cleanPath.compare(PATHS[UpperLevelType::metadata], Qt::CaseInsensitive) == 0)
+		if (!(m_mode & Mode::Images) && cleanPath.compare(PATHS[UpperLevelType::metadata], Qt::CaseInsensitive) == 0)
 			return false;
 
 		if (m_upperLevelType != UpperLevelType::none && cleanPath.compare(PATHS[m_upperLevelType], Qt::CaseInsensitive) == 0)
@@ -407,21 +406,7 @@ private:
 		if (name.endsWith("creator", Qt::CaseInsensitive))
 			return (void)(m_functor = [this](const QString&, const QString& value) {
 				if (const QString creatorText = value.trimmed(); !creatorText.isEmpty())
-				{
-					auto& author = m_result.authors.emplace_back(creatorText.split(" ", Qt::SkipEmptyParts));
-					if (author.size() == 2)
-						std::swap(author[0], author[1]);
-					else if (author.size() >= 3)
-					{
-						auto firstName = std::move(author.front());
-						author.pop_front();
-						auto middleName = std::move(author.front());
-						author.pop_front();
-						auto lastName = author.join(' ');
-						author        = QStringList { std::move(lastName), std::move(firstName), std::move(middleName) };
-					}
-					Resize(author, 3);
-				}
+					m_result.authors.emplace_back(ParseAuthor(creatorText));
 			});
 
 		if ((name == "meta" || name == "opf:meta" || name == "ns0:meta") && attributes.GetAttribute("name") == "cover")
@@ -487,10 +472,10 @@ private:
 	}
 
 private:
-	const EpubParser::Mode m_mode;
+	const Mode m_mode;
 
 	int                                  m_upperLevelType { UpperLevelType::none };
-	EpubParser::ParseResult              m_result;
+	ParseResult                          m_result;
 	QString                              m_coverId;
 	QString                              m_coverPath;
 	std::unordered_map<QString, QString> m_manifest;
