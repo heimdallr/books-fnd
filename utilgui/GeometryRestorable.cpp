@@ -4,6 +4,7 @@
 #include <QScreen>
 #include <QSplitter>
 #include <QTimer>
+#include <QWindow>
 
 #include "fnd/algorithm.h"
 
@@ -248,4 +249,13 @@ void MoveToParentCenter(QWidget& widget)
 	Platform::SetGeometry(widget, rect);
 }
 
+QScreen* GetActiveScreen(QWidget& widget)
+{
+	for (auto* pWidget = &widget; pWidget; pWidget = pWidget->parentWidget())
+		if (auto* w = pWidget->windowHandle())
+			return w->screen();
+
+	return nullptr;
 }
+
+} // namespace HomeCompa::Util

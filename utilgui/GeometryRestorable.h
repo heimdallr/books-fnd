@@ -7,6 +7,7 @@
 
 #include "export/utilgui.h"
 
+class QScreen;
 class QSplitter;
 
 namespace HomeCompa::Util
@@ -53,6 +54,7 @@ private:
 	QWidget& m_widget;
 };
 
-void UTILGUI_EXPORT MoveToParentCenter(QWidget& widget);
+UTILGUI_EXPORT void MoveToParentCenter(QWidget& widget);
+UTILGUI_EXPORT QScreen* GetActiveScreen(QWidget& widget);
 
 } // namespace HomeCompa::Util

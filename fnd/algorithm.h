@@ -4,7 +4,9 @@
 #include <filesystem>
 #include <vector>
 
+#include <QIODevice>
 #include <QString>
+#include <QVariant>
 
 #include "platform/StrUtil.h"
 
@@ -221,6 +223,20 @@ struct TupleHash
 		);
 
 		return result;
+	}
+};
+
+struct VariantHash
+{
+	size_t operator()(const QVariant& var) const
+	{
+		QByteArray bytes;
+		{
+			QDataStream stream(&bytes, QIODevice::WriteOnly);
+			stream << static_cast<int>(var.metaType().id()) << var;
+		}
+
+		return qHash(bytes);
 	}
 };
 
