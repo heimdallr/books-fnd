@@ -14,6 +14,12 @@ namespace HomeCompa::Util
 {
 
 template <typename T>
+bool InBounds(const T value, std::convertible_to<T> auto min, std::convertible_to<T> auto max)
+{
+	return !(value < static_cast<T>(min)) && (value < static_cast<T>(max));
+}
+
+template <typename T>
 static bool Set(T& dst, T value)
 {
 	if (dst == value)
