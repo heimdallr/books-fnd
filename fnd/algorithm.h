@@ -7,6 +7,7 @@
 #include <QIODevice>
 #include <QString>
 #include <QVariant>
+#include <QDataStream>
 
 #include "platform/StrUtil.h"
 
@@ -239,7 +240,7 @@ struct VariantHash
 		QByteArray bytes;
 		{
 			QDataStream stream(&bytes, QIODevice::WriteOnly);
-			stream << static_cast<int>(var.metaType().id()) << var;
+			stream << var.typeName() << var;
 		}
 
 		return qHash(bytes);

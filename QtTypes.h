@@ -66,10 +66,10 @@ inline void Resize(QStringList& list, const qsizetype_t size)
 }
 
 	#define BEGIN_FILTER_CHANGE beginFilterChange()
-
 	#define END_FILTER_CHANGE endFilterChange(Direction::Rows)
-
 	#define QT_CONST const
+	#define CHECK_STATE_CHANGED checkStateChanged
+	#define CHECK_STATE Qt::CheckState
 
 #elif QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 
@@ -131,10 +131,10 @@ inline void Resize(QStringList& list, const qsizetype_t size)
 }
 
 	#define BEGIN_FILTER_CHANGE (void)0
-
 	#define END_FILTER_CHANGE invalidateFilter()
-
 	#define QT_CONST
+	#define CHECK_STATE_CHANGED stateChanged
+	#define CHECK_STATE int
 
 Q_DECLARE_METATYPE(std::set<QString>)
 Q_DECLARE_METATYPE(std::unordered_set<QString>)
