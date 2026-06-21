@@ -38,6 +38,12 @@ public:
 	}
 
 private:
+	static void*       InnerOpen(const std::filesystem::path& moduleName);
+	static bool        InnerClose(void* handle);
+	static void*       InnerGetProc(void* handle, const std::string& procName);
+	static std::string InnerGetErrorDescription();
+
+private:
 	void*                 m_handle { nullptr };
 	std::filesystem::path m_moduleName;
 	std::string           m_errorDescription;

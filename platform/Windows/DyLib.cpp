@@ -4,10 +4,9 @@
 
 #include <cassert>
 #include <cwctype>
-#include <sstream>
 
-namespace HomeCompa::Platform
-{
+using namespace HomeCompa::Platform;
+
 
 namespace
 {
@@ -25,23 +24,25 @@ std::string ToMultiByte(const std::wstring& src)
 	return dst;
 }
 
-void* InnerOpen(const std::filesystem::path& moduleName)
+} // namespace
+
+void* DyLib::InnerOpen(const std::filesystem::path& moduleName)
 {
 	const auto handle = LoadLibraryW(moduleName.wstring().data());
 	return handle;
 }
 
-bool InnerClose(void* handle)
+bool DyLib::InnerClose(void* handle)
 {
 	return !!FreeLibrary(static_cast<HMODULE>(handle));
 }
 
-auto InnerGetProc(void* handle, const std::string& procName)
+void* DyLib::InnerGetProc(void* handle, const std::string& procName)
 {
-	return GetProcAddress(static_cast<HMODULE>(handle), procName.data());
+	return reinterpret_cast<void*>(GetProcAddress(static_cast<HMODULE>(handle), procName.data()));
 }
 
-std::string InnerGetErrorDescription()
+std::string DyLib::InnerGetErrorDescription()
 {
 	const DWORD errCode = GetLastError();
 	assert(errCode != 0);
@@ -69,90 +70,3 @@ std::string InnerGetErrorDescription()
 	return message;
 }
 
-} // namespace
-
-DyLib::DyLib() = default;
-
-DyLib::DyLib(std::filesystem::path moduleName)
-{
-	this->Open(std::move(moduleName));
-}
-
-DyLib::~DyLib()
-{
-	if (this->IsOpen())
-		this->Close();
-}
-
-bool DyLib::IsOpen() const
-{
-	const bool result = (m_handle != nullptr);
-	assert(result == !m_moduleName.empty());
-	return result;
-}
-
-void DyLib::Detach()
-{
-	m_handle = nullptr;
-	m_moduleName.clear();
-	m_errorDescription.clear();
-}
-
-bool DyLib::Open(std::filesystem::path moduleName)
-{
-	if (this->IsOpen())
-		this->Close();
-
-	void* const handle = InnerOpen(moduleName);
-	if (!handle)
-	{
-		const auto         innerDescription = InnerGetErrorDescription();
-		std::ostringstream stream;
-		stream << "Cannot load module '" << moduleName.generic_string() << "', additional info: " << innerDescription;
-		m_errorDescription = stream.str();
-		return false;
-	}
-
-	m_errorDescription.clear();
-	m_moduleName = std::move(moduleName);
-	m_handle     = handle;
-	return true;
-}
-
-void DyLib::Close()
-{
-	assert(this->IsOpen());
-	const bool result = InnerClose(m_handle);
-	this->Detach();
-	if (result)
-		return;
-
-	assert(false);
-	std::ostringstream stream;
-	stream << "Cannot unload module '" << m_moduleName.generic_string() << "', additional info: " << InnerGetErrorDescription();
-	m_errorDescription = stream.str();
-}
-
-void* DyLib::GetProc(const std::string& procName)
-{
-	if (!this->IsOpen())
-	{
-		assert(false);
-		m_errorDescription = "Cannot find entry point in empty module";
-		return nullptr;
-	}
-
-	if (const auto result = InnerGetProc(m_handle, procName))
-	{
-		m_errorDescription.clear();
-		return result;
-	}
-
-	assert(false);
-	std::ostringstream stream;
-	stream << "Cannot find entry point '" << procName << "' in '" << m_moduleName.generic_string() << "', additional info: " << InnerGetErrorDescription();
-	m_errorDescription = stream.str();
-	return nullptr;
-}
-
-} // namespace HomeCompa::Platform
