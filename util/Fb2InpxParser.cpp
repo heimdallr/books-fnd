@@ -259,7 +259,7 @@ private:
 
 	bool ParseLang(const QString& value)
 	{
-		m_data.lang = value;
+		m_data.lang = value.toLower();
 		return true;
 	}
 

@@ -395,7 +395,7 @@ private:
 
 		if (name.endsWith("language", Qt::CaseInsensitive))
 			return (void)(m_functor = [this](const QString&, const QString& value) {
-				m_result.language = value.trimmed().left(2);
+				m_result.language = value.trimmed().left(2).toLower();
 			});
 
 		if (name.endsWith("subject", Qt::CaseInsensitive))
