@@ -36,6 +36,6 @@ struct ParseResult
 
 QStringList ParseAuthor(const QString& str);
 
-} // namespace HomeCompa::Util::EpubParser
+} // namespace HomeCompa::Util::CommonParser
 
 ENABLE_BITMASK_OPERATORS(HomeCompa::Util::CommonParser::Mode);

@@ -24,4 +24,4 @@ QStringList ParseAuthor(const QString& str)
 	return author;
 }
 
-}
+} // namespace HomeCompa::Util::CommonParser

@@ -7,7 +7,6 @@
 
 using namespace HomeCompa::Platform;
 
-
 namespace
 {
 
@@ -69,4 +68,3 @@ std::string DyLib::InnerGetErrorDescription()
 	assert(nullptr == ::LocalFree(lpMsg));
 	return message;
 }
-

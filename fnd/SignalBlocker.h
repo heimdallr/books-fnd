@@ -6,15 +6,18 @@ template <typename T>
 class SignalBlocker
 {
 public:
-	explicit SignalBlocker(T *object)
+	explicit SignalBlocker(T* object)
 		: object_(object)
 		, blocker_(object)
 	{
 	}
 
-	T *operator->() { return object_; }
+	T* operator->()
+	{
+		return object_;
+	}
 
 private:
-	T *object_;
+	T*             object_;
 	QSignalBlocker blocker_;
 };

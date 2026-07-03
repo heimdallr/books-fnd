@@ -4,10 +4,10 @@
 #include <filesystem>
 #include <vector>
 
+#include <QDataStream>
 #include <QIODevice>
 #include <QString>
 #include <QVariant>
-#include <QDataStream>
 
 #include "platform/StrUtil.h"
 
