@@ -3,6 +3,7 @@
 #include <cassert>
 #include <memory>
 #include <stdexcept>
+#include <type_traits>
 
 namespace HomeCompa
 {
@@ -170,6 +171,14 @@ public:
 		: m_p(std::move(p))
 	{
 	}
+
+	PropagateConstPtr(const PropagateConstPtr&)
+		requires std::is_copy_constructible_v<P<T>>
+	= default;
+
+	PropagateConstPtr& operator=(const PropagateConstPtr&)
+		requires std::is_copy_assignable_v<P<T>>
+	= default;
 
 	PropagateConstPtr(PropagateConstPtr&&) noexcept = default;
 

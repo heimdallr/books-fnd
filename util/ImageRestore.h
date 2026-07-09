@@ -3,6 +3,8 @@
 #include <functional>
 #include <memory>
 
+#include "BookUtil.h"
+
 #include "export/util.h"
 
 class QByteArray;
@@ -21,8 +23,6 @@ class Zip;
 
 namespace HomeCompa::Util
 {
-
-struct ExtractedBook;
 
 UTIL_EXPORT QByteArray PrepareToExport(QIODevice& input, const QString& folder, const QString& fileName, const ISettings& settings, std::unique_ptr<const ExtractedBook> metadataReplacement = {});
 

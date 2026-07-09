@@ -1,6 +1,7 @@
 #include "DyLib.h"
 
 #include <cassert>
+#include <sstream>
 
 using namespace HomeCompa::Platform;
 

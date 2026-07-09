@@ -23,7 +23,7 @@ public:
 	void setCellBackgroundColor(int row, int column, const QColor& color);
 	void setCellForegroundColor(int row, int column, const QColor& color);
 
-	QModelIndex indexAt(const QPoint& pos);
+	QModelIndex indexAt(const QPoint& pos) const override;
 	void        paintSection(QPainter* painter, const QRect& rect, int logicalIndex) const override;
 	QSize       sectionSizeFromContents(int logicalIndex) const override;
 
