@@ -256,7 +256,7 @@ void MultiHeaderView::setCellForegroundColor(const int row, const int column, co
 	model.setData(model.index(row, column), color, Qt::ForegroundRole);
 }
 
-QModelIndex MultiHeaderView::indexAt(const QPoint& pos)
+QModelIndex MultiHeaderView::indexAt(const QPoint& pos) const
 {
 	auto&     tblModel   = *m_impl->model;
 	const int rows       = tblModel.rowCount();

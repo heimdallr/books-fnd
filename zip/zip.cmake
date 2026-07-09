@@ -22,7 +22,7 @@ if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL Windows)
 	set(7zip_BIN_FILENAME 7z.dll)
 	set(7zip_INSTALL_PATH .)
 	set(7zip_BIN_PATH ${CMAKE_BINARY_DIR}/bin)
-elseif (${CMAKE_HOST_SYSTEM_NAME} STREQUAL Linux)
+elseif ((${CMAKE_HOST_SYSTEM_NAME} STREQUAL Linux) OR (${CMAKE_HOST_SYSTEM_NAME} STREQUAL Darwin))
 	set(7zip_BIN_FILENAME 7z.so)
 	set(7zip_INSTALL_PATH lib)
 	set(7zip_BIN_PATH ${CMAKE_BINARY_DIR}/lib)
@@ -32,4 +32,3 @@ endif()
 
 file(COPY "${7zip_BIN_DIR}/${7zip_BIN_FILENAME}" DESTINATION ${7zip_BIN_PATH})
 install(FILES "${7zip_BIN_DIR}/${7zip_BIN_FILENAME}" DESTINATION ${7zip_INSTALL_PATH})
-

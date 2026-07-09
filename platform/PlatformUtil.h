@@ -11,7 +11,8 @@ namespace HomeCompa::Platform
 enum class PlatformType
 {
 	Windows,
-	Linux
+	Linux,
+	MacOS
 };
 
 PLATFORM_EXPORT PlatformType GetPlatformType() noexcept;

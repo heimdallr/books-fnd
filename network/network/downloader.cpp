@@ -21,7 +21,7 @@ public:
 			reply->deleteLater();
 		});
 #if QT_CONFIG(ssl)
-		QObject::connect(&m_manager, &QNetworkAccessManager::sslErrors, &m_manager, [this](QNetworkReply* reply, const QList<QSslError>& errors) {
+		QObject::connect(&m_manager, &QNetworkAccessManager::sslErrors, &m_manager, [](QNetworkReply* reply, const QList<QSslError>& errors) {
 			QStringList list;
 			std::ranges::transform(errors, std::back_inserter(list), [](const auto& item) {
 				return QString("%1 (%2)").arg(item.errorString()).arg(static_cast<int>(item.error()));
