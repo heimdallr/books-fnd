@@ -1,9 +1,9 @@
 #pragma once
 
 #include <condition_variable>
+#include <deque>
 #include <functional>
 #include <mutex>
-#include <queue>
 #include <ranges>
 #include <thread>
 
@@ -37,14 +37,17 @@ public:
 		});
 	}
 
-	void enqueue(std::function<void(T&)> task)
+	void enqueue(std::function<void(T&)> task, const bool highPriority = false)
 	{
 		{
 			std::unique_lock lock(m_tasksGuard);
 			m_condition.wait(lock, [this] {
 				return m_tasks.size() < m_maxQueueSize;
 			});
-			m_tasks.emplace(std::move(task));
+			if (highPriority)
+				m_tasks.push_front(std::move(task));
+			else
+				m_tasks.push_back(std::move(task));
 		}
 
 		m_condition.notify_one();
@@ -83,7 +86,7 @@ private:
 			return {};
 
 		auto task = std::move(m_tasks.front());
-		m_tasks.pop();
+		m_tasks.pop_front();
 
 		return task;
 	}
@@ -97,7 +100,7 @@ private:
 
 private:
 	const size_t                        m_maxQueueSize;
-	std::queue<std::function<void(T&)>> m_tasks;
+	std::deque<std::function<void(T&)>> m_tasks;
 	std::mutex                          m_tasksGuard;
 	std::condition_variable_any         m_condition;
 	std::vector<T>                      m_contexts;
