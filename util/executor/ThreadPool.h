@@ -14,6 +14,9 @@ template <typename T = size_t>
 class ThreadPool
 {
 public:
+	using Task = std::function<void(T&, const std::stop_token&)>;
+
+public:
 	struct Initializer
 	{
 		unsigned int             threadCount { std::thread::hardware_concurrency() };
@@ -37,7 +40,7 @@ public:
 		});
 	}
 
-	void enqueue(std::function<void(T&)> task, const bool highPriority = false)
+	void enqueue(Task task, const bool highPriority = false)
 	{
 		{
 			std::unique_lock lock(m_tasksGuard);
@@ -69,7 +72,7 @@ public:
 	}
 
 private:
-	std::function<void(T&)> getTask(const std::stop_token& stop)
+	Task getTask(const std::stop_token& stop)
 	{
 		auto task = getTaskImpl(stop);
 		m_condition.notify_all();
@@ -77,7 +80,7 @@ private:
 		return task;
 	}
 
-	std::function<void(T&)> getTaskImpl(const std::stop_token& stop)
+	Task getTaskImpl(const std::stop_token& stop)
 	{
 		std::unique_lock lock(m_tasksGuard);
 		if (!m_condition.wait(lock, stop, [this] {
@@ -95,16 +98,16 @@ private:
 	{
 		while (!stop.stop_requested())
 			if (const auto task = getTask(stop))
-				task(t);
+				task(t, stop);
 	}
 
 private:
-	const size_t                        m_maxQueueSize;
-	std::deque<std::function<void(T&)>> m_tasks;
-	std::mutex                          m_tasksGuard;
-	std::condition_variable_any         m_condition;
-	std::vector<T>                      m_contexts;
-	std::vector<std::jthread>           m_threads;
+	const size_t                m_maxQueueSize;
+	std::deque<Task>            m_tasks;
+	std::mutex                  m_tasksGuard;
+	std::condition_variable_any m_condition;
+	std::vector<T>              m_contexts;
+	std::vector<std::jthread>   m_threads;
 };
 
 } // namespace HomeCompa::Util
