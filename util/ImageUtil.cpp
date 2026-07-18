@@ -111,7 +111,7 @@ std::pair<QByteArray, const char*> Recode(const QByteArray& bytes)
 
 QImage HasAlpha(const QImage& image, const char* data)
 {
-	if (memcmp(data, "\xFF\xD8\xFF\xE0", 4) == 0)
+	if (data && memcmp(data, "\xFF\xD8\xFF\xE0", 4) == 0)
 		return image.convertToFormat(QImage::Format_RGB888);
 
 	if (!image.hasAlphaChannel())
