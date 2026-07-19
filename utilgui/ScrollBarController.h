@@ -16,7 +16,7 @@ namespace HomeCompa::Util
 class UTILGUI_EXPORT ScrollBarController final : public QObject
 {
 public:
-	explicit ScrollBarController(const std::shared_ptr<const ISettings>& settings, QObject* parent = nullptr);
+	explicit ScrollBarController(std::shared_ptr<ISettings> settings, QObject* parent = nullptr);
 	void SetScrollArea(QAbstractScrollArea* area);
 
 private: // QObject
@@ -28,9 +28,10 @@ private:
 	void    OnTimeoutH() const;
 
 private:
+	std::shared_ptr<ISettings>    m_settings;
 	QTimer*                       m_timerV;
 	QTimer*                       m_timerH;
 	QPointer<QAbstractScrollArea> m_area;
 };
 
-}
+} // namespace HomeCompa::Util
