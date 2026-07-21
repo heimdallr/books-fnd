@@ -19,6 +19,8 @@
 using namespace HomeCompa;
 using namespace HomeCompa::Util;
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+
 namespace
 {
 
@@ -170,6 +172,8 @@ private:
 
 } // namespace
 
+#endif
+
 ScrollBarController::ScrollBarController(std::shared_ptr<ISettings> settings, QObject* parent)
 	: QObject(parent)
 	, m_settings { std::move(settings) }
@@ -182,8 +186,10 @@ void ScrollBarController::SetScrollArea(QAbstractScrollArea* area)
 {
 	m_area = area;
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 	m_area->setHorizontalScrollBar(new ScrollBar(m_settings, Qt::Horizontal, m_area));
 	m_area->setVerticalScrollBar(new ScrollBar(m_settings, Qt::Vertical, m_area));
+#endif
 
 	m_area->setMouseTracking(m_timerV);
 	m_area->viewport()->installEventFilter(this);
