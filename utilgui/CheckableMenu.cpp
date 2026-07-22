@@ -1,5 +1,7 @@
 #include "CheckableMenu.h"
 
+#include <ranges>
+
 #include <QMenu>
 #include <QStringListModel>
 #include <QTableView>
