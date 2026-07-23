@@ -1,9 +1,9 @@
 #include "ScrollBarController.h"
 
+#include <QAbstractScrollArea>
 #include <QApplication>
 #include <QDateTime>
 #include <QEvent>
-#include <QAbstractScrollArea>
 #include <QMenu>
 #include <QMouseEvent>
 #include <QScrollBar>
@@ -12,8 +12,8 @@
 
 #include "fnd/memory.h"
 
-#include "Constant.h"
 #include "CheckableMenu.h"
+#include "Constant.h"
 
 using namespace HomeCompa;
 using namespace HomeCompa::Util;
