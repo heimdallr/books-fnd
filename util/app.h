@@ -11,7 +11,7 @@ namespace HomeCompa::Util
     INSTALLER_MODE_ITEM(dmg, "dmg", true)      \
     INSTALLER_MODE_ITEM(portable, "7z", false) \
     INSTALLER_MODE_ITEM(deb, "deb", false)     \
-	INSTALLER_MODE_ITEM(xz, "xz", false)
+    INSTALLER_MODE_ITEM(txz, "xz", false)
 
 enum class InstallerType
 {
