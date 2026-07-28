@@ -43,8 +43,9 @@ private: // ISettings
 		return defaultValue;
 	}
 
-	void Set(const QString& /*key*/, const QVariant& /*value*/, bool /*sync*/) override
+	bool Set(const QString& /*key*/, const QVariant& /*value*/, bool /*sync*/) override
 	{
+		return true;
 	}
 
 	[[nodiscard]] bool HasKey(const QString& /*key*/) const override
@@ -118,10 +119,16 @@ private: // ISettings
 		return m_impl->Get(key, defaultValue);
 	}
 
-	void Set(const QString& key, const QVariant& value, const bool sync) override
+	bool Set(const QString& key, const QVariant& value, const bool sync) override
 	{
 		if (auto it = m_replacement.find(key); it != m_replacement.end())
-			return (void)(it->second = value);
+		{
+			if (it->second == value)
+				return false;
+
+			it->second = value;
+			return true;
+		}
 
 		return m_impl->Set(key, value, sync);
 	}
@@ -213,18 +220,19 @@ private: // ISettings
 		return defaultValue;
 	}
 
-	void Set(const QString& key, const QVariant& value, const bool sync) override
+	bool Set(const QString& key, const QVariant& value, const bool sync) override
 	{
 		if (Get(key) == value)
-			return;
+			return false;
 
 		std::lock_guard lock(m_mutex);
 		m_settings.setValue(key, value);
-		if (!sync)
-			return;
-
-		m_settings.sync();
 		Perform(&ISettingsObserver::HandleValueChanged, Key(key), std::cref(value));
+
+		if (sync)
+			m_settings.sync();
+
+		return true;
 	}
 
 	[[nodiscard]] bool HasKey(const QString& key) const override
