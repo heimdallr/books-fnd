@@ -57,7 +57,7 @@ public:
 
 		ContainerParser parser(stream);
 		auto            result = std::move(parser.m_opfPath);
-		return First(it->first, it->first.length() - static_cast<qsizetype>(Epub::CONTAINER_FILE_NAME.size())) + result;
+		return First(it->first, it->first.length() - static_cast<qsizetype_t>(Epub::CONTAINER_FILE_NAME.size())) + result;
 	}
 
 private:

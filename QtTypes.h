@@ -23,12 +23,12 @@ inline void RemoveIf(QString& value, T&& functor)
 	value.removeIf(std::forward<T>(functor));
 }
 
-inline QString First(const QString& string, const qsizetype n)
+inline QString First(const QString& string, const qsizetype_t n)
 {
 	return string.first(std::min(n, string.length()));
 }
 
-inline QString Last(const QString& string, const qsizetype n)
+inline QString Last(const QString& string, const qsizetype_t n)
 {
 	return string.last(n);
 }
@@ -84,12 +84,12 @@ inline void RemoveIf(QString& value, T&& functor)
 	std::ranges::transform(value, value.begin(), std::forward<T>(functor));
 }
 
-inline QString First(const QString& string, const qsizetype n)
+inline QString First(const QString& string, const qsizetype_t n)
 {
 	return string.mid(0, std::min(n, string.length()));
 }
 
-inline QString Last(const QString& string, const qsizetype n)
+inline QString Last(const QString& string, const qsizetype_t n)
 {
 	return string.mid(string.length() - n);
 }
