@@ -25,7 +25,7 @@ inline void RemoveIf(QString& value, T&& functor)
 
 inline QString First(const QString& string, const qsizetype n)
 {
-	return string.first(n);
+	return string.first(std::min(n, string.length()));
 }
 
 inline QString Last(const QString& string, const qsizetype n)
@@ -86,7 +86,7 @@ inline void RemoveIf(QString& value, T&& functor)
 
 inline QString First(const QString& string, const qsizetype n)
 {
-	return string.mid(0, n);
+	return string.mid(0, std::min(n, string.length()));
 }
 
 inline QString Last(const QString& string, const qsizetype n)
