@@ -42,6 +42,12 @@ public:
 			std::invoke(function, observer, std::forward<ARGS>(args)...);
 	}
 
+protected:
+	size_t GetObserverCount() const noexcept
+	{
+		return m_observers.size();
+	}
+
 private: // ObserverHelper::Observable
 	void HandleObserverDestructed(Observer* observer) override
 	{
