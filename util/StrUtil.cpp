@@ -70,4 +70,16 @@ QString& PrepareTitle(QString& value)
 	return value;
 }
 
+void AppendTitle(QString& title, const QString& str, const QString& delimiter)
+{
+	if (title.isEmpty())
+	{
+		title = str;
+		return;
+	}
+
+	if (!str.isEmpty())
+		title.append(delimiter).append(str);
+}
+
 } // namespace HomeCompa::Util
