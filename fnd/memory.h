@@ -115,10 +115,10 @@ namespace details
 {
 
 template <class T>
-struct PropogateConstCreator;
+struct PropagateConstCreator;
 
 template <class T>
-struct PropogateConstCreator<std::shared_ptr<T>>
+struct PropagateConstCreator<std::shared_ptr<T>>
 {
 	template <class... ARGS>
 	std::shared_ptr<T> operator()(ARGS&&... args)
@@ -128,7 +128,7 @@ struct PropogateConstCreator<std::shared_ptr<T>>
 };
 
 template <class T>
-struct PropogateConstCreator<std::unique_ptr<T>>
+struct PropagateConstCreator<std::unique_ptr<T>>
 {
 	template <class... ARGS>
 	std::unique_ptr<T> operator()(ARGS&&... args)
@@ -163,7 +163,7 @@ class PropagateConstPtr
 public:
 	template <class... ARGS>
 	explicit PropagateConstPtr(ARGS&&... args)
-		: m_p(details::PropogateConstCreator<P<T>>()(std::forward<ARGS>(args)...))
+		: m_p(details::PropagateConstCreator<P<T>>()(std::forward<ARGS>(args)...))
 	{
 	}
 
@@ -266,3 +266,72 @@ private:
 };
 
 } // namespace HomeCompa
+
+template <typename T>
+class propagate_const
+{
+	using element_type = std::remove_pointer_t<T>;
+
+public:
+	propagate_const() = default;
+
+	~propagate_const() = default;
+
+	propagate_const(T&& ptr)
+		: m_p { std::forward<T>(ptr) }
+	{
+	}
+
+	propagate_const(const T& ptr)
+		: m_p { ptr }
+	{
+	}
+
+	element_type* operator->()
+	{
+		return get();
+	}
+
+	element_type& operator*()
+	{
+		return *m_p;
+	}
+
+	element_type* get()
+	{
+		return m_p;
+	}
+
+	const element_type* operator->() const
+	{
+		return get();
+	}
+
+	const element_type& operator*() const
+	{
+		return *m_p;
+	}
+
+	const element_type* get() const
+	{
+		return m_p;
+	}
+
+	explicit operator bool() const noexcept
+	{
+		return !!get();
+	}
+
+	bool operator!() const noexcept
+	{
+		return !get();
+	}
+
+	propagate_const(const propagate_const&)            = delete;
+	propagate_const& operator=(const propagate_const&) = delete;
+	propagate_const(propagate_const&&)                 = default;
+	propagate_const& operator=(propagate_const&&)      = default;
+
+private:
+	T m_p;
+};
