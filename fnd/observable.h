@@ -38,8 +38,14 @@ public:
 	template <typename F, typename... ARGS>
 	void Perform(F function, ARGS&&... args) const
 	{
+		auto tuple = std::make_tuple(std::forward<ARGS>(args)...);
 		for (auto* const observer : m_observers)
-			std::invoke(function, observer, std::forward<ARGS>(args)...);
+			std::apply(
+				[&](auto&&... tupleArgs) {
+					std::invoke(function, observer, tupleArgs...);
+				},
+				tuple
+			);
 	}
 
 protected:
