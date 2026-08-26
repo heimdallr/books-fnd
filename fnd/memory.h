@@ -273,46 +273,46 @@ class propagate_const
 	using element_type = std::remove_pointer_t<T>;
 
 public:
-	propagate_const() = default;
+	propagate_const() noexcept = default;
 
-	~propagate_const() = default;
+	~propagate_const() noexcept = default;
 
-	propagate_const(T&& ptr)
+	propagate_const(T&& ptr) noexcept
 		: m_p { std::forward<T>(ptr) }
 	{
 	}
 
-	propagate_const(const T& ptr)
+	propagate_const(const T& ptr) noexcept
 		: m_p { ptr }
 	{
 	}
 
-	element_type* operator->()
+	element_type* operator->() noexcept
 	{
 		return get();
 	}
 
-	element_type& operator*()
+	element_type& operator*() noexcept
 	{
 		return *m_p;
 	}
 
-	element_type* get()
+	element_type* get() noexcept
 	{
 		return m_p;
 	}
 
-	const element_type* operator->() const
+	const element_type* operator->() const noexcept
 	{
 		return get();
 	}
 
-	const element_type& operator*() const
+	const element_type& operator*() const noexcept
 	{
 		return *m_p;
 	}
 
-	const element_type* get() const
+	const element_type* get() const noexcept
 	{
 		return m_p;
 	}
@@ -327,11 +327,11 @@ public:
 		return !get();
 	}
 
-	propagate_const(const propagate_const&)            = delete;
-	propagate_const& operator=(const propagate_const&) = delete;
-	propagate_const(propagate_const&&)                 = default;
-	propagate_const& operator=(propagate_const&&)      = default;
+	propagate_const(const propagate_const&)                = delete;
+	propagate_const& operator=(const propagate_const&)     = delete;
+	propagate_const(propagate_const&&) noexcept            = default;
+	propagate_const& operator=(propagate_const&&) noexcept = default;
 
 private:
-	T m_p;
+	T m_p {};
 };
