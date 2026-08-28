@@ -42,6 +42,8 @@ private: // Util::SaxParser
 #define HASH_PARSER_CALLBACK_ITEM(NAME) m_##NAME = attributes.GetAttribute(#NAME);
 			HASH_PARSER_CALLBACK_ITEMS_X_MACRO
 #undef HASH_PARSER_CALLBACK_ITEM
+			m_size           = attributes.GetAttribute("size").toULongLong();
+			m_simHash        = attributes.GetAttribute("simHash").toULongLong(nullptr, 16);
 			m_section        = std::make_unique<HashParser::Section>();
 			m_currentSection = m_section.get();
 		}
@@ -55,6 +57,7 @@ private: // Util::SaxParser
 			auto& section    = m_currentSection->children.try_emplace(attributes.GetAttribute("id"), std::make_unique<HashParser::Section>()).first->second;
 			section->count   = attributes.GetAttribute("count").toULongLong();
 			section->size    = attributes.GetAttribute("size").toULongLong();
+			section->simHash = attributes.GetAttribute("simHash").toULongLong(nullptr, 16);
 			section->parent  = m_currentSection;
 			m_currentSection = section.get();
 		}
@@ -88,6 +91,8 @@ private: // Util::SaxParser
 						std::move(m_cover),
 					std::move(m_images),
 					std::move(m_section),
+					m_size,
+					m_simHash,
 					std::move(m_textHistogram),
 					std::move(m_annotation)
 				))
@@ -100,6 +105,8 @@ private: // Util::SaxParser
 			m_cover          = {};
 			m_images         = {};
 			m_section        = {};
+			m_size           = 0;
+			m_simHash        = 0;
 			m_textHistogram  = {};
 			m_annotation     = QStringList {};
 			m_currentSection = nullptr;
@@ -135,6 +142,8 @@ private:
 	HashParser::Section*                   m_currentSection { nullptr };
 	TextHistogram                          m_textHistogram;
 	QStringList                            m_annotation;
+	size_t                                 m_size { 0 };
+	uint64_t                               m_simHash { 0 };
 };
 
 } // namespace

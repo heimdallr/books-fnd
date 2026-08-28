@@ -38,6 +38,8 @@ private: // HashParser::IObserver
 			HashParser::HashImageItem cover,
 		HashParser::HashImageItems    images,
 		HashParser::Section::Ptr,
+		size_t /*size*/,
+		uint64_t /*simHash*/,
 		TextHistogram textHistogram,
 		QStringList   annotation
 	) override

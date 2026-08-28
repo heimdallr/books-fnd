@@ -33,6 +33,7 @@ struct HashParser
 		Section* parent { nullptr };
 		size_t   count { 0 };
 		size_t   size { 0 };
+		uint64_t simHash { 0 };
 		using Ptr = std::unique_ptr<Section>;
 		std::unordered_map<QString, Ptr> children;
 	};
@@ -51,6 +52,8 @@ struct HashParser
 				HashImageItem cover,
 			HashImageItems    images,
 			Section::Ptr      section,
+			size_t            size,
+			uint64_t          simHash,
 			TextHistogram     textHistogram,
 			QStringList       annotation
 		) = 0;
