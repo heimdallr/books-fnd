@@ -21,6 +21,7 @@ struct CalculateHashResult
 	QString    hash;
 	size_t     count;
 	size_t     size;
+	uint64_t   simHash;
 };
 
 UTIL_EXPORT CalculateHashResult CalculateHash(Hist& hist);

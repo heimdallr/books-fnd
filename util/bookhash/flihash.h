@@ -22,7 +22,9 @@ struct HashParseResult
 	QStringList   hashSections;
 	QStringList   annotation;
 	TextHistogram hashValues;
+	size_t        count;
 	size_t        size;
+	uint64_t      simHash;
 };
 
 struct ImageHashItem

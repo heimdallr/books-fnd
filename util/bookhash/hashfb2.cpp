@@ -39,6 +39,7 @@ class Fb2Parser final
 		int      depth { 0 };
 		size_t   count { 0 };
 		size_t   size { 0 };
+		uint64_t simHash { 0 };
 
 		Hist                                  hist;
 		QString                               hash;
@@ -46,10 +47,11 @@ class Fb2Parser final
 
 		HashValues GetHashValues()
 		{
-			auto [hashValues, h, c, s] = CalculateHash(hist);
-			hash                       = std::move(h);
-			count                      = c;
-			size                       = s;
+			auto [hashValues, h, c, s, sh] = CalculateHash(hist);
+			hash                           = std::move(h);
+			count                          = c;
+			size                           = s;
+			simHash                        = sh;
 			return hashValues;
 		}
 	};
@@ -67,7 +69,7 @@ private: // BookHash::IParser
 	{
 		QStringList sections;
 		const auto  enumerate = [&](const Section& parent, const auto& r) -> void {
-			sections << QString("%1\t%2\t%3\t%4").arg(parent.depth).arg(parent.hash).arg(parent.count).arg(parent.size);
+			sections << QString("%1\t%2\t%3\t%4\t%5").arg(parent.depth).arg(parent.hash).arg(parent.count).arg(parent.size).arg(parent.simHash, 16, 16, QChar { '0' });
 
 			for (const auto& child : parent.children)
 				r(*child, r);
@@ -76,12 +78,17 @@ private: // BookHash::IParser
 		auto hashValues = m_section.GetHashValues();
 		enumerate(m_section, enumerate);
 
-		return { .id           = QString::fromUtf8(m_md5.result().toHex()),
-			     .title        = std::move(m_title),
-			     .hashText     = std::move(m_section.hash),
-			     .hashSections = std::move(sections),
-			     .annotation   = std::move(m_annotation),
-			     .hashValues   = std::move(hashValues) };
+		return {
+			.id           = QString::fromUtf8(m_md5.result().toHex()),
+			.title        = std::move(m_title),
+			.hashText     = std::move(m_section.hash),
+			.hashSections = std::move(sections),
+			.annotation   = std::move(m_annotation),
+			.hashValues   = std::move(hashValues),
+			.count        = m_section.count,
+			.size         = m_section.size,
+			.simHash      = m_section.simHash,
+		};
 	}
 
 	ImageHashItem GetCover() override

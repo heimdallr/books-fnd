@@ -46,12 +46,12 @@ private: // BookHash::IParser
 			for (const auto& [word, count] : sectionHist)
 				hist[word] += count;
 
-			auto [hashValues, hash, count, size] = CalculateHash(sectionHist);
-			sections << QString("1\t%1\t%2\t%3").arg(hash).arg(count).arg(size);
+			auto [hashValues, hash, count, size, simHash] = CalculateHash(sectionHist);
+			sections << QString("1\t%1\t%2\t%3\n%4").arg(hash).arg(count).arg(size).arg(simHash, 16, 16, QChar { '0' });
 		}
 
-		auto [hashValues, hash, count, size] = CalculateHash(hist);
-		sections.push_front(QString("0\t%1\t%2\t%3").arg(hash).arg(count).arg(size));
+		auto [hashValues, hash, count, size, simHash] = CalculateHash(hist);
+		sections.push_front(QString("0\t%1\t%2\t%3\n%4").arg(hash).arg(count).arg(size).arg(simHash, 16, 16, QChar { '0' }));
 
 		HashParseResult result {
 			.id           = QString::fromUtf8(md5.result().toHex()),
@@ -60,6 +60,9 @@ private: // BookHash::IParser
 			.hashSections = std::move(sections),
 			.annotation   = QStringList { std::move(m_result.annotation) },
 			.hashValues   = std::move(hashValues),
+			.count        = count,
+			.size         = size,
+			.simHash      = simHash,
 		};
 		return result;
 	}

@@ -234,6 +234,25 @@ CalculateHashResult CalculateHash(Hist& hist)
 {
 	QCryptographicHash cryptographicHash { QCryptographicHash::Md5 };
 
+	std::array<int64_t, 64> counters;
+	counters.fill(0);
+	for (const auto& [word, count] : hist | std::views::filter([](const auto& item) {
+										 return item.first.length() > 3;
+									 }))
+	{
+		cryptographicHash.reset();
+		cryptographicHash.addData(word.toUtf8());
+		const auto md5  = cryptographicHash.result();
+		const auto hash = *reinterpret_cast<const uint64_t*>(md5.data()) ^ *reinterpret_cast<const uint64_t*>(md5.data() + 8);
+		for (int i = 0; i < 64; ++i)
+			((1ULL << i) & hash) ? counters[i] += static_cast<int64_t>(count) : counters[i] -= static_cast<int64_t>(count);
+	}
+
+	uint64_t simHash = 0;
+	for (int i = 0; i < 64; ++i)
+		if (counters[i] > 0)
+			simHash |= 1ULL << i;
+
 	cryptographicHash.reset();
 	auto hashValues = GetHashValues(hist);
 	for (const auto& word : hashValues.first | std::views::values)
@@ -243,7 +262,7 @@ CalculateHashResult CalculateHash(Hist& hist)
 	const auto count = hist.size();
 	hist.clear();
 
-	return { .hashValues = std::move(hashValues.first), .hash = std::move(hash), .count = count, .size = hashValues.second };
+	return { .hashValues = std::move(hashValues.first), .hash = std::move(hash), .count = count, .size = hashValues.second, .simHash = simHash };
 }
 
 void ParseBookHash(BookHashItem& bookHashItem, QCryptographicHash& cryptographicHash)
