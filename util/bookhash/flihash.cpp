@@ -59,10 +59,19 @@ using ImageHashes = std::unordered_multimap<uint64_t, QString>;
 
 BookHashItem GetHash_7z(const QString& path, const QString& file)
 {
-	QCryptographicHash md5 { QCryptographicHash::Md5 };
-	auto               bookHashItem = BookHashItemProvider(path).Get(file);
-	ParseBookHash(bookHashItem, md5);
-	return bookHashItem;
+	try
+	{
+		QCryptographicHash md5 { QCryptographicHash::Md5 };
+		auto               bookHashItem = BookHashItemProvider(path).Get(file);
+		ParseBookHash(bookHashItem, md5);
+		return bookHashItem;
+	}
+	catch (const std::exception& ex)
+	{
+		PLOGE << ex.what();
+	}
+
+	return {};
 }
 
 BookHashItem GetHash_xml(const QString& path, const QString& file)
