@@ -1,5 +1,6 @@
 #pragma once
 
+#include <unordered_set>
 #include <vector>
 
 #include <QStringList>
@@ -16,15 +17,16 @@ using TextHistogram = std::vector<std::pair<size_t, QString>>;
 
 struct HashParseResult
 {
-	QString       id;
-	QString       title;
-	QString       hashText;
-	QStringList   hashSections;
-	QStringList   annotation;
-	TextHistogram hashValues;
-	size_t        count;
-	size_t        size;
-	uint64_t      simHash;
+	QString                     id;
+	QString                     title;
+	QString                     hashText;
+	QStringList                 hashSections;
+	QStringList                 annotation;
+	TextHistogram               hashValues;
+	size_t                      count;
+	size_t                      size;
+	uint64_t                    simHash;
+	std::unordered_set<QString> linkedImages;
 };
 
 struct ImageHashItem

@@ -19,6 +19,28 @@ using namespace HomeCompa;
 namespace
 {
 
+QString GetImageId(const XmlAttributes& attributes)
+{
+	for (size_t i = 0, sz = attributes.GetCount(); i < sz; ++i)
+	{
+		auto attributeName  = attributes.GetName(i);
+		auto attributeValue = attributes.GetValue(i);
+		if (attributeName.endsWith(":href"))
+		{
+			if (const auto it = std::ranges::find_if(
+					attributeValue,
+					[](const auto ch) {
+						return ch != '#';
+					}
+				);
+			    it != attributeValue.end())
+				return Last(attributeValue, std::distance(it, attributeValue.end())).trimmed();
+		}
+	}
+
+	return {};
+}
+
 class Fb2Parser final
 	: public SaxParser
 	, public BookHash::IParser
@@ -32,6 +54,7 @@ class Fb2Parser final
 
 	static constexpr auto ID      = "id";
 	static constexpr auto SECTION = "section";
+	static constexpr auto IMAGE   = "image";
 
 	struct Section
 	{
@@ -88,6 +111,7 @@ private: // BookHash::IParser
 			.count        = m_section.count,
 			.size         = m_section.size,
 			.simHash      = m_section.simHash,
+			.linkedImages = std::move(m_linkedImages),
 		};
 	}
 
@@ -135,25 +159,18 @@ private: // Util::SaxParser
 
 		if (path == COVERPAGE_IMAGE)
 		{
-			for (size_t i = 0, sz = attributes.GetCount(); i < sz; ++i)
-			{
-				auto attributeName  = attributes.GetName(i);
-				auto attributeValue = attributes.GetValue(i);
-				if (attributeName.endsWith(":href"))
-				{
-					if (const auto it = std::ranges::find_if(
-							attributeValue,
-							[](const auto ch) {
-								return ch != '#';
-							}
-						);
-					    it != attributeValue.end())
-						m_coverPage = Last(attributeValue, std::distance(it, attributeValue.end())).trimmed();
-					break;
-				}
-			}
+			if (auto imageId = GetImageId(attributes); !imageId.isEmpty())
+				m_coverPage = std::move(imageId);
+
 			return true;
 		}
+
+		if (name == IMAGE && path.startsWith(BODY, Qt::CaseInsensitive))
+		{
+			if (auto imageId = GetImageId(attributes); !imageId.isEmpty())
+				m_linkedImages.emplace(std::move(imageId));
+		}
+
 		return true;
 	}
 
@@ -255,6 +272,8 @@ private:
 	bool    m_isBinary { false };
 	QString m_coverPage;
 	QString m_picId;
+
+	std::unordered_set<QString> m_linkedImages;
 };
 
 } // namespace

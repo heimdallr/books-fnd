@@ -3,6 +3,10 @@
 #include <QBuffer>
 #include <QCryptographicHash>
 
+#include "xml/SaxParser.h"
+#include "xml/XmlAttributes.h"
+#include "xml/XmlUtil.h"
+
 #include "EpubParser.h"
 #include "hashbook.h"
 #include "log.h"
@@ -13,6 +17,37 @@ using namespace HomeCompa;
 
 namespace
 {
+
+struct HtmlParser final : private SaxParser
+{
+	HtmlParser(QIODevice& input, std::unordered_set<QString>& linkedImage)
+		: SaxParser(input, 512)
+		, m_linkedImages { linkedImage }
+	{
+		Parse();
+	}
+
+private: // Util::SaxParser
+	bool OnStartElement(const QString& name, const QString& path, const XmlAttributes& attributes) override
+	{
+		if (name == "img" && path.startsWith("html/body", Qt::CaseInsensitive))
+			if (auto imageName = attributes.GetAttribute("src"); !imageName.isEmpty())
+				m_linkedImages.emplace(std::move(imageName));
+
+		return true;
+	}
+
+private:
+	std::unordered_set<QString>& m_linkedImages;
+};
+
+void CollectLinkedImages(QByteArray body, std::unordered_set<QString>& linkedImage)
+{
+	body = RemoveDocType(std::move(body));
+	QBuffer buffer(&body);
+	buffer.open(QIODevice::ReadOnly);
+	[[maybe_unused]] const HtmlParser parser(buffer, linkedImage);
+}
 
 class EpubParserImpl final : public BookHash::IParser
 {
@@ -31,6 +66,8 @@ private: // BookHash::IParser
 		QStringList                         sections;
 		std::unordered_map<QString, size_t> hist;
 
+		std::unordered_set<QString> linkedImage;
+
 		for (auto [id, body] : m_result.texts | std::views::filter([](const auto& item) {
 								   return std::ranges::any_of(textExt, [&](const char* ext) {
 									   return item.id.endsWith(ext, Qt::CaseInsensitive);
@@ -42,6 +79,7 @@ private: // BookHash::IParser
 #endif
 
 			auto sectionHist = CollectHistogram(body, md5);
+			CollectLinkedImages(body, linkedImage);
 
 			for (const auto& [word, count] : sectionHist)
 				hist[word] += count;
@@ -64,6 +102,12 @@ private: // BookHash::IParser
 			.size         = size,
 			.simHash      = simHash,
 		};
+
+		const auto imageIndex = EpubParser::GetImageIndex(m_result.imageIndex) | std::ranges::to<std::unordered_map>();
+		for (const auto& imageName : linkedImage)
+			if (const auto it = imageIndex.find(imageName); it != imageIndex.end())
+				result.linkedImages.emplace(QString::number(it->second));
+
 		return result;
 	}
 
