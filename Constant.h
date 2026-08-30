@@ -73,6 +73,12 @@ constexpr auto COMPILATION = "compilation";
 constexpr auto COVERED     = "covered";
 constexpr auto PART        = "part";
 
+constexpr std::pair<char, const char*> PATH_FIX[] {
+	{ 0x04, "~04" },
+	{ 0x0A, "~0A" },
+	{ 0x0D, "~0D" },
+};
+
 } // namespace HomeCompa::Inpx
 
 namespace HomeCompa::Epub
