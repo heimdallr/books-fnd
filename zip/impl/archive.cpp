@@ -42,6 +42,32 @@ constexpr const char* ARCHIVE_EXTENSIONS[] {
 };
 
 #ifdef _WIN32
+constexpr std::pair<QChar, QChar> FIX_TABLE[] {
+	{ QChar { 0x22 }, QChar { 0xF022 } },
+    { QChar { 0x2A }, QChar { 0xF02A } },
+    { QChar { 0x2F }, QChar { 0xF02F } },
+    { QChar { 0x3A }, QChar { 0xF03A } },
+    { QChar { 0x3C }, QChar { 0xF03C } },
+	{ QChar { 0x3E }, QChar { 0xF03E } },
+    { QChar { 0x3F }, QChar { 0xF03F } },
+    { QChar { 0x5C }, QChar { 0xF05C } },
+    { QChar { 0x7C }, QChar { 0xF07C } },
+};
+
+QString FixFileName(QString fileName)
+{
+	for (const auto& [to, from] : FIX_TABLE)
+		fileName.replace(from, to);
+	return fileName;
+}
+#else
+QString FixFileName(QString fileName)
+{
+	return fileName;
+}
+#endif
+
+#ifdef _WIN32
 	#define fromBit7zString fromStdWString
 	#define toBit7zString toStdWString
 #else
@@ -111,7 +137,8 @@ FileStorage CreateFileList(const bit7z::BitInputArchive& archive)
 			return QDateTime::fromSecsSinceEpoch(*fileTime);
 		}();
 
-		auto fileName = QDir::fromNativeSeparators(QString::fromBit7zString(archive.itemProperty(i, bit7z::BitProperty::Path).getString()));
+		auto fileName = QDir::fromNativeSeparators(FixFileName(QString::fromBit7zString(archive.itemProperty(i, bit7z::BitProperty::Path).getString())));
+
 		if (const auto it = result.index.try_emplace(fileName, result.files.size()); it.second)
 			result.files.emplace_back(i, std::move(fileName), size, std::move(time), archive.isItemFolder(i));
 		else
