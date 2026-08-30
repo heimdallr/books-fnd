@@ -65,6 +65,8 @@ private: // Util::SaxParser
 		else if (path == IMAGE)
 		{
 			m_images.emplace_back(attributes.GetAttribute("id"), QString(), attributes.GetAttribute("pHash"));
+			if (const auto linked = attributes.GetAttribute("linked"); !linked.isEmpty())
+				m_images.back().linked = linked == "true";
 		}
 		else if (path == HISTOGRAM)
 		{

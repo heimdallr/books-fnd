@@ -25,6 +25,7 @@ struct HashParser
 		QString id;
 		QString hash;
 		QString pHash;
+		bool    linked { true };
 	};
 
 	struct Section
