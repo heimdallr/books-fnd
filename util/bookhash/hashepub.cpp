@@ -2,6 +2,7 @@
 
 #include <QBuffer>
 #include <QCryptographicHash>
+#include <QFileInfo>
 
 #include "xml/SaxParser.h"
 #include "xml/XmlAttributes.h"
@@ -103,9 +104,12 @@ private: // BookHash::IParser
 			.simHash      = simHash,
 		};
 
-		const auto imageIndex = EpubParser::GetImageIndex(m_result.imageIndex) | std::ranges::to<std::unordered_map>();
+		const auto imageIndex = EpubParser::GetImageIndex(m_result.imageIndex) | std::views::transform([](const auto& item) {
+									return std::make_pair(QFileInfo(item.first).fileName().toLower(), item.second);
+								})
+		                      | std::ranges::to<std::unordered_map>();
 		for (const auto& imageName : linkedImage)
-			if (const auto it = imageIndex.find(imageName); it != imageIndex.end())
+			if (const auto it = imageIndex.find(QFileInfo(imageName).fileName().toLower()); it != imageIndex.end())
 				result.linkedImages.emplace(QString::number(it->second));
 
 		return result;
