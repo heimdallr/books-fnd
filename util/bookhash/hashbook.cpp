@@ -8,6 +8,7 @@
 #include "canny.h"
 // clang-format on
 
+#include <array>
 #include <set>
 
 #include "fnd/ScopedCall.h"
