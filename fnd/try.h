@@ -1,5 +1,7 @@
 #pragma once
 
+#include "fnd/StrUtil.h"
+
 #include "log.h"
 
 namespace HomeCompa::Util
@@ -10,14 +12,18 @@ R Try(const S& name, const T& functor, const std::string_view file, const int li
 {
 	try
 	{
+#ifndef NDEBUG
 		PLOGV << name << " started";
+#endif
 		auto result = functor();
+#ifndef NDEBUG
 		PLOGV << name << " finished";
+#endif
 		return std::forward<R>(result);
 	}
 	catch (const std::exception& ex)
 	{
-		PLOGE << std::format("{}, {}: {}", file, line, ex.what());
+		PLOGE << std::format("{} failed. {}, {}: {}", name, file, line, ex.what());
 	}
 	catch (...)
 	{
