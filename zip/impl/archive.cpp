@@ -56,8 +56,11 @@ constexpr std::pair<QChar, QChar> FIX_TABLE[] {
 
 QString FixFileName(QString fileName)
 {
-	for (const auto& [to, from] : FIX_TABLE)
-		fileName.replace(from, to);
+	if (std::ranges::any_of(fileName, [](const QChar& item) {
+			return item.category() == QChar::Other_PrivateUse;
+		}))
+		for (const auto& [to, from] : FIX_TABLE)
+			fileName.replace(from, to);
 	return fileName;
 }
 #else
