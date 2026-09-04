@@ -71,6 +71,7 @@ inline void Resize(QStringList& list, const qsizetype_t size)
 	#define CHECK_STATE_CHANGED checkStateChanged
 	#define CHECK_STATE Qt::CheckState
 	#define IS_VALID_COLOR_NAME(NAME) isValidColorName(NAME)
+	#define Q_JSON_VALUE_CONST_REF QJsonValueConstRef
 
 #elif QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 
@@ -137,6 +138,7 @@ inline void Resize(QStringList& list, const qsizetype_t size)
 	#define CHECK_STATE_CHANGED stateChanged
 	#define CHECK_STATE int
 	#define IS_VALID_COLOR_NAME(NAME) isValidColor(NAME)
+	#define Q_JSON_VALUE_CONST_REF const QJsonValue&
 
 Q_DECLARE_METATYPE(std::set<QString>)
 Q_DECLARE_METATYPE(std::unordered_set<QString>)
