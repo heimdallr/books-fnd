@@ -44,7 +44,7 @@ private: // QAbstractItemModel
 			return QStringListModel::setData(index, value, role);
 
 		m_checked[index.row()] = value.value<Qt::CheckState>() == Qt::Checked;
-		emit dataChanged(index, index, { Qt::CheckStateRole });
+		emit dataChanged(index, index, QVector<int> { Qt::CheckStateRole });
 		return true;
 	}
 
@@ -92,7 +92,7 @@ QMenu* CreateCheckableMenu(const std::vector<std::pair<QString, bool>>& values, 
 	for (auto&& [checked, row] : std::views::zip(values | std::views::values, std::views::iota(0)))
 		model->setData(model->index(row, 0), checked ? Qt::Checked : Qt::Unchecked, Qt::CheckStateRole);
 
-	QObject::connect(model, &QAbstractItemModel::dataChanged, [callback = std::move(callback)](const QModelIndex& topLeft, const QModelIndex& bottomRight, const QList<int>& roles = QList<int>()) {
+	QObject::connect(model, &QAbstractItemModel::dataChanged, [callback = std::move(callback)](const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles = {}) {
 		if (roles.contains(Qt::CheckStateRole))
 			for (const auto& index : QItemSelection(topLeft, bottomRight).indexes())
 				callback(index.row(), index.data(Qt::CheckStateRole).value<Qt::CheckState>() == Qt::Checked);
