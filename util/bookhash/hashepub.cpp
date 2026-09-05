@@ -29,7 +29,7 @@ struct HtmlParser final : private SaxParser
 	}
 
 private: // Util::SaxParser
-	bool OnStartElement(const QString& name, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView name, const QString& path, const XmlAttributes& attributes) override
 	{
 		if (name == "img" && path.startsWith("html/body", Qt::CaseInsensitive))
 			if (auto imageName = attributes.GetAttribute("src"); !imageName.isEmpty())

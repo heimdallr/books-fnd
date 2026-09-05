@@ -99,7 +99,7 @@ public:
 	}
 
 private: // SaxParser
-	bool OnStartElement(const QString& /*name*/, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView /*name*/, const QString& path, const XmlAttributes& attributes) override
 	{
 		using ParseElementFunction = bool (Fb2InpxParserImpl::*)(const XmlAttributes&);
 		using ParseElementItem     = std::pair<const char*, ParseElementFunction>;

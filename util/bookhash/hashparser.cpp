@@ -31,7 +31,7 @@ public:
 	}
 
 private: // Util::SaxParser
-	bool OnStartElement(const QString& name, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView name, const QString& path, const XmlAttributes& attributes) override
 	{
 		if (path == BOOKS)
 		{

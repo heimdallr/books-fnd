@@ -102,7 +102,7 @@ public:
 	}
 
 private:
-	bool OnStartElement(const QString& name, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(QStringView name, const QString& path, const XmlAttributes& attributes) override
 	{
 		if (name == BINARY)
 			return (m_id = attributes.GetAttribute(ID)), true;
@@ -191,7 +191,7 @@ private: // Util::SaxParser
 		return m_writer.WriteProcessingInstruction(target, data), true;
 	}
 
-	bool OnStartElement(const QString& name, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView name, const QString& path, const XmlAttributes& attributes) override
 	{
 		if (m_specialNode || (m_metadataReplacement && IsOneOf(path, AUTHOR, BOOK_TITLE, SEQUENCE)))
 			return m_specialNode = true;

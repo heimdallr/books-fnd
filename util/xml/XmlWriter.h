@@ -92,7 +92,9 @@ public:
 
 	XmlWriter& WriteProcessingInstruction(QStringView target, QStringView data);
 	XmlWriter& WriteStartElement(const QString& name);
+	XmlWriter& WriteStartElement(QStringView name);
 	XmlWriter& WriteStartElement(const QString& name, const XmlAttributes& attributes);
+	XmlWriter& WriteStartElement(QStringView name, const XmlAttributes& attributes);
 	XmlWriter& WriteEndElement();
 	XmlWriter& WriteAttribute(const QString& name, const QString& value);
 	XmlWriter& WriteCharacters(const QString& data);

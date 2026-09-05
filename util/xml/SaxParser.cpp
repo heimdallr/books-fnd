@@ -19,6 +19,11 @@ namespace xercesc = xercesc_3_3;
 namespace
 {
 
+QStringView ToStringView(const XMLCh* const value)
+{
+	return QStringView { value, static_cast<qsizetype>(std::char_traits<char16_t>::length(value)) };
+}
+
 class XmlAttributesImpl final : public XmlAttributes
 {
 public:
@@ -192,7 +197,7 @@ private: // xercesc::DocumentHandler
 		m_stack.Push(name);
 		const auto& key = m_stack.ToString();
 		m_attributes.SetAttributeList(args);
-		if (!m_parser.OnStartElement(QString::fromStdU16String(name), key, m_attributes))
+		if (!m_parser.OnStartElement(ToStringView(name), key, m_attributes))
 			m_inputSource.SetStopped(true);
 	}
 
@@ -341,7 +346,7 @@ bool SaxParser::OnXMLDecl(QStringView /*versionStr*/, QStringView /*encodingStr*
 	return true;
 }
 
-bool SaxParser::OnStartElement(const QString& /*name*/, const QString& /*path*/, const XmlAttributes& /*attributes*/)
+bool SaxParser::OnStartElement(QStringView /*name*/, const QString& /*path*/, const XmlAttributes& /*attributes*/)
 {
 	return true;
 }

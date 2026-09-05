@@ -231,9 +231,21 @@ XmlWriter& XmlWriter::WriteStartElement(const QString& name)
 	return *this;
 }
 
+XmlWriter& XmlWriter::WriteStartElement(const QStringView name)
+{
+	m_impl->WriteStartElement(name.toString());
+	return *this;
+}
+
 XmlWriter& XmlWriter::WriteStartElement(const QString& name, const XmlAttributes& attributes)
 {
 	m_impl->WriteStartElement(name, attributes);
+	return *this;
+}
+
+XmlWriter& XmlWriter::WriteStartElement(const QStringView name, const XmlAttributes& attributes)
+{
+	m_impl->WriteStartElement(name.toString(), attributes);
 	return *this;
 }
 

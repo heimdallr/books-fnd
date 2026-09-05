@@ -27,6 +27,19 @@ using namespace HomeCompa;
 namespace
 {
 
+constexpr std::wstring_view TITLE       = L"title";
+constexpr std::wstring_view DESCRIPTION = L"description";
+constexpr std::wstring_view LANGUAGE    = L"language";
+constexpr std::wstring_view SUBJECT     = L"subject";
+constexpr std::wstring_view CREATOR     = L"creator";
+constexpr std::wstring_view ITEMREF     = L"itemref";
+constexpr std::wstring_view REFERENCE   = L"reference";
+
+QStringView ToQStringView(const std::wstring_view value)
+{
+	return QStringView { value.data(), static_cast<qsizetype_t>(value.length()) };
+}
+
 QString CleanPath(const QString& relativePath, const QString& path)
 {
 	auto result = relativePath + path;
@@ -69,7 +82,7 @@ private:
 			throw std::runtime_error("opf path not found");
 	}
 
-	bool OnStartElement(const QString& /*name*/, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(QStringView /*name*/, const QString& path, const XmlAttributes& attributes) override
 	{
 		if (path.toLower() == "container/rootfiles/rootfile")
 		{
@@ -123,7 +136,7 @@ private:
 	}
 
 private: // SaxParser
-	bool OnStartElement(const QString& name, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView name, const QString& path, const XmlAttributes& attributes) override
 	{
 		if (name.compare("img", Qt::CaseInsensitive) == 0)
 		{
@@ -342,7 +355,7 @@ public:
 	}
 
 private: // SaxParser
-	bool OnStartElement(const QString& name, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView name, const QString& path, const XmlAttributes& attributes) override
 	{
 		const auto cleanPath = RemoveNS(path);
 
@@ -381,29 +394,29 @@ private: // SaxParser
 	}
 
 private:
-	void parse_metadata(const QString& name, const XmlAttributes& attributes)
+	void parse_metadata(const QStringView name, const XmlAttributes& attributes)
 	{
-		if (name.endsWith("title", Qt::CaseInsensitive))
+		if (name.endsWith(ToQStringView(TITLE), Qt::CaseInsensitive))
 			return (void)(m_functor = [this](const QString&, const QStringView value) {
 				m_result.title = value.toString().trimmed();
 			});
 
-		if (name.endsWith("description", Qt::CaseInsensitive))
+		if (name.endsWith(DESCRIPTION, Qt::CaseInsensitive))
 			return (void)(m_functor = [this](const QString&, const QStringView value) {
 				m_result.annotation = value.toString().trimmed();
 			});
 
-		if (name.endsWith("language", Qt::CaseInsensitive))
+		if (name.endsWith(LANGUAGE, Qt::CaseInsensitive))
 			return (void)(m_functor = [this](const QString&, const QStringView value) {
 				m_result.language = value.toString().trimmed().left(2).toLower();
 			});
 
-		if (name.endsWith("subject", Qt::CaseInsensitive))
+		if (name.endsWith(SUBJECT, Qt::CaseInsensitive))
 			return (void)(m_functor = [this](const QString&, const QStringView value) {
 				ParseGenresString(m_result.genres, value.toString());
 			});
 
-		if (name.endsWith("creator", Qt::CaseInsensitive))
+		if (name.endsWith(CREATOR, Qt::CaseInsensitive))
 			return (void)(m_functor = [this](const QString&, const QStringView value) {
 				if (const QString creatorText = value.toString().trimmed(); !creatorText.isEmpty())
 					m_result.authors.emplace_back(ParseAuthor(creatorText));
@@ -413,7 +426,7 @@ private:
 			m_coverId = attributes.GetAttribute("content");
 	}
 
-	void parse_manifest(const QString& /*name*/, const XmlAttributes& attributes)
+	void parse_manifest(QStringView /*name*/, const XmlAttributes& attributes)
 	{
 		const auto& [id, href] = *m_manifest.try_emplace(attributes.GetAttribute("id"), attributes.GetAttribute("href")).first;
 
@@ -431,12 +444,12 @@ private:
 		}
 	}
 
-	void parse_spine(const QString& name, const XmlAttributes& attributes)
+	void parse_spine(const QStringView name, const XmlAttributes& attributes)
 	{
 		if (m_spineItemRefFound || !m_coverPath.isEmpty())
 			return;
 
-		if (name.endsWith("itemref", Qt::CaseInsensitive))
+		if (name.endsWith(ITEMREF, Qt::CaseInsensitive))
 		{
 			m_spineItemRefFound = true;
 			if (const auto it = m_manifest.find(attributes.GetAttribute("idref")); it != m_manifest.end())
@@ -448,12 +461,12 @@ private:
 		}
 	}
 
-	void parse_guide(const QString& name, const XmlAttributes& attributes)
+	void parse_guide(const QStringView name, const XmlAttributes& attributes)
 	{
 		if (!m_coverPath.isEmpty())
 			return;
 
-		if (name.endsWith("reference", Qt::CaseInsensitive))
+		if (name.endsWith(REFERENCE, Qt::CaseInsensitive))
 		{
 			if (const auto type = attributes.GetAttribute("type"); type.compare("cover", Qt::CaseInsensitive) == 0)
 			{
@@ -481,7 +494,7 @@ private:
 	std::unordered_map<QString, QString> m_manifest;
 	bool                                 m_spineItemRefFound { false };
 
-	using ParserImpl = void (OpfParser::*)(const QString& /*name*/, const XmlAttributes& /*attributes*/);
+	using ParserImpl = void (OpfParser::*)(QStringView /*name*/, const XmlAttributes& /*attributes*/);
 
 	static constexpr ParserImpl PARSERS[] {
 #define OPF_PARSER_MODE_ITEM(NAME) &OpfParser::parse_##NAME,

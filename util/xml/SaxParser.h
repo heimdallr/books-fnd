@@ -41,10 +41,13 @@ protected:
 
 protected:
 	template <typename Obj, typename Value, size_t ArraySize, typename... ARGS>
-	bool Parse(Obj& obj, Value (&array)[ArraySize], const QString& key, const ARGS&... args)
+	bool Parse(Obj& obj, Value (&array)[ArraySize], const QStringView key, const ARGS&... args)
 	{
 		m_processed       = true;
-		const auto parser = FindSecond(array, key.toStdString().data(), &SaxParser::Stub<ARGS...>, PszComparerEndsWithCaseInsensitive {});
+		const auto it     = std::ranges::find_if(array, [&](const auto& item) {
+			return key == item.first;
+		});
+		const auto parser = it != std::end(array) ? it->second : &SaxParser::Stub<ARGS...>;
 		return std::invoke(parser, obj, std::cref(args)...);
 	}
 
@@ -66,7 +69,7 @@ public:
 	virtual bool OnProcessingInstruction(QStringView target, QStringView data);
 	virtual bool OnXMLDecl(QStringView versionStr, QStringView encodingStr, QStringView standaloneStr, QStringView actualEncodingStr);
 
-	virtual bool OnStartElement(const QString& name, const QString& path, const XmlAttributes& attributes);
+	virtual bool OnStartElement(QStringView name, const QString& path, const XmlAttributes& attributes);
 	virtual bool OnEndElement(const QString& name, const QString& path);
 	virtual bool OnCharacters(const QString& path, QStringView value);
 
