@@ -3,8 +3,6 @@
 #include "xml/SaxParser.h"
 #include "xml/XmlAttributes.h"
 
-#include "Constant.h"
-
 using namespace HomeCompa::Util;
 using namespace HomeCompa;
 
@@ -13,14 +11,14 @@ namespace
 
 class HashParserImpl final : public SaxParser
 {
-	static constexpr auto BOOKS      = "books";
-	static constexpr auto BOOK       = "books/book";
-	static constexpr auto COVER      = "books/book/cover";
-	static constexpr auto IMAGE      = "books/book/image";
-	static constexpr auto ORIGIN     = "books/book/origin";
-	static constexpr auto HISTOGRAM  = "books/book/histogram/item";
-	static constexpr auto SECTION    = "section";
-	static constexpr auto ANNOTATION = "books/book/annotation/p";
+	static constexpr auto BOOKS      = u"books";
+	static constexpr auto BOOK       = u"books/book";
+	static constexpr auto COVER      = u"books/book/cover";
+	static constexpr auto IMAGE      = u"books/book/image";
+	static constexpr auto ORIGIN     = u"books/book/origin";
+	static constexpr auto HISTOGRAM  = u"books/book/histogram/item";
+	static constexpr auto SECTION    = u"section";
+	static constexpr auto ANNOTATION = u"books/book/annotation/p";
 
 public:
 	HashParserImpl(QIODevice& input, HashParser::IObserver& observer)
@@ -35,45 +33,45 @@ private: // Util::SaxParser
 	{
 		if (path == BOOKS)
 		{
-			m_observer.OnParseStarted(attributes.GetAttribute(L"source"));
+			m_observer.OnParseStarted(attributes.GetAttribute(u"source"));
 		}
 		else if (path == BOOK)
 		{
 #define HASH_PARSER_CALLBACK_ITEM(NAME) m_##NAME = attributes.GetAttribute(L#NAME).toString();
 			HASH_PARSER_CALLBACK_ITEMS_X_MACRO
 #undef HASH_PARSER_CALLBACK_ITEM
-			m_size           = attributes.GetAttribute(L"size").toULongLong();
-			m_simHash        = attributes.GetAttribute(L"simHash").toULongLong(nullptr, 16);
+			m_size           = attributes.GetAttribute(u"size").toULongLong();
+			m_simHash        = attributes.GetAttribute(u"simHash").toULongLong(nullptr, 16);
 			m_section        = std::make_unique<HashParser::Section>();
 			m_currentSection = m_section.get();
 		}
 		else if (path == ORIGIN)
 		{
-			m_originFolder = attributes.GetAttribute(L"folder").toString();
-			m_originFile   = attributes.GetAttribute(L"file").toString();
+			m_originFolder = attributes.GetAttribute(u"folder").toString();
+			m_originFile   = attributes.GetAttribute(u"file").toString();
 		}
 		else if (name == SECTION)
 		{
-			auto& section    = m_currentSection->children.try_emplace(attributes.GetAttribute(L"id").toString(), std::make_unique<HashParser::Section>()).first->second;
-			section->count   = attributes.GetAttribute(L"count").toULongLong();
-			section->size    = attributes.GetAttribute(L"size").toULongLong();
-			section->simHash = attributes.GetAttribute(L"simHash").toULongLong(nullptr, 16);
+			auto& section    = m_currentSection->children.try_emplace(attributes.GetAttribute(u"id").toString(), std::make_unique<HashParser::Section>()).first->second;
+			section->count   = attributes.GetAttribute(u"count").toULongLong();
+			section->size    = attributes.GetAttribute(u"size").toULongLong();
+			section->simHash = attributes.GetAttribute(u"simHash").toULongLong(nullptr, 16);
 			section->parent  = m_currentSection;
 			m_currentSection = section.get();
 		}
 		else if (path == COVER)
 		{
-			m_cover.pHash = attributes.GetAttribute(L"pHash").toString();
+			m_cover.pHash = attributes.GetAttribute(u"pHash").toString();
 		}
 		else if (path == IMAGE)
 		{
-			m_images.emplace_back(attributes.GetAttribute(L"id").toString(), QString(), attributes.GetAttribute(L"pHash").toString());
-			if (const auto linked = attributes.GetAttribute(L"linked"); !linked.isEmpty())
-				m_images.back().linked = linked == "true";
+			m_images.emplace_back(attributes.GetAttribute(u"id").toString(), QString(), attributes.GetAttribute(u"pHash").toString());
+			if (const auto linked = attributes.GetAttribute(u"linked"); !linked.isEmpty())
+				m_images.back().linked = linked == u"true";
 		}
 		else if (path == HISTOGRAM)
 		{
-			m_textHistogram.emplace_back(attributes.GetAttribute(L"count").toULongLong(), attributes.GetAttribute(L"word"));
+			m_textHistogram.emplace_back(attributes.GetAttribute(u"count").toULongLong(), attributes.GetAttribute(u"word").toString());
 		}
 
 		return true;

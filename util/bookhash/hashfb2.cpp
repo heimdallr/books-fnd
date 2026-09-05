@@ -45,17 +45,16 @@ class Fb2Parser final
 	: public SaxParser
 	, public BookHash::IParser
 {
-	static constexpr std::wstring_view BODY = L"FictionBook/body";
+	static constexpr auto BODY            = u"FictionBook/body";
+	static constexpr auto BINARY          = u"FictionBook/binary";
+	static constexpr auto BODY_BINARY     = u"FictionBook/body/binary";
+	static constexpr auto TITLE           = u"FictionBook/description/title-info/book-title";
+	static constexpr auto COVERPAGE_IMAGE = u"FictionBook/description/title-info/coverpage/image";
+	static constexpr auto ANNOTATION      = u"FictionBook/description/title-info/annotation";
 
-	static constexpr auto BINARY          = "FictionBook/binary";
-	static constexpr auto BODY_BINARY     = "FictionBook/body/binary";
-	static constexpr auto TITLE           = "FictionBook/description/title-info/book-title";
-	static constexpr auto COVERPAGE_IMAGE = "FictionBook/description/title-info/coverpage/image";
-	static constexpr auto ANNOTATION      = "FictionBook/description/title-info/annotation";
-
-	static constexpr auto ID      = L"id";
-	static constexpr auto SECTION = "section";
-	static constexpr auto IMAGE   = "image";
+	static constexpr auto ID      = u"id";
+	static constexpr auto SECTION = u"section";
+	static constexpr auto IMAGE   = u"image";
 
 	struct Section
 	{

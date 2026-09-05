@@ -21,23 +21,23 @@ using namespace Fb2InpxParser;
 namespace
 {
 
-constexpr auto NAME                   = L"name";
-constexpr auto NUMBER                 = L"number";
-constexpr auto GENRE                  = "FictionBook/description/title-info/genre";
-constexpr auto AUTHOR                 = "FictionBook/description/title-info/author";
-constexpr auto AUTHOR_FIRST_NAME      = "FictionBook/description/title-info/author/first-name";
-constexpr auto AUTHOR_LAST_NAME       = "FictionBook/description/title-info/author/last-name";
-constexpr auto AUTHOR_MIDDLE_NAME     = "FictionBook/description/title-info/author/middle-name";
-constexpr auto ANNOTATION             = "FictionBook/description/title-info/annotation";
-constexpr auto AUTHOR_DOC             = "FictionBook/description/document-info/author";
-constexpr auto AUTHOR_FIRST_NAME_DOC  = "FictionBook/description/document-info/author/first-name";
-constexpr auto AUTHOR_LAST_NAME_DOC   = "FictionBook/description/document-info/author/last-name";
-constexpr auto AUTHOR_MIDDLE_NAME_DOC = "FictionBook/description/document-info/author/middle-name";
-constexpr auto BOOK_TITLE             = "FictionBook/description/title-info/book-title";
-constexpr auto LANG                   = "FictionBook/description/title-info/lang";
-constexpr auto SEQUENCE               = "FictionBook/description/title-info/sequence";
-constexpr auto KEYWORDS               = "FictionBook/description/title-info/keywords";
-constexpr auto PUBLISH_INFO_YEAR      = "FictionBook/description/publish-info/year";
+constexpr auto NAME                   = u"name";
+constexpr auto NUMBER                 = u"number";
+constexpr auto GENRE                  = u"FictionBook/description/title-info/genre";
+constexpr auto AUTHOR                 = u"FictionBook/description/title-info/author";
+constexpr auto AUTHOR_FIRST_NAME      = u"FictionBook/description/title-info/author/first-name";
+constexpr auto AUTHOR_LAST_NAME       = u"FictionBook/description/title-info/author/last-name";
+constexpr auto AUTHOR_MIDDLE_NAME     = u"FictionBook/description/title-info/author/middle-name";
+constexpr auto ANNOTATION             = u"FictionBook/description/title-info/annotation";
+constexpr auto AUTHOR_DOC             = u"FictionBook/description/document-info/author";
+constexpr auto AUTHOR_FIRST_NAME_DOC  = u"FictionBook/description/document-info/author/first-name";
+constexpr auto AUTHOR_LAST_NAME_DOC   = u"FictionBook/description/document-info/author/last-name";
+constexpr auto AUTHOR_MIDDLE_NAME_DOC = u"FictionBook/description/document-info/author/middle-name";
+constexpr auto BOOK_TITLE             = u"FictionBook/description/title-info/book-title";
+constexpr auto LANG                   = u"FictionBook/description/title-info/lang";
+constexpr auto SEQUENCE               = u"FictionBook/description/title-info/sequence";
+constexpr auto KEYWORDS               = u"FictionBook/description/title-info/keywords";
+constexpr auto PUBLISH_INFO_YEAR      = u"FictionBook/description/publish-info/year";
 
 struct Data
 {
@@ -102,7 +102,7 @@ private: // SaxParser
 	bool OnStartElement(const QStringView /*name*/, const QStringView path, const XmlAttributes& attributes) override
 	{
 		using ParseElementFunction = bool (Fb2InpxParserImpl::*)(const XmlAttributes&);
-		using ParseElementItem     = std::pair<const char*, ParseElementFunction>;
+		using ParseElementItem     = std::pair<const char16_t*, ParseElementFunction>;
 		static constexpr ParseElementItem PARSERS[] {
 			{     AUTHOR,     &Fb2InpxParserImpl::OnStartElementAuthor },
 			{ AUTHOR_DOC,  &Fb2InpxParserImpl::OnStartElementAuthorDoc },
@@ -116,7 +116,7 @@ private: // SaxParser
 	bool OnEndElement(QStringView /*name*/, const QStringView path) override
 	{
 		using ParseElementFunction = bool (Fb2InpxParserImpl::*)();
-		using ParseElementItem     = std::pair<const char*, ParseElementFunction>;
+		using ParseElementItem     = std::pair<const char16_t*, ParseElementFunction>;
 		static constexpr ParseElementItem PARSERS[] {
 			{     AUTHOR,     &Fb2InpxParserImpl::OnEndElementAuthor },
 			{ AUTHOR_DOC,     &Fb2InpxParserImpl::OnEndElementAuthor },
@@ -129,7 +129,7 @@ private: // SaxParser
 	bool OnCharacters(const QStringView path, const QStringView value) override
 	{
 		using ParseCharacterFunction = bool (Fb2InpxParserImpl::*)(const QString&);
-		using ParseCharacterItem     = std::pair<const char*, ParseCharacterFunction>;
+		using ParseCharacterItem     = std::pair<const char16_t*, ParseCharacterFunction>;
 		static constexpr ParseCharacterItem PARSERS[] {
 			{				  GENRE,            &Fb2InpxParserImpl::ParseGenre },
 			{      AUTHOR_FIRST_NAME,  &Fb2InpxParserImpl::ParseAuthorFirstName },

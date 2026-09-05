@@ -61,14 +61,14 @@ void FormatBuf(
 	const XMLFormatter::UnRepFlags  unrepFlags  = XMLFormatter::DefaultUnRep
 )
 {
-	formatter.formatBuf(reinterpret_cast<const XMLCh*>(str.constData()), str.size(), escapeFlags, unrepFlags);
+	formatter.formatBuf(reinterpret_cast<const XMLCh*>(str.data()), str.size(), escapeFlags, unrepFlags);
 }
 
 } // namespace
 
 XMLFormatter& operator<<(XMLFormatter& formatter, const QStringView str)
 {
-	formatter.writeBOM(reinterpret_cast<const XMLByte*>(str.constData()), str.size());
+	FormatBuf(formatter, str);
 	return formatter;
 }
 
@@ -198,7 +198,11 @@ private:
 
 		m_lastElement = name;
 
-		m_formatter << chLF;
+		m_formatter
+#ifdef _WIN32
+			<< chCR
+#endif
+			<< chLF;
 		for (size_t i = 0, sz = m_elements.size(); i < sz; ++i)
 			m_formatter << chHTab;
 	}
@@ -229,21 +233,9 @@ XmlWriter& XmlWriter::WriteProcessingInstruction(const QStringView target, const
 	return *this;
 }
 
-XmlWriter& XmlWriter::WriteStartElement(const QString& name)
-{
-	m_impl->WriteStartElement(name);
-	return *this;
-}
-
 XmlWriter& XmlWriter::WriteStartElement(const QStringView name)
 {
 	m_impl->WriteStartElement(name.toString());
-	return *this;
-}
-
-XmlWriter& XmlWriter::WriteStartElement(const QString& name, const XmlAttributes& attributes)
-{
-	m_impl->WriteStartElement(name, attributes);
 	return *this;
 }
 
@@ -259,21 +251,9 @@ XmlWriter& XmlWriter::WriteEndElement()
 	return *this;
 }
 
-XmlWriter& XmlWriter::WriteAttribute(const QString& name, const QString& value)
-{
-	m_impl->WriteAttribute(name, value);
-	return *this;
-}
-
 XmlWriter& XmlWriter::WriteAttribute(const QStringView name, const QStringView value)
 {
 	m_impl->WriteAttribute(name, value);
-	return *this;
-}
-
-XmlWriter& XmlWriter::WriteCharacters(const QString& data)
-{
-	m_impl->WriteCharacters(data);
 	return *this;
 }
 
@@ -289,7 +269,7 @@ XmlWriter& XmlWriter::CloseTag()
 	return *this;
 }
 
-XmlWriter::XmlNodeGuard XmlWriter::Guard(const QString& name)
+XmlWriter::XmlNodeGuard XmlWriter::Guard(const QStringView name)
 {
 	return XmlNodeGuard { *this, name };
 }

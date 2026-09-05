@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QStringView>
+
 #include "fnd/NonCopyMovable.h"
 #include "fnd/memory.h"
 
@@ -7,7 +9,6 @@
 
 class QIODevice;
 class QString;
-class QStringView;
 
 namespace HomeCompa::Util
 {
@@ -63,7 +64,7 @@ public:
 			return *this;
 		}
 
-		XmlNodeGuard(XmlWriter& writer, const QString& name)
+		XmlNodeGuard(XmlWriter& writer, const QStringView name)
 			: m_writer(&writer)
 		{
 			assert(m_writer);
@@ -91,18 +92,14 @@ public:
 	~XmlWriter();
 
 	XmlWriter& WriteProcessingInstruction(QStringView target, QStringView data);
-	XmlWriter& WriteStartElement(const QString& name);
 	XmlWriter& WriteStartElement(QStringView name);
-	XmlWriter& WriteStartElement(const QString& name, const XmlAttributes& attributes);
 	XmlWriter& WriteStartElement(QStringView name, const XmlAttributes& attributes);
 	XmlWriter& WriteEndElement();
-	XmlWriter& WriteAttribute(const QString& name, const QString& value);
 	XmlWriter& WriteAttribute(QStringView name, QStringView value);
-	XmlWriter& WriteCharacters(const QString& data);
 	XmlWriter& WriteCharacters(QStringView data);
 	XmlWriter& CloseTag();
 
-	XmlNodeGuard Guard(const QString& name);
+	XmlNodeGuard Guard(QStringView name);
 
 private:
 	class Impl;

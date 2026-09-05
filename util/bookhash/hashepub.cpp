@@ -31,8 +31,8 @@ struct HtmlParser final : private SaxParser
 private: // Util::SaxParser
 	bool OnStartElement(const QStringView name, const QStringView path, const XmlAttributes& attributes) override
 	{
-		if (name == "img" && path.startsWith(L"html/body", Qt::CaseInsensitive))
-			if (auto imageName = attributes.GetAttribute(L"src").toString(); !imageName.isEmpty())
+		if (name == u"img" && path.startsWith(u"html/body", Qt::CaseInsensitive))
+			if (auto imageName = attributes.GetAttribute(u"src").toString(); !imageName.isEmpty())
 				m_linkedImages.emplace(std::move(imageName));
 
 		return true;

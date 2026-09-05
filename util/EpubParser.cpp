@@ -27,18 +27,13 @@ using namespace HomeCompa;
 namespace
 {
 
-constexpr std::wstring_view TITLE       = L"title";
-constexpr std::wstring_view DESCRIPTION = L"description";
-constexpr std::wstring_view LANGUAGE    = L"language";
-constexpr std::wstring_view SUBJECT     = L"subject";
-constexpr std::wstring_view CREATOR     = L"creator";
-constexpr std::wstring_view ITEMREF     = L"itemref";
-constexpr std::wstring_view REFERENCE   = L"reference";
-
-QStringView ToQStringView(const std::wstring_view value)
-{
-	return QStringView { value.data(), static_cast<qsizetype_t>(value.length()) };
-}
+constexpr auto TITLE       = u"title";
+constexpr auto DESCRIPTION = u"description";
+constexpr auto LANGUAGE    = u"language";
+constexpr auto SUBJECT     = u"subject";
+constexpr auto CREATOR     = u"creator";
+constexpr auto ITEMREF     = u"itemref";
+constexpr auto REFERENCE   = u"reference";
 
 QString CleanPath(const QString& relativePath, const QString& path)
 {
@@ -84,9 +79,9 @@ private:
 
 	bool OnStartElement(QStringView /*name*/, const QStringView path, const XmlAttributes& attributes) override
 	{
-		if (path.compare(L"container/rootfiles/rootfile", Qt::CaseInsensitive) == 0)
+		if (path.compare(u"container/rootfiles/rootfile", Qt::CaseInsensitive) == 0)
 		{
-			m_opfPath = attributes.GetAttribute(L"full-path").toString();
+			m_opfPath = attributes.GetAttribute(u"full-path").toString();
 			return false;
 		}
 		return true;
@@ -138,21 +133,21 @@ private:
 private: // SaxParser
 	bool OnStartElement(const QStringView name, const QStringView path, const XmlAttributes& attributes) override
 	{
-		if (name.compare(L"img", Qt::CaseInsensitive) == 0)
+		if (name.compare(u"img", Qt::CaseInsensitive) == 0)
 		{
-			if (auto imagePath = attributes.GetAttribute(L"src").toString(); !imagePath.isEmpty())
+			if (auto imagePath = attributes.GetAttribute(u"src").toString(); !imagePath.isEmpty())
 			{
 				m_imagePath = std::move(imagePath);
 				return false;
 			}
 		}
 
-		for (const auto* node : { L"image" })
+		for (const auto* node : { u"image" })
 		{
 			if (!path.endsWith(node, Qt::CaseInsensitive))
 				return true;
 
-			for (const auto* attr : { L"xlink:href", L"href" })
+			for (const auto* attr : { u"xlink:href", u"href" })
 				if (auto imagePath = attributes.GetAttribute(attr).toString(); !imagePath.isEmpty())
 				{
 					m_imagePath = std::move(imagePath);
@@ -396,7 +391,7 @@ private: // SaxParser
 private:
 	void parse_metadata(const QStringView name, const XmlAttributes& attributes)
 	{
-		if (name.endsWith(ToQStringView(TITLE), Qt::CaseInsensitive))
+		if (name.endsWith(TITLE, Qt::CaseInsensitive))
 			return (void)(m_functor = [this](const QStringView value) {
 				m_result.title = value.toString().trimmed();
 			});
@@ -422,21 +417,21 @@ private:
 					m_result.authors.emplace_back(ParseAuthor(creatorText));
 			});
 
-		if ((name == "meta" || name == "opf:meta" || name == "ns0:meta") && attributes.GetAttribute(L"name") == "cover")
-			m_coverId = attributes.GetAttribute(L"content").toString();
+		if ((name == u"meta" || name == u"opf:meta" || name == u"ns0:meta") && attributes.GetAttribute(u"name") == u"cover")
+			m_coverId = attributes.GetAttribute(u"content").toString();
 	}
 
 	void parse_manifest(QStringView /*name*/, const XmlAttributes& attributes)
 	{
-		const auto& [id, href] = *m_manifest.try_emplace(attributes.GetAttribute(L"id").toString(), attributes.GetAttribute(L"href")).first;
+		const auto& [id, href] = *m_manifest.try_emplace(attributes.GetAttribute(u"id").toString(), attributes.GetAttribute(u"href").toString()).first;
 
-		if (const auto properties = attributes.GetAttribute(L"properties"); properties.contains(L"cover-image", Qt::CaseInsensitive))
+		if (const auto properties = attributes.GetAttribute(u"properties"); properties.contains(u"cover-image", Qt::CaseInsensitive))
 		{
 			m_coverPath = href;
 			return;
 		}
 
-		if (const auto mediaType = attributes.GetAttribute(L"media-type"); mediaType.startsWith(L"image/", Qt::CaseInsensitive))
+		if (const auto mediaType = attributes.GetAttribute(u"media-type"); mediaType.startsWith(u"image/", Qt::CaseInsensitive))
 		{
 			if (id == m_coverId)
 				m_coverPath = href;
@@ -452,7 +447,7 @@ private:
 		if (name.endsWith(ITEMREF, Qt::CaseInsensitive))
 		{
 			m_spineItemRefFound = true;
-			if (const auto it = m_manifest.find(attributes.GetAttribute(L"idref").toString()); it != m_manifest.end())
+			if (const auto it = m_manifest.find(attributes.GetAttribute(u"idref").toString()); it != m_manifest.end())
 			{
 				m_coverPath = it->second;
 				m_coverId   = QFileInfo(m_coverPath).fileName();
@@ -468,16 +463,16 @@ private:
 
 		if (name.endsWith(REFERENCE, Qt::CaseInsensitive))
 		{
-			if (const auto type = attributes.GetAttribute(L"type"); type.compare("cover", Qt::CaseInsensitive) == 0)
+			if (const auto type = attributes.GetAttribute(u"type"); type.compare(u"cover", Qt::CaseInsensitive) == 0)
 			{
-				m_coverPath = attributes.GetAttribute(L"href").toString();
+				m_coverPath = attributes.GetAttribute(u"href").toString();
 				m_coverId   = QFileInfo(m_coverPath).fileName();
 				return;
 			}
 
-			if (const auto type = attributes.GetAttribute(L"type"); type.compare("title-page", Qt::CaseInsensitive) == 0)
+			if (const auto type = attributes.GetAttribute(u"type"); type.compare(u"title-page", Qt::CaseInsensitive) == 0)
 			{
-				m_coverPath = attributes.GetAttribute(L"href").toString();
+				m_coverPath = attributes.GetAttribute(u"href").toString();
 				m_coverId   = QFileInfo(m_coverPath).fileName();
 				return;
 			}
