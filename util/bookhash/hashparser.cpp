@@ -31,7 +31,7 @@ public:
 	}
 
 private: // Util::SaxParser
-	bool OnStartElement(const QStringView name, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView name, const QStringView path, const XmlAttributes& attributes) override
 	{
 		if (path == BOOKS)
 		{
@@ -79,7 +79,7 @@ private: // Util::SaxParser
 		return true;
 	}
 
-	bool OnEndElement(const QStringView name, const QString& path) override
+	bool OnEndElement(const QStringView name, const QStringView path) override
 	{
 		if (path == BOOK)
 		{
@@ -119,7 +119,7 @@ private: // Util::SaxParser
 		return true;
 	}
 
-	bool OnCharacters(const QString& path, const QStringView value) override
+	bool OnCharacters(const QStringView path, const QStringView value) override
 	{
 		if (path == COVER)
 			m_cover.hash = value.toString();

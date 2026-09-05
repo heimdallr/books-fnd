@@ -99,7 +99,7 @@ public:
 	}
 
 private: // SaxParser
-	bool OnStartElement(const QStringView /*name*/, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView /*name*/, const QStringView path, const XmlAttributes& attributes) override
 	{
 		using ParseElementFunction = bool (Fb2InpxParserImpl::*)(const XmlAttributes&);
 		using ParseElementItem     = std::pair<const char*, ParseElementFunction>;
@@ -113,7 +113,7 @@ private: // SaxParser
 		return Parse(*this, PARSERS, path, attributes);
 	}
 
-	bool OnEndElement(QStringView /*name*/, const QString& path) override
+	bool OnEndElement(QStringView /*name*/, const QStringView path) override
 	{
 		using ParseElementFunction = bool (Fb2InpxParserImpl::*)();
 		using ParseElementItem     = std::pair<const char*, ParseElementFunction>;
@@ -126,7 +126,7 @@ private: // SaxParser
 		return Parse(*this, PARSERS, path);
 	}
 
-	bool OnCharacters(const QString& path, const QStringView value) override
+	bool OnCharacters(const QStringView path, const QStringView value) override
 	{
 		using ParseCharacterFunction = bool (Fb2InpxParserImpl::*)(const QString&);
 		using ParseCharacterItem     = std::pair<const char*, ParseCharacterFunction>;

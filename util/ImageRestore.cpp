@@ -102,7 +102,7 @@ public:
 	}
 
 private:
-	bool OnStartElement(QStringView name, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView name, const QStringView path, const XmlAttributes& attributes) override
 	{
 		if (name == BINARY)
 			return (m_id = attributes.GetAttribute(ID)), true;
@@ -132,7 +132,7 @@ private:
 		return true;
 	}
 
-	bool OnCharacters(const QString&, const QStringView value) override
+	bool OnCharacters(QStringView, const QStringView value) override
 	{
 		if (m_id.isEmpty())
 			return true;
@@ -191,7 +191,7 @@ private: // Util::SaxParser
 		return m_writer.WriteProcessingInstruction(target, data), true;
 	}
 
-	bool OnStartElement(const QStringView name, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView name, const QStringView path, const XmlAttributes& attributes) override
 	{
 		if (m_specialNode || (m_metadataReplacement && IsOneOf(path, AUTHOR, BOOK_TITLE, SEQUENCE)))
 			return m_specialNode = true;
@@ -212,7 +212,7 @@ private: // Util::SaxParser
 		return true;
 	}
 
-	bool OnEndElement(const QStringView name, const QString& path) override
+	bool OnEndElement(const QStringView name, const QStringView path) override
 	{
 		if (m_specialNode)
 		{
@@ -245,7 +245,7 @@ private: // Util::SaxParser
 		return m_writer.WriteEndElement(), true;
 	}
 
-	bool OnCharacters(const QString& path, const QStringView value) override
+	bool OnCharacters(const QStringView path, const QStringView value) override
 	{
 		if (m_specialNode)
 			return true;

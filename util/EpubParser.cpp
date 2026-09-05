@@ -82,9 +82,9 @@ private:
 			throw std::runtime_error("opf path not found");
 	}
 
-	bool OnStartElement(QStringView /*name*/, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(QStringView /*name*/, const QStringView path, const XmlAttributes& attributes) override
 	{
-		if (path.toLower() == "container/rootfiles/rootfile")
+		if (path.compare(L"container/rootfiles/rootfile", Qt::CaseInsensitive) == 0)
 		{
 			m_opfPath = attributes.GetAttribute("full-path");
 			return false;
@@ -136,9 +136,9 @@ private:
 	}
 
 private: // SaxParser
-	bool OnStartElement(const QStringView name, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView name, const QStringView path, const XmlAttributes& attributes) override
 	{
-		if (name.compare("img", Qt::CaseInsensitive) == 0)
+		if (name.compare(L"img", Qt::CaseInsensitive) == 0)
 		{
 			if (auto imagePath = attributes.GetAttribute("src"); !imagePath.isEmpty())
 			{
@@ -147,7 +147,7 @@ private: // SaxParser
 			}
 		}
 
-		for (const auto* node : { "image" })
+		for (const auto* node : { L"image" })
 		{
 			if (!path.endsWith(node, Qt::CaseInsensitive))
 				return true;
@@ -355,9 +355,9 @@ public:
 	}
 
 private: // SaxParser
-	bool OnStartElement(const QStringView name, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView name, const QStringView path, const XmlAttributes& attributes) override
 	{
-		const auto cleanPath = RemoveNS(path);
+		const auto cleanPath = RemoveNS(path.toString());
 
 		if (m_upperLevelType == UpperLevelType::none)
 			if (const auto it = std::ranges::find(PATHS, cleanPath.toLower()); it != std::end(PATHS))
@@ -369,9 +369,9 @@ private: // SaxParser
 		return true;
 	}
 
-	bool OnEndElement(QStringView /*name*/, const QString& path) override
+	bool OnEndElement(QStringView /*name*/, const QStringView path) override
 	{
-		const auto cleanPath = RemoveNS(path);
+		const auto cleanPath = RemoveNS(path.toString());
 
 		if (!(m_mode & Mode::Images) && cleanPath.compare(PATHS[UpperLevelType::metadata], Qt::CaseInsensitive) == 0)
 			return false;
@@ -382,12 +382,12 @@ private: // SaxParser
 		return true;
 	}
 
-	bool OnCharacters(const QString& path, const QStringView value) override
+	bool OnCharacters(QStringView, const QStringView value) override
 	{
 		if (!m_functor)
 			return true;
 
-		m_functor(path, value);
+		m_functor(value);
 		m_functor = {};
 
 		return true;
@@ -397,27 +397,27 @@ private:
 	void parse_metadata(const QStringView name, const XmlAttributes& attributes)
 	{
 		if (name.endsWith(ToQStringView(TITLE), Qt::CaseInsensitive))
-			return (void)(m_functor = [this](const QString&, const QStringView value) {
+			return (void)(m_functor = [this](const QStringView value) {
 				m_result.title = value.toString().trimmed();
 			});
 
 		if (name.endsWith(DESCRIPTION, Qt::CaseInsensitive))
-			return (void)(m_functor = [this](const QString&, const QStringView value) {
+			return (void)(m_functor = [this](const QStringView value) {
 				m_result.annotation = value.toString().trimmed();
 			});
 
 		if (name.endsWith(LANGUAGE, Qt::CaseInsensitive))
-			return (void)(m_functor = [this](const QString&, const QStringView value) {
+			return (void)(m_functor = [this](const QStringView value) {
 				m_result.language = value.toString().trimmed().left(2).toLower();
 			});
 
 		if (name.endsWith(SUBJECT, Qt::CaseInsensitive))
-			return (void)(m_functor = [this](const QString&, const QStringView value) {
+			return (void)(m_functor = [this](const QStringView value) {
 				ParseGenresString(m_result.genres, value.toString());
 			});
 
 		if (name.endsWith(CREATOR, Qt::CaseInsensitive))
-			return (void)(m_functor = [this](const QString&, const QStringView value) {
+			return (void)(m_functor = [this](const QStringView value) {
 				if (const QString creatorText = value.toString().trimmed(); !creatorText.isEmpty())
 					m_result.authors.emplace_back(ParseAuthor(creatorText));
 			});
@@ -502,7 +502,7 @@ private:
 #undef OPF_PARSER_MODE_ITEM
 	};
 
-	std::function<void(const QString&, QStringView)> m_functor;
+	std::function<void(QStringView)> m_functor;
 };
 
 } // namespace

@@ -180,7 +180,7 @@ struct HtmlParser final : private SaxParser
 	}
 
 private: // SaxParser
-	bool OnCharacters(const QString&, const QStringView value) override
+	bool OnCharacters(QStringView, const QStringView value) override
 	{
 		auto valueCopy = value.toString();
 

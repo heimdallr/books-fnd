@@ -69,9 +69,9 @@ public:
 	virtual bool OnProcessingInstruction(QStringView target, QStringView data);
 	virtual bool OnXMLDecl(QStringView versionStr, QStringView encodingStr, QStringView standaloneStr, QStringView actualEncodingStr);
 
-	virtual bool OnStartElement(QStringView name, const QString& path, const XmlAttributes& attributes);
-	virtual bool OnEndElement(QStringView name, const QString& path);
-	virtual bool OnCharacters(const QString& path, QStringView value);
+	virtual bool OnStartElement(QStringView name, QStringView path, const XmlAttributes& attributes);
+	virtual bool OnEndElement(QStringView name, QStringView path);
+	virtual bool OnCharacters(QStringView path, QStringView value);
 
 	virtual bool OnWarning(size_t line, size_t column, const QString& text);
 	virtual bool OnError(size_t line, size_t column, const QString& text);

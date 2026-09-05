@@ -45,7 +45,8 @@ class Fb2Parser final
 	: public SaxParser
 	, public BookHash::IParser
 {
-	static constexpr auto BODY            = "FictionBook/body";
+	static constexpr std::wstring_view BODY = L"FictionBook/body";
+
 	static constexpr auto BINARY          = "FictionBook/binary";
 	static constexpr auto BODY_BINARY     = "FictionBook/body/binary";
 	static constexpr auto TITLE           = "FictionBook/description/title-info/book-title";
@@ -128,7 +129,7 @@ private: // BookHash::IParser
 	}
 
 private: // Util::SaxParser
-	bool OnStartElement(const QStringView name, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView name, const QStringView path, const XmlAttributes& attributes) override
 	{
 		if (name == SECTION)
 		{
@@ -174,7 +175,7 @@ private: // Util::SaxParser
 		return true;
 	}
 
-	bool OnEndElement(const QStringView name, const QString& path) override
+	bool OnEndElement(const QStringView name, const QStringView path) override
 	{
 		if (IsOneOf(path, BINARY, BODY_BINARY))
 		{
@@ -194,7 +195,7 @@ private: // Util::SaxParser
 		return true;
 	}
 
-	bool OnCharacters(const QString& path, const QStringView value) override
+	bool OnCharacters(const QStringView path, const QStringView value) override
 	{
 		if (!m_picId.isEmpty())
 		{

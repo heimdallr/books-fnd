@@ -346,17 +346,17 @@ bool SaxParser::OnXMLDecl(QStringView /*versionStr*/, QStringView /*encodingStr*
 	return true;
 }
 
-bool SaxParser::OnStartElement(QStringView /*name*/, const QString& /*path*/, const XmlAttributes& /*attributes*/)
+bool SaxParser::OnStartElement(QStringView /*name*/, QStringView /*path*/, const XmlAttributes& /*attributes*/)
 {
 	return true;
 }
 
-bool SaxParser::OnEndElement(QStringView /*name*/, const QString& /*path*/)
+bool SaxParser::OnEndElement(QStringView /*name*/, QStringView /*path*/)
 {
 	return true;
 }
 
-bool SaxParser::OnCharacters(const QString& /*path*/, QStringView /*value*/)
+bool SaxParser::OnCharacters(QStringView /*path*/, QStringView /*value*/)
 {
 	return true;
 }
