@@ -70,7 +70,7 @@ public:
 	virtual bool OnXMLDecl(QStringView versionStr, QStringView encodingStr, QStringView standaloneStr, QStringView actualEncodingStr);
 
 	virtual bool OnStartElement(QStringView name, const QString& path, const XmlAttributes& attributes);
-	virtual bool OnEndElement(const QString& name, const QString& path);
+	virtual bool OnEndElement(QStringView name, const QString& path);
 	virtual bool OnCharacters(const QString& path, QStringView value);
 
 	virtual bool OnWarning(size_t line, size_t column, const QString& text);

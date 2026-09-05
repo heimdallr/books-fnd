@@ -212,7 +212,7 @@ private: // Util::SaxParser
 		return true;
 	}
 
-	bool OnEndElement(const QString& name, const QString& path) override
+	bool OnEndElement(const QStringView name, const QString& path) override
 	{
 		if (m_specialNode)
 		{

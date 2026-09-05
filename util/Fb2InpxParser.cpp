@@ -113,7 +113,7 @@ private: // SaxParser
 		return Parse(*this, PARSERS, path, attributes);
 	}
 
-	bool OnEndElement(const QString& /*name*/, const QString& path) override
+	bool OnEndElement(QStringView /*name*/, const QString& path) override
 	{
 		using ParseElementFunction = bool (Fb2InpxParserImpl::*)();
 		using ParseElementItem     = std::pair<const char*, ParseElementFunction>;

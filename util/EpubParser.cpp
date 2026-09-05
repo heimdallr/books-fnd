@@ -369,7 +369,7 @@ private: // SaxParser
 		return true;
 	}
 
-	bool OnEndElement(const QString& /*name*/, const QString& path) override
+	bool OnEndElement(QStringView /*name*/, const QString& path) override
 	{
 		const auto cleanPath = RemoveNS(path);
 

@@ -185,7 +185,7 @@ private: // xercesc::DocumentHandler
 		if (m_inputSource.IsStopped())
 			return;
 
-		if (!m_parser.OnProcessingInstruction(QString::fromUtf16(target), QString::fromStdU16String(data)))
+		if (!m_parser.OnProcessingInstruction(ToStringView(target), ToStringView(data)))
 			m_inputSource.SetStopped(true);
 	}
 
@@ -206,7 +206,7 @@ private: // xercesc::DocumentHandler
 		if (m_inputSource.IsStopped())
 			return;
 
-		if (const auto& key = m_stack.ToString(); !m_parser.OnEndElement(QString::fromStdU16String(name), key))
+		if (const auto& key = m_stack.ToString(); !m_parser.OnEndElement(ToStringView(name), key))
 			m_inputSource.SetStopped(true);
 
 		m_stack.Pop(name);
@@ -255,7 +255,7 @@ private: // IDeclHandler
 		if (m_inputSource.IsStopped())
 			return;
 
-		if (!m_parser.OnXMLDecl(QString::fromStdU16String(versionStr), QString::fromStdU16String(encodingStr), QString::fromStdU16String(standaloneStr), QString::fromStdU16String(actualEncodingStr)))
+		if (!m_parser.OnXMLDecl(ToStringView(versionStr), ToStringView(encodingStr), ToStringView(standaloneStr), ToStringView(actualEncodingStr)))
 			m_inputSource.SetStopped(true);
 	}
 
@@ -351,7 +351,7 @@ bool SaxParser::OnStartElement(QStringView /*name*/, const QString& /*path*/, co
 	return true;
 }
 
-bool SaxParser::OnEndElement(const QString& /*name*/, const QString& /*path*/)
+bool SaxParser::OnEndElement(QStringView /*name*/, const QString& /*path*/)
 {
 	return true;
 }
