@@ -21,8 +21,8 @@ using namespace Fb2InpxParser;
 namespace
 {
 
-constexpr auto NAME                   = "name";
-constexpr auto NUMBER                 = "number";
+constexpr auto NAME                   = L"name";
+constexpr auto NUMBER                 = L"number";
 constexpr auto GENRE                  = "FictionBook/description/title-info/genre";
 constexpr auto AUTHOR                 = "FictionBook/description/title-info/author";
 constexpr auto AUTHOR_FIRST_NAME      = "FictionBook/description/title-info/author/first-name";
@@ -193,8 +193,8 @@ private:
 
 	bool OnStartElementSequence(const XmlAttributes& attributes)
 	{
-		m_data.series    = attributes.GetAttribute(NAME).trimmed();
-		m_data.seqNumber = GetSeqNumber(attributes.GetAttribute(NUMBER));
+		m_data.series    = attributes.GetAttribute(NAME).toString().trimmed();
+		m_data.seqNumber = GetSeqNumber(attributes.GetAttribute(NUMBER).toString());
 		return true;
 	}
 

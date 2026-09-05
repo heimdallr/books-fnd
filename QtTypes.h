@@ -28,7 +28,7 @@ inline QString First(const QString& string, const qsizetype_t n)
 	return string.first(std::min(n, string.length()));
 }
 
-inline QString Last(const QString& string, const qsizetype_t n)
+inline QStringView Last(const QStringView string, const qsizetype_t n)
 {
 	return string.last(n);
 }

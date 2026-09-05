@@ -97,6 +97,7 @@ public:
 	XmlWriter& WriteStartElement(QStringView name, const XmlAttributes& attributes);
 	XmlWriter& WriteEndElement();
 	XmlWriter& WriteAttribute(const QString& name, const QString& value);
+	XmlWriter& WriteAttribute(QStringView name, QStringView value);
 	XmlWriter& WriteCharacters(const QString& data);
 	XmlWriter& WriteCharacters(QStringView data);
 	XmlWriter& CloseTag();

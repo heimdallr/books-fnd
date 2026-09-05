@@ -32,7 +32,7 @@ private: // Util::SaxParser
 	bool OnStartElement(const QStringView name, const QStringView path, const XmlAttributes& attributes) override
 	{
 		if (name == "img" && path.startsWith(L"html/body", Qt::CaseInsensitive))
-			if (auto imageName = attributes.GetAttribute("src"); !imageName.isEmpty())
+			if (auto imageName = attributes.GetAttribute(L"src").toString(); !imageName.isEmpty())
 				m_linkedImages.emplace(std::move(imageName));
 
 		return true;

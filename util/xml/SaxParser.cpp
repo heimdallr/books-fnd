@@ -29,10 +29,10 @@ public:
 	}
 
 private: // SaxParser::Attributes
-	QString GetAttribute(const QString& key) const override
+	QStringView GetAttribute(const QStringView key) const override
 	{
-		if (const auto value = m_attributes->getValue(key.toStdU16String().data()))
-			return QString::fromStdU16String(value);
+		if (const auto value = m_attributes->getValue(key.utf16()))
+			return value;
 		return {};
 	}
 
@@ -41,16 +41,16 @@ private: // SaxParser::Attributes
 		return m_attributes->getLength();
 	}
 
-	QString GetName(const size_t index) const override
+	QStringView GetName(const size_t index) const override
 	{
 		assert(index < GetCount());
-		return QString::fromStdU16String(m_attributes->getName(index));
+		return m_attributes->getName(index);
 	}
 
-	QString GetValue(const size_t index) const override
+	QStringView GetValue(const size_t index) const override
 	{
 		assert(index < GetCount());
-		return QString::fromStdU16String(m_attributes->getValue(index));
+		return m_attributes->getValue(index);
 	}
 
 private:

@@ -28,7 +28,7 @@ public:
 	}
 
 private: // HashParser::IObserver
-	void OnParseStarted(const QString& /*sourceLib*/) override
+	void OnParseStarted(QStringView /*sourceLib*/) override
 	{
 	}
 	bool OnBookParsed(

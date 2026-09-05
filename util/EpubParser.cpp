@@ -86,7 +86,7 @@ private:
 	{
 		if (path.compare(L"container/rootfiles/rootfile", Qt::CaseInsensitive) == 0)
 		{
-			m_opfPath = attributes.GetAttribute("full-path");
+			m_opfPath = attributes.GetAttribute(L"full-path").toString();
 			return false;
 		}
 		return true;
@@ -140,7 +140,7 @@ private: // SaxParser
 	{
 		if (name.compare(L"img", Qt::CaseInsensitive) == 0)
 		{
-			if (auto imagePath = attributes.GetAttribute("src"); !imagePath.isEmpty())
+			if (auto imagePath = attributes.GetAttribute(L"src").toString(); !imagePath.isEmpty())
 			{
 				m_imagePath = std::move(imagePath);
 				return false;
@@ -152,8 +152,8 @@ private: // SaxParser
 			if (!path.endsWith(node, Qt::CaseInsensitive))
 				return true;
 
-			for (const auto* attr : { "xlink:href", "href" })
-				if (auto imagePath = attributes.GetAttribute(attr); !imagePath.isEmpty())
+			for (const auto* attr : { L"xlink:href", L"href" })
+				if (auto imagePath = attributes.GetAttribute(attr).toString(); !imagePath.isEmpty())
 				{
 					m_imagePath = std::move(imagePath);
 					return false;
@@ -422,21 +422,21 @@ private:
 					m_result.authors.emplace_back(ParseAuthor(creatorText));
 			});
 
-		if ((name == "meta" || name == "opf:meta" || name == "ns0:meta") && attributes.GetAttribute("name") == "cover")
-			m_coverId = attributes.GetAttribute("content");
+		if ((name == "meta" || name == "opf:meta" || name == "ns0:meta") && attributes.GetAttribute(L"name") == "cover")
+			m_coverId = attributes.GetAttribute(L"content").toString();
 	}
 
 	void parse_manifest(QStringView /*name*/, const XmlAttributes& attributes)
 	{
-		const auto& [id, href] = *m_manifest.try_emplace(attributes.GetAttribute("id"), attributes.GetAttribute("href")).first;
+		const auto& [id, href] = *m_manifest.try_emplace(attributes.GetAttribute(L"id").toString(), attributes.GetAttribute(L"href")).first;
 
-		if (const auto properties = attributes.GetAttribute("properties"); properties.contains("cover-image", Qt::CaseInsensitive))
+		if (const auto properties = attributes.GetAttribute(L"properties"); properties.contains(L"cover-image", Qt::CaseInsensitive))
 		{
 			m_coverPath = href;
 			return;
 		}
 
-		if (const auto mediaType = attributes.GetAttribute("media-type"); mediaType.startsWith("image/", Qt::CaseInsensitive))
+		if (const auto mediaType = attributes.GetAttribute(L"media-type"); mediaType.startsWith(L"image/", Qt::CaseInsensitive))
 		{
 			if (id == m_coverId)
 				m_coverPath = href;
@@ -452,7 +452,7 @@ private:
 		if (name.endsWith(ITEMREF, Qt::CaseInsensitive))
 		{
 			m_spineItemRefFound = true;
-			if (const auto it = m_manifest.find(attributes.GetAttribute("idref")); it != m_manifest.end())
+			if (const auto it = m_manifest.find(attributes.GetAttribute(L"idref").toString()); it != m_manifest.end())
 			{
 				m_coverPath = it->second;
 				m_coverId   = QFileInfo(m_coverPath).fileName();
@@ -468,16 +468,16 @@ private:
 
 		if (name.endsWith(REFERENCE, Qt::CaseInsensitive))
 		{
-			if (const auto type = attributes.GetAttribute("type"); type.compare("cover", Qt::CaseInsensitive) == 0)
+			if (const auto type = attributes.GetAttribute(L"type"); type.compare("cover", Qt::CaseInsensitive) == 0)
 			{
-				m_coverPath = attributes.GetAttribute("href");
+				m_coverPath = attributes.GetAttribute(L"href").toString();
 				m_coverId   = QFileInfo(m_coverPath).fileName();
 				return;
 			}
 
-			if (const auto type = attributes.GetAttribute("type"); type.compare("title-page", Qt::CaseInsensitive) == 0)
+			if (const auto type = attributes.GetAttribute(L"type"); type.compare("title-page", Qt::CaseInsensitive) == 0)
 			{
-				m_coverPath = attributes.GetAttribute("href");
+				m_coverPath = attributes.GetAttribute(L"href").toString();
 				m_coverId   = QFileInfo(m_coverPath).fileName();
 				return;
 			}

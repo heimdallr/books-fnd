@@ -35,45 +35,45 @@ private: // Util::SaxParser
 	{
 		if (path == BOOKS)
 		{
-			m_observer.OnParseStarted(attributes.GetAttribute("source"));
+			m_observer.OnParseStarted(attributes.GetAttribute(L"source"));
 		}
 		else if (path == BOOK)
 		{
-#define HASH_PARSER_CALLBACK_ITEM(NAME) m_##NAME = attributes.GetAttribute(#NAME);
+#define HASH_PARSER_CALLBACK_ITEM(NAME) m_##NAME = attributes.GetAttribute(L#NAME).toString();
 			HASH_PARSER_CALLBACK_ITEMS_X_MACRO
 #undef HASH_PARSER_CALLBACK_ITEM
-			m_size           = attributes.GetAttribute("size").toULongLong();
-			m_simHash        = attributes.GetAttribute("simHash").toULongLong(nullptr, 16);
+			m_size           = attributes.GetAttribute(L"size").toULongLong();
+			m_simHash        = attributes.GetAttribute(L"simHash").toULongLong(nullptr, 16);
 			m_section        = std::make_unique<HashParser::Section>();
 			m_currentSection = m_section.get();
 		}
 		else if (path == ORIGIN)
 		{
-			m_originFolder = attributes.GetAttribute(Inpx::FOLDER);
-			m_originFile   = attributes.GetAttribute(Inpx::FILE);
+			m_originFolder = attributes.GetAttribute(L"folder").toString();
+			m_originFile   = attributes.GetAttribute(L"file").toString();
 		}
 		else if (name == SECTION)
 		{
-			auto& section    = m_currentSection->children.try_emplace(attributes.GetAttribute("id"), std::make_unique<HashParser::Section>()).first->second;
-			section->count   = attributes.GetAttribute("count").toULongLong();
-			section->size    = attributes.GetAttribute("size").toULongLong();
-			section->simHash = attributes.GetAttribute("simHash").toULongLong(nullptr, 16);
+			auto& section    = m_currentSection->children.try_emplace(attributes.GetAttribute(L"id").toString(), std::make_unique<HashParser::Section>()).first->second;
+			section->count   = attributes.GetAttribute(L"count").toULongLong();
+			section->size    = attributes.GetAttribute(L"size").toULongLong();
+			section->simHash = attributes.GetAttribute(L"simHash").toULongLong(nullptr, 16);
 			section->parent  = m_currentSection;
 			m_currentSection = section.get();
 		}
 		else if (path == COVER)
 		{
-			m_cover.pHash = attributes.GetAttribute("pHash");
+			m_cover.pHash = attributes.GetAttribute(L"pHash").toString();
 		}
 		else if (path == IMAGE)
 		{
-			m_images.emplace_back(attributes.GetAttribute("id"), QString(), attributes.GetAttribute("pHash"));
-			if (const auto linked = attributes.GetAttribute("linked"); !linked.isEmpty())
+			m_images.emplace_back(attributes.GetAttribute(L"id").toString(), QString(), attributes.GetAttribute(L"pHash").toString());
+			if (const auto linked = attributes.GetAttribute(L"linked"); !linked.isEmpty())
 				m_images.back().linked = linked == "true";
 		}
 		else if (path == HISTOGRAM)
 		{
-			m_textHistogram.emplace_back(attributes.GetAttribute("count").toULongLong(), attributes.GetAttribute("word"));
+			m_textHistogram.emplace_back(attributes.GetAttribute(L"count").toULongLong(), attributes.GetAttribute(L"word"));
 		}
 
 		return true;

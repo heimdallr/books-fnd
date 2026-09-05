@@ -51,7 +51,7 @@ namespace
 using Covers = std::unordered_map<QString, std::pair<bool, QByteArray>>;
 
 constexpr auto BINARY       = "binary";
-constexpr auto ID           = "id";
+constexpr auto ID           = L"id";
 constexpr auto CONTENT_TYPE = "content-type";
 
 void ConvertToGrayscale(QImage& image)
@@ -105,7 +105,7 @@ private:
 	bool OnStartElement(const QStringView name, const QStringView path, const XmlAttributes& attributes) override
 	{
 		if (name == BINARY)
-			return (m_id = attributes.GetAttribute(ID)), true;
+			return (m_id = attributes.GetAttribute(ID).toString()), true;
 
 		if (path == COVERPAGE_IMAGE)
 		{
@@ -113,7 +113,7 @@ private:
 			{
 				auto attributeName  = attributes.GetName(i);
 				auto attributeValue = attributes.GetValue(i);
-				if (attributeName.endsWith(":href"))
+				if (attributeName.endsWith(L":href"))
 				{
 					if (const auto it = std::ranges::find_if(
 							attributeValue,
@@ -122,7 +122,7 @@ private:
 							}
 						);
 					    it != attributeValue.end())
-						m_coverId = Last(attributeValue, std::distance(it, attributeValue.end())).trimmed();
+						m_coverId = Last(attributeValue, std::distance(it, attributeValue.end())).toString().trimmed();
 					break;
 				}
 			}
@@ -303,14 +303,14 @@ private:
 			node->WriteAttribute("number", QString::number(m_metadataReplacement->seqNumber));
 	}
 
-	void WriteImage(const QString& imageFileName)
+	void WriteImage(const QStringView imageFileName)
 	{
 		m_specialNode = true;
 
 		const auto [isCover, body] = [&]() -> std::pair<bool, QByteArray> {
 			try
 			{
-				const auto it = m_covers.find(imageFileName);
+				const auto it = m_covers.find(imageFileName.toString());
 				if (it == m_covers.end())
 					return {};
 
@@ -344,7 +344,7 @@ private:
 		m_covers.clear();
 	}
 
-	void WriteImage(const QString& name, const bool isCover, const QByteArray& body)
+	void WriteImage(const QStringView name, const bool isCover, const QByteArray& body)
 	{
 		if (const auto [bytes, mediaType] = RecodeImage(isCover, m_imageProcessing, body); !bytes.isEmpty())
 			m_writer.WriteStartElement(BINARY).WriteAttribute(ID, name).WriteAttribute(CONTENT_TYPE, mediaType).WriteCharacters(QString::fromUtf8(bytes.toBase64())).WriteEndElement();

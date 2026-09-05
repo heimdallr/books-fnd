@@ -72,7 +72,6 @@ XMLFormatter& operator<<(XMLFormatter& formatter, const QStringView str)
 	return formatter;
 }
 
-
 class XmlWriter::Impl final : public XMLFormatTarget
 {
 public:
@@ -113,8 +112,8 @@ public:
 		WriteStartElement(name);
 
 		for (size_t i = 0, attributeCount = attributes.GetCount(); i < attributeCount; ++i)
-			m_formatter << XMLFormatter::NoEscapes << chSpace << attributes.GetName(i).toStdU16String().data() << chEqual << chDoubleQuote << XMLFormatter::AttrEscapes
-						<< attributes.GetValue(i).toStdU16String().data() << XMLFormatter::NoEscapes << chDoubleQuote;
+			m_formatter << XMLFormatter::NoEscapes << chSpace << attributes.GetName(i) << chEqual << chDoubleQuote << XMLFormatter::AttrEscapes << attributes.GetValue(i) << XMLFormatter::NoEscapes
+						<< chDoubleQuote;
 	}
 
 	void WriteEndElement()
@@ -144,6 +143,11 @@ public:
 	{
 		m_formatter << XMLFormatter::NoEscapes << chSpace << name.toStdU16String().data() << chEqual << chDoubleQuote << XMLFormatter::AttrEscapes << value.toStdU16String().data() << XMLFormatter::NoEscapes
 					<< chDoubleQuote;
+	}
+
+	void WriteAttribute(const QStringView name, const QStringView value)
+	{
+		m_formatter << XMLFormatter::NoEscapes << chSpace << name << chEqual << chDoubleQuote << XMLFormatter::AttrEscapes << value << XMLFormatter::NoEscapes << chDoubleQuote;
 	}
 
 	void WriteCharacters(const QString& data)
@@ -256,6 +260,12 @@ XmlWriter& XmlWriter::WriteEndElement()
 }
 
 XmlWriter& XmlWriter::WriteAttribute(const QString& name, const QString& value)
+{
+	m_impl->WriteAttribute(name, value);
+	return *this;
+}
+
+XmlWriter& XmlWriter::WriteAttribute(const QStringView name, const QStringView value)
 {
 	m_impl->WriteAttribute(name, value);
 	return *this;

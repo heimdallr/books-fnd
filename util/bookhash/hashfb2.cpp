@@ -25,7 +25,7 @@ QString GetImageId(const XmlAttributes& attributes)
 	{
 		auto attributeName  = attributes.GetName(i);
 		auto attributeValue = attributes.GetValue(i);
-		if (attributeName.endsWith(":href"))
+		if (attributeName.endsWith(L":href"))
 		{
 			if (const auto it = std::ranges::find_if(
 					attributeValue,
@@ -34,7 +34,7 @@ QString GetImageId(const XmlAttributes& attributes)
 					}
 				);
 			    it != attributeValue.end())
-				return Last(attributeValue, std::distance(it, attributeValue.end())).trimmed();
+				return Last(attributeValue, std::distance(it, attributeValue.end())).toString().trimmed();
 		}
 	}
 
@@ -53,7 +53,7 @@ class Fb2Parser final
 	static constexpr auto COVERPAGE_IMAGE = "FictionBook/description/title-info/coverpage/image";
 	static constexpr auto ANNOTATION      = "FictionBook/description/title-info/annotation";
 
-	static constexpr auto ID      = "id";
+	static constexpr auto ID      = L"id";
 	static constexpr auto SECTION = "section";
 	static constexpr auto IMAGE   = "image";
 
@@ -140,7 +140,7 @@ private: // Util::SaxParser
 		if (IsOneOf(path, BINARY, BODY_BINARY))
 		{
 			m_isBinary = true;
-			m_picId    = attributes.GetAttribute(ID).trimmed();
+			m_picId    = attributes.GetAttribute(ID).toString().trimmed();
 			if (const auto it = std::ranges::find_if(
 					m_picId,
 					[](const auto ch) {
@@ -148,7 +148,7 @@ private: // Util::SaxParser
 					}
 				);
 			    it != m_picId.end())
-				m_picId = Last(m_picId, std::distance(it, m_picId.end())).trimmed();
+				m_picId = Last(m_picId, std::distance(it, m_picId.end())).toString().trimmed();
 			return true;
 		}
 
