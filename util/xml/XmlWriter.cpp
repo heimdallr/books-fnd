@@ -54,7 +54,24 @@ constexpr std::pair<XmlWriter::Type, void (*)(XMLFormatter&)> STARTERS[] {
 	{ XmlWriter::Type::Headless, &HeadlessStarter },
 };
 
+void FormatBuf(
+	XMLFormatter&                   formatter,
+	const QStringView               str,
+	const XMLFormatter::EscapeFlags escapeFlags = XMLFormatter::DefaultEscape,
+	const XMLFormatter::UnRepFlags  unrepFlags  = XMLFormatter::DefaultUnRep
+)
+{
+	formatter.formatBuf(reinterpret_cast<const XMLCh*>(str.constData()), str.size(), escapeFlags, unrepFlags);
+}
+
 } // namespace
+
+XMLFormatter& operator<<(XMLFormatter& formatter, const QStringView str)
+{
+	formatter.writeBOM(reinterpret_cast<const XMLByte*>(str.constData()), str.size());
+	return formatter;
+}
+
 
 class XmlWriter::Impl final : public XMLFormatTarget
 {
@@ -68,11 +85,11 @@ public:
 			FindSecond(STARTERS, options.type)(m_formatter);
 	}
 
-	void WriteProcessingInstruction(const QString& target, const QString& data)
+	void WriteProcessingInstruction(const QStringView target, const QStringView data)
 	{
-		m_formatter << chLF << XMLFormatter::NoEscapes << gStartPI << target.toStdU16String().data();
+		m_formatter << chLF << XMLFormatter::NoEscapes << gStartPI << target;
 		if (!data.isEmpty())
-			m_formatter << chSpace << data.toStdU16String().data();
+			m_formatter << chSpace << data;
 
 		m_formatter << XMLFormatter::NoEscapes << gEndPI;
 	}
@@ -142,6 +159,18 @@ public:
 			m_characterDepth = m_elements.size();
 	}
 
+	void WriteCharacters(const QStringView data)
+	{
+		if (data.isEmpty())
+			return;
+
+		CloseTag();
+		FormatBuf(m_formatter, data, XMLFormatter::CharEscapes);
+
+		if (!m_characterDepth)
+			m_characterDepth = m_elements.size();
+	}
+
 	void CloseTag()
 	{
 		if (!m_tagOpened)
@@ -190,7 +219,7 @@ XmlWriter::XmlWriter(QIODevice& stream, const Options& options)
 
 XmlWriter::~XmlWriter() = default;
 
-XmlWriter& XmlWriter::WriteProcessingInstruction(const QString& target, const QString& data)
+XmlWriter& XmlWriter::WriteProcessingInstruction(const QStringView target, const QStringView data)
 {
 	m_impl->WriteProcessingInstruction(target, data);
 	return *this;
@@ -221,6 +250,12 @@ XmlWriter& XmlWriter::WriteAttribute(const QString& name, const QString& value)
 }
 
 XmlWriter& XmlWriter::WriteCharacters(const QString& data)
+{
+	m_impl->WriteCharacters(data);
+	return *this;
+}
+
+XmlWriter& XmlWriter::WriteCharacters(const QStringView data)
 {
 	m_impl->WriteCharacters(data);
 	return *this;

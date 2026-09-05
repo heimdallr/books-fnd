@@ -5,8 +5,9 @@
 
 #include "export/util.h"
 
-class QString;
 class QIODevice;
+class QString;
+class QStringView;
 
 namespace HomeCompa::Util
 {
@@ -89,12 +90,13 @@ public:
 	explicit XmlWriter(QIODevice& stream, const Options& options = Options {});
 	~XmlWriter();
 
-	XmlWriter& WriteProcessingInstruction(const QString& target, const QString& data);
+	XmlWriter& WriteProcessingInstruction(QStringView target, QStringView data);
 	XmlWriter& WriteStartElement(const QString& name);
 	XmlWriter& WriteStartElement(const QString& name, const XmlAttributes& attributes);
 	XmlWriter& WriteEndElement();
 	XmlWriter& WriteAttribute(const QString& name, const QString& value);
 	XmlWriter& WriteCharacters(const QString& data);
+	XmlWriter& WriteCharacters(QStringView data);
 	XmlWriter& CloseTag();
 
 	XmlNodeGuard Guard(const QString& name);

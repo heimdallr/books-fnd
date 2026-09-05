@@ -36,7 +36,7 @@ public:
 	};
 
 protected:
-	explicit SaxParser(QIODevice& stream, int64_t maxChunkSize = std::numeric_limits<int64_t>::max());
+	explicit SaxParser(QIODevice& stream);
 	virtual ~SaxParser();
 
 protected:
@@ -63,12 +63,12 @@ public:
 	void Parse();
 
 public:
-	virtual bool OnProcessingInstruction(const QString& target, const QString& data);
-	virtual bool OnXMLDecl(const QString& versionStr, const QString& encodingStr, const QString& standaloneStr, const QString& actualEncodingStr);
+	virtual bool OnProcessingInstruction(QStringView target, QStringView data);
+	virtual bool OnXMLDecl(QStringView versionStr, QStringView encodingStr, QStringView standaloneStr, QStringView actualEncodingStr);
 
 	virtual bool OnStartElement(const QString& name, const QString& path, const XmlAttributes& attributes);
 	virtual bool OnEndElement(const QString& name, const QString& path);
-	virtual bool OnCharacters(const QString& path, const QString& value);
+	virtual bool OnCharacters(const QString& path, QStringView value);
 
 	virtual bool OnWarning(size_t line, size_t column, const QString& text);
 	virtual bool OnError(size_t line, size_t column, const QString& text);

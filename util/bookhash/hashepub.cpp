@@ -22,7 +22,7 @@ namespace
 struct HtmlParser final : private SaxParser
 {
 	HtmlParser(QIODevice& input, std::unordered_set<QString>& linkedImage)
-		: SaxParser(input, 512)
+		: SaxParser(input)
 		, m_linkedImages { linkedImage }
 	{
 		Parse();

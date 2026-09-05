@@ -81,7 +81,7 @@ class Fb2Parser final
 
 public:
 	explicit Fb2Parser(QIODevice& input)
-		: SaxParser(input, 512)
+		: SaxParser(input)
 	{
 		Parse();
 		//		assert(m_tags.empty());
@@ -194,7 +194,7 @@ private: // Util::SaxParser
 		return true;
 	}
 
-	bool OnCharacters(const QString& path, const QString& value) override
+	bool OnCharacters(const QString& path, const QStringView value) override
 	{
 		if (!m_picId.isEmpty())
 		{
@@ -214,9 +214,9 @@ private: // Util::SaxParser
 		}
 
 		if (m_isAnnotation)
-			m_annotation << value;
+			m_annotation << value.toString();
 
-		auto valueCopy = value;
+		auto valueCopy = value.toString();
 
 		PrepareTitle(valueCopy);
 

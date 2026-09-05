@@ -84,7 +84,7 @@ class Fb2InpxParserImpl final : public SaxParser
 {
 public:
 	Fb2InpxParserImpl(QIODevice& stream, const QString& fileName)
-		: SaxParser(stream, 512)
+		: SaxParser(stream)
 		, m_fileName(fileName)
 	{
 	}
@@ -126,7 +126,7 @@ private: // SaxParser
 		return Parse(*this, PARSERS, path);
 	}
 
-	bool OnCharacters(const QString& path, const QString& value) override
+	bool OnCharacters(const QString& path, const QStringView value) override
 	{
 		using ParseCharacterFunction = bool (Fb2InpxParserImpl::*)(const QString&);
 		using ParseCharacterItem     = std::pair<const char*, ParseCharacterFunction>;
@@ -145,10 +145,10 @@ private: // SaxParser
 		};
 
 		if (m_annotationMode)
-			m_data.annotation << value.trimmed();
+			m_data.annotation << value.toString().trimmed();
 
 		{
-			auto valueCopy = value;
+			auto valueCopy = value.toString();
 			PrepareTitle(valueCopy);
 			RemoveIf(valueCopy, [](const QChar ch) {
 				const auto category = ch.category();
@@ -157,7 +157,7 @@ private: // SaxParser
 			m_data.size += valueCopy.length();
 		}
 
-		return Parse(*this, PARSERS, path, value.trimmed());
+		return Parse(*this, PARSERS, path, value.toString().trimmed());
 	}
 
 	bool OnWarning(const size_t line, const size_t column, const QString& text) override

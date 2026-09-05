@@ -369,7 +369,7 @@ private: // SaxParser
 		return true;
 	}
 
-	bool OnCharacters(const QString& path, const QString& value) override
+	bool OnCharacters(const QString& path, const QStringView value) override
 	{
 		if (!m_functor)
 			return true;
@@ -384,28 +384,28 @@ private:
 	void parse_metadata(const QString& name, const XmlAttributes& attributes)
 	{
 		if (name.endsWith("title", Qt::CaseInsensitive))
-			return (void)(m_functor = [this](const QString&, const QString& value) {
-				m_result.title = value.trimmed();
+			return (void)(m_functor = [this](const QString&, const QStringView value) {
+				m_result.title = value.toString().trimmed();
 			});
 
 		if (name.endsWith("description", Qt::CaseInsensitive))
-			return (void)(m_functor = [this](const QString&, const QString& value) {
-				m_result.annotation = value.trimmed();
+			return (void)(m_functor = [this](const QString&, const QStringView value) {
+				m_result.annotation = value.toString().trimmed();
 			});
 
 		if (name.endsWith("language", Qt::CaseInsensitive))
-			return (void)(m_functor = [this](const QString&, const QString& value) {
-				m_result.language = value.trimmed().left(2).toLower();
+			return (void)(m_functor = [this](const QString&, const QStringView value) {
+				m_result.language = value.toString().trimmed().left(2).toLower();
 			});
 
 		if (name.endsWith("subject", Qt::CaseInsensitive))
-			return (void)(m_functor = [this](const QString&, const QString& value) {
-				ParseGenresString(m_result.genres, value);
+			return (void)(m_functor = [this](const QString&, const QStringView value) {
+				ParseGenresString(m_result.genres, value.toString());
 			});
 
 		if (name.endsWith("creator", Qt::CaseInsensitive))
-			return (void)(m_functor = [this](const QString&, const QString& value) {
-				if (const QString creatorText = value.trimmed(); !creatorText.isEmpty())
+			return (void)(m_functor = [this](const QString&, const QStringView value) {
+				if (const QString creatorText = value.toString().trimmed(); !creatorText.isEmpty())
 					m_result.authors.emplace_back(ParseAuthor(creatorText));
 			});
 
@@ -489,7 +489,7 @@ private:
 #undef OPF_PARSER_MODE_ITEM
 	};
 
-	std::function<void(const QString&, const QString&)> m_functor;
+	std::function<void(const QString&, QStringView)> m_functor;
 };
 
 } // namespace

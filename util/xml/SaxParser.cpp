@@ -8,8 +8,6 @@
 #include <xercesc/sax/InputSource.hpp>
 #include <xercesc/util/BinInputStream.hpp>
 
-#include "fnd/ScopedCall.h"
-
 #include "Initializer.h"
 #include "XmlAttributes.h"
 #include "log.h"
@@ -93,9 +91,8 @@ private:
 class BinInputStream final : public xercesc_3_3::BinInputStream
 {
 public:
-	BinInputStream(QIODevice& source, const int64_t maxChunkSize)
+	explicit BinInputStream(QIODevice& source)
 		: m_source(source)
-		, m_maxChunkSize(maxChunkSize)
 	{
 	}
 
@@ -122,20 +119,19 @@ private: // xercesc::BinInputStream
 
 	XMLSize_t readBytes(XMLByte* const toFill, const XMLSize_t maxToRead) override
 	{
-		return m_stopped ? 0 : m_source.read(reinterpret_cast<char*>(toFill), std::min(static_cast<int64_t>(maxToRead), m_maxChunkSize));
+		return m_stopped ? 0 : m_source.read(reinterpret_cast<char*>(toFill), static_cast<int64_t>(maxToRead));
 	}
 
 private:
-	QIODevice&    m_source;
-	const int64_t m_maxChunkSize;
-	bool          m_stopped { false };
+	QIODevice& m_source;
+	bool       m_stopped { false };
 };
 
 class InputSource final : public xercesc::InputSource
 {
 public:
-	InputSource(QIODevice& source, const int64_t maxChunkSize)
-		: m_binInputStream(new BinInputStream(source, maxChunkSize))
+	InputSource(QIODevice& source)
+		: m_binInputStream(new BinInputStream(source))
 	{
 	}
 
@@ -181,17 +177,15 @@ public:
 private: // xercesc::DocumentHandler
 	void processingInstruction(const XMLCh* const target, const XMLCh* const data) override
 	{
-		ProcessCharacters();
 		if (m_inputSource.IsStopped())
 			return;
 
-		if (!m_parser.OnProcessingInstruction(QString::fromStdU16String(target), QString::fromStdU16String(data)))
+		if (!m_parser.OnProcessingInstruction(QString::fromUtf16(target), QString::fromStdU16String(data)))
 			m_inputSource.SetStopped(true);
 	}
 
 	void startElement(const XMLCh* const name, xercesc::AttributeList& args) override
 	{
-		ProcessCharacters();
 		if (m_inputSource.IsStopped())
 			return;
 
@@ -207,8 +201,6 @@ private: // xercesc::DocumentHandler
 		if (m_inputSource.IsStopped())
 			return;
 
-		ProcessCharacters();
-
 		if (const auto& key = m_stack.ToString(); !m_parser.OnEndElement(QString::fromStdU16String(name), key))
 			m_inputSource.SetStopped(true);
 
@@ -217,11 +209,11 @@ private: // xercesc::DocumentHandler
 
 	void characters(const XMLCh* const chars, const XMLSize_t length) override
 	{
-		if (m_inputSource.IsStopped())
+		if (m_inputSource.IsStopped() || length == 0)
 			return;
 
-		if (length != 0)
-			m_characters.append(QString::fromStdU16String(chars));
+		if (const auto& key = m_stack.ToString(); !m_parser.OnCharacters(key, QStringView { chars, chars + length }))
+			m_inputSource.SetStopped(true);
 	}
 
 private: // xercesc::ErrorHandler
@@ -263,29 +255,11 @@ private: // IDeclHandler
 	}
 
 private:
-	void ProcessCharacters()
-	{
-		if (m_inputSource.IsStopped())
-			return;
-
-		ScopedCall clearGuard([&] {
-			m_characters.clear();
-		});
-
-		if (m_characters.simplified().isEmpty())
-			return;
-
-		if (const auto& key = m_stack.ToString(); !m_parser.OnCharacters(key, m_characters))
-			m_inputSource.SetStopped(true);
-	}
-
-private:
 	XmlStack          m_stack;
 	XmlAttributesImpl m_attributes {};
 
 	SaxParser&   m_parser;
 	InputSource& m_inputSource;
-	QString      m_characters;
 };
 
 class SAXParserImpl : public xercesc::SAXParser
@@ -312,11 +286,11 @@ private:
 class SaxParser::Impl
 {
 public:
-	Impl(SaxParser& self, QIODevice& stream, const int64_t maxChunkSize)
+	Impl(SaxParser& self, QIODevice& stream)
 		: m_self(self)
-		, m_inputSource(stream, maxChunkSize)
+		, m_inputSource(stream)
 	{
-		m_saxParser.setValidationScheme(xercesc::SAXParser::Val_Auto);
+		m_saxParser.setValidationScheme(xercesc::SAXParser::Val_Never);
 		m_saxParser.setDoNamespaces(false);
 		m_saxParser.setDoSchema(false);
 		m_saxParser.setHandleMultipleImports(true);
@@ -340,8 +314,8 @@ private:
 	InputSource            m_inputSource;
 };
 
-SaxParser::SaxParser(QIODevice& stream, const int64_t maxChunkSize)
-	: m_impl(*this, stream, maxChunkSize)
+SaxParser::SaxParser(QIODevice& stream)
+	: m_impl(*this, stream)
 {
 }
 
@@ -357,12 +331,12 @@ bool SaxParser::IsLastItemProcessed() const noexcept
 	return m_processed;
 }
 
-bool SaxParser::OnProcessingInstruction(const QString& /*target*/, const QString& /*data*/)
+bool SaxParser::OnProcessingInstruction(QStringView /*target*/, QStringView /*data*/)
 {
 	return true;
 }
 
-bool SaxParser::OnXMLDecl(const QString& /*versionStr*/, const QString& /*encodingStr*/, const QString& /*standaloneStr*/, const QString& /*actualEncodingStr*/)
+bool SaxParser::OnXMLDecl(QStringView /*versionStr*/, QStringView /*encodingStr*/, QStringView /*standaloneStr*/, QStringView /*actualEncodingStr*/)
 {
 	return true;
 }
@@ -377,7 +351,7 @@ bool SaxParser::OnEndElement(const QString& /*name*/, const QString& /*path*/)
 	return true;
 }
 
-bool SaxParser::OnCharacters(const QString& /*path*/, const QString& /*value*/)
+bool SaxParser::OnCharacters(const QString& /*path*/, QStringView /*value*/)
 {
 	return true;
 }

@@ -24,7 +24,7 @@ class HashParserImpl final : public SaxParser
 
 public:
 	HashParserImpl(QIODevice& input, HashParser::IObserver& observer)
-		: SaxParser(input, 512)
+		: SaxParser(input)
 		, m_observer { observer }
 	{
 		Parse();
@@ -119,14 +119,14 @@ private: // Util::SaxParser
 		return true;
 	}
 
-	bool OnCharacters(const QString& path, const QString& value) override
+	bool OnCharacters(const QString& path, const QStringView value) override
 	{
 		if (path == COVER)
-			m_cover.hash = value;
+			m_cover.hash = value.toString();
 		else if (path == IMAGE)
-			m_images.back().hash = value;
+			m_images.back().hash = value.toString();
 		else if (path == ANNOTATION)
-			m_annotation << value;
+			m_annotation << value.toString();
 		return true;
 	}
 

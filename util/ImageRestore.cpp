@@ -132,7 +132,7 @@ private:
 		return true;
 	}
 
-	bool OnCharacters(const QString&, const QString& value) override
+	bool OnCharacters(const QString&, const QStringView value) override
 	{
 		if (m_id.isEmpty())
 			return true;
@@ -186,7 +186,7 @@ public:
 	}
 
 private: // Util::SaxParser
-	bool OnProcessingInstruction(const QString& target, const QString& data) override
+	bool OnProcessingInstruction(const QStringView target, const QStringView data) override
 	{
 		return m_writer.WriteProcessingInstruction(target, data), true;
 	}
@@ -245,7 +245,7 @@ private: // Util::SaxParser
 		return m_writer.WriteEndElement(), true;
 	}
 
-	bool OnCharacters(const QString& path, const QString& value) override
+	bool OnCharacters(const QString& path, const QStringView value) override
 	{
 		if (m_specialNode)
 			return true;
