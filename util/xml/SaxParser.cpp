@@ -63,15 +63,16 @@ public:
 	void Push(const QStringView tag) //-V801
 	{
 		const auto lastSize = m_stack.back();
-		m_stack.push_back(lastSize + tag.size());
+		m_stack.push_back(lastSize + tag.size() + 1);
 		if (m_buffer.size() >= m_stack.back())
 		{
-			std::ranges::copy(tag, m_buffer.begin() + lastSize);
+			m_buffer[lastSize] = '/';
+			std::ranges::copy(tag, m_buffer.begin() + lastSize + 1);
 		}
 		else
 		{
 			m_buffer.truncate(lastSize);
-			m_buffer.append(tag);
+			m_buffer.append('/').append(tag);
 		}
 	}
 
@@ -79,7 +80,7 @@ public:
 	{
 		[[maybe_unused]] const auto to = m_stack.back();
 		m_stack.pop_back();
-		[[maybe_unused]] const auto        from = m_stack.back();
+		[[maybe_unused]] const auto        from = m_stack.back() + 1;
 		[[maybe_unused]] const QStringView buffered { m_buffer.begin() + from, m_buffer.begin() + to };
 
 		assert(tag == buffered);
@@ -87,7 +88,7 @@ public:
 
 	QStringView ToString() const
 	{
-		return QStringView { m_buffer.begin(), std::next(m_buffer.begin(), m_stack.back()) };
+		return QStringView { std::next(m_buffer.begin()), std::next(m_buffer.begin(), m_stack.back()) };
 	}
 
 private:
@@ -197,7 +198,7 @@ private: // xercesc::DocumentHandler
 			return;
 
 		m_stack.Push(name);
-		const auto& key = m_stack.ToString();
+		const auto key = m_stack.ToString();
 		m_attributes.SetAttributeList(args);
 		if (!m_parser.OnStartElement(QStringView { name }, key, m_attributes))
 			m_inputSource.SetStopped(true);
@@ -208,7 +209,7 @@ private: // xercesc::DocumentHandler
 		if (m_inputSource.IsStopped())
 			return;
 
-		if (const auto& key = m_stack.ToString(); !m_parser.OnEndElement(QStringView { name }, key))
+		if (const auto key = m_stack.ToString(); !m_parser.OnEndElement(QStringView { name }, key))
 			m_inputSource.SetStopped(true);
 
 		m_stack.Pop(name);
@@ -219,7 +220,7 @@ private: // xercesc::DocumentHandler
 		if (m_inputSource.IsStopped() || length == 0)
 			return;
 
-		if (const auto& key = m_stack.ToString(); !m_parser.OnCharacters(key, QStringView { chars, chars + length }))
+		if (const auto key = m_stack.ToString(); !m_parser.OnCharacters(key, QStringView { chars, chars + length }))
 			m_inputSource.SetStopped(true);
 	}
 
