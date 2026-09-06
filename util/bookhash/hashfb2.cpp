@@ -25,7 +25,7 @@ QString GetImageId(const XmlAttributes& attributes)
 	{
 		auto attributeName  = attributes.GetName(i);
 		auto attributeValue = attributes.GetValue(i);
-		if (attributeName.endsWith(L":href"))
+        if (attributeName.endsWith(u":href"))
 		{
 			if (const auto it = std::ranges::find_if(
 					attributeValue,

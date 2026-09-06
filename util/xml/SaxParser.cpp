@@ -303,6 +303,9 @@ public:
 		m_saxParser.setDoSchema(false);
 		m_saxParser.setHandleMultipleImports(true);
 		m_saxParser.setValidationSchemaFullChecking(false);
+        m_saxParser.setLoadSchema(false);
+        m_saxParser.setLoadExternalDTD(false);
+        m_saxParser.setSkipDTDValidation(true);
 	}
 
 	void Parse()

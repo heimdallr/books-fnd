@@ -37,7 +37,7 @@ private: // Util::SaxParser
 		}
 		else if (path == BOOK)
 		{
-#define HASH_PARSER_CALLBACK_ITEM(NAME) m_##NAME = attributes.GetAttribute(L#NAME).toString();
+#define HASH_PARSER_CALLBACK_ITEM(NAME) m_##NAME = attributes.GetAttribute(u""#NAME).toString();
 			HASH_PARSER_CALLBACK_ITEMS_X_MACRO
 #undef HASH_PARSER_CALLBACK_ITEM
 			m_size           = attributes.GetAttribute(u"size").toULongLong();
