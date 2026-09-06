@@ -8,6 +8,8 @@
 #include <xercesc/sax/InputSource.hpp>
 #include <xercesc/util/BinInputStream.hpp>
 
+#include "fnd/ScopedCall.h"
+
 #include "Initializer.h"
 #include "QtTypes.h"
 #include "XmlAttributes.h"
@@ -185,6 +187,7 @@ public:
 private: // xercesc::DocumentHandler
 	void processingInstruction(const XMLCh* const target, const XMLCh* const data) override
 	{
+		ProcessCharacters();
 		if (m_inputSource.IsStopped())
 			return;
 
@@ -194,6 +197,7 @@ private: // xercesc::DocumentHandler
 
 	void startElement(const XMLCh* const name, xercesc::AttributeList& args) override
 	{
+		ProcessCharacters();
 		if (m_inputSource.IsStopped())
 			return;
 
@@ -209,6 +213,8 @@ private: // xercesc::DocumentHandler
 		if (m_inputSource.IsStopped())
 			return;
 
+		ProcessCharacters();
+
 		if (const auto key = m_stack.ToString(); !m_parser.OnEndElement(QStringView { name }, key))
 			m_inputSource.SetStopped(true);
 
@@ -220,8 +226,7 @@ private: // xercesc::DocumentHandler
 		if (m_inputSource.IsStopped() || length == 0)
 			return;
 
-		if (const auto key = m_stack.ToString(); !m_parser.OnCharacters(key, QStringView { chars, chars + length }))
-			m_inputSource.SetStopped(true);
+		m_characters.append(QStringView { chars, static_cast<qsizetype_t>(length) });
 	}
 
 private: // xercesc::ErrorHandler
@@ -263,11 +268,29 @@ private: // IDeclHandler
 	}
 
 private:
+	void ProcessCharacters()
+	{
+		if (m_inputSource.IsStopped())
+			return;
+
+		ScopedCall clearGuard([&] {
+			m_characters.clear();
+		});
+
+		if (m_characters.simplified().isEmpty())
+			return;
+
+		if (const auto& key = m_stack.ToString(); !m_parser.OnCharacters(key, m_characters))
+			m_inputSource.SetStopped(true);
+	}
+
+private:
 	XmlStack          m_stack;
 	XmlAttributesImpl m_attributes {};
 
 	SaxParser&   m_parser;
 	InputSource& m_inputSource;
+	QString      m_characters;
 };
 
 class SAXParserImpl : public xercesc::SAXParser
@@ -303,9 +326,9 @@ public:
 		m_saxParser.setDoSchema(false);
 		m_saxParser.setHandleMultipleImports(true);
 		m_saxParser.setValidationSchemaFullChecking(false);
-        m_saxParser.setLoadSchema(false);
-        m_saxParser.setLoadExternalDTD(false);
-        m_saxParser.setSkipDTDValidation(true);
+		m_saxParser.setLoadSchema(false);
+		m_saxParser.setLoadExternalDTD(false);
+		m_saxParser.setSkipDTDValidation(true);
 	}
 
 	void Parse()
