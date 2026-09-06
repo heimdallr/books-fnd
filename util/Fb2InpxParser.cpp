@@ -60,7 +60,7 @@ struct Data
 	QString     year;
 	size_t      size { 0 };
 
-	QStringList annotation;
+	QString annotation;
 
 	QString error;
 };
@@ -99,7 +99,7 @@ public:
 	}
 
 private: // SaxParser
-	bool OnStartElement(const QStringView /*name*/, const QStringView path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView name, const QStringView path, const XmlAttributes& attributes) override
 	{
 		using ParseElementFunction = bool (Fb2InpxParserImpl::*)(const XmlAttributes&);
 		using ParseElementItem     = std::pair<const char16_t*, ParseElementFunction>;
@@ -107,21 +107,33 @@ private: // SaxParser
 			{     AUTHOR,     &Fb2InpxParserImpl::OnStartElementAuthor },
 			{ AUTHOR_DOC,  &Fb2InpxParserImpl::OnStartElementAuthorDoc },
 			{   SEQUENCE,   &Fb2InpxParserImpl::OnStartElementSequence },
-			{ ANNOTATION, &Fb2InpxParserImpl::OnStartElementAnnotation },
 		};
+
+		if (path.startsWith(ANNOTATION))
+		{
+			if (path != ANNOTATION)
+				m_data.annotation.append(QString("<%1>").arg(name));
+			return true;
+		}
 
 		return Parse(*this, PARSERS, path, attributes);
 	}
 
-	bool OnEndElement(QStringView /*name*/, const QStringView path) override
+	bool OnEndElement(const QStringView name, const QStringView path) override
 	{
 		using ParseElementFunction = bool (Fb2InpxParserImpl::*)();
 		using ParseElementItem     = std::pair<const char16_t*, ParseElementFunction>;
 		static constexpr ParseElementItem PARSERS[] {
 			{     AUTHOR,     &Fb2InpxParserImpl::OnEndElementAuthor },
 			{ AUTHOR_DOC,     &Fb2InpxParserImpl::OnEndElementAuthor },
-			{ ANNOTATION, &Fb2InpxParserImpl::OnEndElementAnnotation },
 		};
+
+		if (path.startsWith(ANNOTATION))
+		{
+			if (path != ANNOTATION)
+				m_data.annotation.append(QString("</%1>").arg(name));
+			return true;
+		}
 
 		return Parse(*this, PARSERS, path);
 	}
@@ -144,8 +156,8 @@ private: // SaxParser
 			{      PUBLISH_INFO_YEAR,      &Fb2InpxParserImpl::ParsePublishYear },
 		};
 
-		if (m_annotationMode)
-			m_data.annotation << value.toString().trimmed();
+		if (path.startsWith(ANNOTATION))
+			m_data.annotation.append(value.toString().trimmed());
 
 		{
 			auto valueCopy = value.toString();
@@ -198,12 +210,6 @@ private:
 		return true;
 	}
 
-	bool OnStartElementAnnotation(const XmlAttributes&)
-	{
-		m_annotationMode = true;
-		return true;
-	}
-
 	bool OnEndElementAuthor()
 	{
 		if (m_insertAuthorMode)
@@ -215,12 +221,6 @@ private:
 		}
 
 		m_insertAuthorMode = false;
-		return true;
-	}
-
-	bool OnEndElementAnnotation()
-	{
-		m_annotationMode = false;
 		return true;
 	}
 
@@ -279,7 +279,6 @@ private:
 	const QString& m_fileName;
 	Data           m_data {};
 	bool           m_insertAuthorMode { false };
-	bool           m_annotationMode { false };
 };
 
 } // namespace

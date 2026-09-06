@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QStringList>
+#include <QString>
 
 #include "export/util.h"
 
@@ -21,8 +21,8 @@ static constexpr char FIELDS_SEPARATOR = '\x04';
 
 struct ParseResult
 {
-	QString     line;
-	QStringList annotation;
+	QString line;
+	QString annotation;
 };
 
 UTIL_EXPORT ParseResult Parse(const QString& folder, const Zip& zip, const QString& fileName, const QDateTime& zipDateTime, bool isDeleted);
