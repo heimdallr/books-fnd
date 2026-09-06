@@ -18,7 +18,7 @@ class HashParserImpl final : public SaxParser
 	static constexpr auto ORIGIN     = u"books/book/origin";
 	static constexpr auto HISTOGRAM  = u"books/book/histogram/item";
 	static constexpr auto SECTION    = u"section";
-	static constexpr auto ANNOTATION = u"books/book/annotation/p";
+	static constexpr auto ANNOTATION = u"books/book/annotation";
 
 public:
 	HashParserImpl(QIODevice& input, HashParser::IObserver& observer)
@@ -37,7 +37,7 @@ private: // Util::SaxParser
 		}
 		else if (path == BOOK)
 		{
-#define HASH_PARSER_CALLBACK_ITEM(NAME) m_##NAME = attributes.GetAttribute(u""#NAME).toString();
+#define HASH_PARSER_CALLBACK_ITEM(NAME) m_##NAME = attributes.GetAttribute(u"" #NAME).toString();
 			HASH_PARSER_CALLBACK_ITEMS_X_MACRO
 #undef HASH_PARSER_CALLBACK_ITEM
 			m_size           = attributes.GetAttribute(u"size").toULongLong();
@@ -73,6 +73,11 @@ private: // Util::SaxParser
 		{
 			m_textHistogram.emplace_back(attributes.GetAttribute(u"count").toULongLong(), attributes.GetAttribute(u"word").toString());
 		}
+		else if (path.startsWith(ANNOTATION))
+		{
+			if (path != ANNOTATION)
+				m_annotation.append(QString("<%1>").arg(name));
+		}
 
 		return true;
 	}
@@ -91,8 +96,7 @@ private: // Util::SaxParser
 					std::move(m_section),
 					m_size,
 					m_simHash,
-					std::move(m_textHistogram),
-					std::move(m_annotation)
+					std::move(m_textHistogram)
 				))
 				return false;
 
@@ -106,12 +110,16 @@ private: // Util::SaxParser
 			m_size           = 0;
 			m_simHash        = 0;
 			m_textHistogram  = {};
-			m_annotation     = QStringList {};
 			m_currentSection = nullptr;
 		}
 		else if (name == SECTION)
 		{
 			m_currentSection = m_currentSection->parent;
+		}
+		else if (path.startsWith(ANNOTATION))
+		{
+			if (path != ANNOTATION)
+				m_annotation.append(QString("</%1>").arg(name));
 		}
 
 		return true;
@@ -124,7 +132,7 @@ private: // Util::SaxParser
 		else if (path == IMAGE)
 			m_images.back().hash = value.toString();
 		else if (path == ANNOTATION)
-			m_annotation << value.toString();
+			m_annotation.append(value);
 		return true;
 	}
 
@@ -139,7 +147,6 @@ private:
 	HashParser::Section::Ptr               m_section;
 	HashParser::Section*                   m_currentSection { nullptr };
 	TextHistogram                          m_textHistogram;
-	QStringList                            m_annotation;
 	size_t                                 m_size { 0 };
 	uint64_t                               m_simHash { 0 };
 };

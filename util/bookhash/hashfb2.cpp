@@ -25,7 +25,7 @@ QString GetImageId(const XmlAttributes& attributes)
 	{
 		auto attributeName  = attributes.GetName(i);
 		auto attributeValue = attributes.GetValue(i);
-        if (attributeName.endsWith(u":href"))
+		if (attributeName.endsWith(u":href"))
 		{
 			if (const auto it = std::ranges::find_if(
 					attributeValue,
@@ -151,9 +151,10 @@ private: // Util::SaxParser
 			return true;
 		}
 
-		if (path == ANNOTATION)
+		if (path.startsWith(ANNOTATION))
 		{
-			m_isAnnotation = true;
+			if (path != ANNOTATION)
+				m_annotation.append(QString("<%1>").arg(name));
 			return true;
 		}
 
@@ -188,7 +189,8 @@ private: // Util::SaxParser
 		}
 		else if (path == ANNOTATION)
 		{
-			m_isAnnotation = false;
+			if (path != ANNOTATION)
+				m_annotation.append(QString("</%1>").arg(name));
 		}
 
 		return true;
@@ -213,8 +215,7 @@ private: // Util::SaxParser
 			return true;
 		}
 
-		if (m_isAnnotation)
-			m_annotation << value.toString();
+		m_annotation.append(value);
 
 		auto valueCopy = value.toString();
 
@@ -266,9 +267,8 @@ private:
 
 	ImageHashItem  m_cover;
 	ImageHashItems m_images;
-	QStringList    m_annotation;
+	QString        m_annotation;
 
-	bool    m_isAnnotation { false };
 	bool    m_isBinary { false };
 	QString m_coverPage;
 	QString m_picId;

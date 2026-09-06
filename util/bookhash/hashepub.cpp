@@ -97,7 +97,7 @@ private: // BookHash::IParser
 			.title        = std::move(m_result.title),
 			.hashText     = std::move(hash),
 			.hashSections = std::move(sections),
-			.annotation   = QStringList { std::move(m_result.annotation) },
+			.annotation   = std::move(m_result.annotation),
 			.hashValues   = std::move(hashValues),
 			.count        = count,
 			.size         = size,

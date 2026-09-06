@@ -17,6 +17,7 @@ struct HashParser
 	HASH_PARSER_CALLBACK_ITEM(folder)       \
 	HASH_PARSER_CALLBACK_ITEM(file)         \
 	HASH_PARSER_CALLBACK_ITEM(title)        \
+	HASH_PARSER_CALLBACK_ITEM(annotation)   \
 	HASH_PARSER_CALLBACK_ITEM(originFolder) \
 	HASH_PARSER_CALLBACK_ITEM(originFile)
 
@@ -43,7 +44,7 @@ struct HashParser
 	class IObserver // NOLINT(cppcoreguidelines-special-member-functions)
 	{
 	public:
-		virtual ~IObserver()                                  = default;
+		virtual ~IObserver()                               = default;
 		virtual void OnParseStarted(QStringView sourceLib) = 0;
 		virtual bool OnBookParsed(
 #define HASH_PARSER_CALLBACK_ITEM(NAME) QString NAME,
@@ -54,8 +55,7 @@ struct HashParser
 			Section::Ptr      section,
 			size_t            size,
 			uint64_t          simHash,
-			TextHistogram     textHistogram,
-			QStringList       annotation
+			TextHistogram     textHistogram
 		) = 0;
 	};
 

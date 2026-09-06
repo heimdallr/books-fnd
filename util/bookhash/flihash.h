@@ -21,7 +21,7 @@ struct HashParseResult
 	QString                     title;
 	QString                     hashText;
 	QStringList                 hashSections;
-	QStringList                 annotation;
+	QString                     annotation;
 	TextHistogram               hashValues;
 	size_t                      count;
 	size_t                      size;
