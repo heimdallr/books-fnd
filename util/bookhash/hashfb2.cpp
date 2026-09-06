@@ -25,7 +25,7 @@ QString GetImageId(const XmlAttributes& attributes)
 	{
 		auto attributeName  = attributes.GetName(i);
 		auto attributeValue = attributes.GetValue(i);
-		if (attributeName.endsWith(":href"))
+		if (attributeName.endsWith(L":href"))
 		{
 			if (const auto it = std::ranges::find_if(
 					attributeValue,
@@ -34,7 +34,7 @@ QString GetImageId(const XmlAttributes& attributes)
 					}
 				);
 			    it != attributeValue.end())
-				return Last(attributeValue, std::distance(it, attributeValue.end())).trimmed();
+				return Last(attributeValue, std::distance(it, attributeValue.end())).toString().trimmed();
 		}
 	}
 
@@ -45,16 +45,16 @@ class Fb2Parser final
 	: public SaxParser
 	, public BookHash::IParser
 {
-	static constexpr auto BODY            = "FictionBook/body";
-	static constexpr auto BINARY          = "FictionBook/binary";
-	static constexpr auto BODY_BINARY     = "FictionBook/body/binary";
-	static constexpr auto TITLE           = "FictionBook/description/title-info/book-title";
-	static constexpr auto COVERPAGE_IMAGE = "FictionBook/description/title-info/coverpage/image";
-	static constexpr auto ANNOTATION      = "FictionBook/description/title-info/annotation";
+	static constexpr auto BODY            = u"FictionBook/body";
+	static constexpr auto BINARY          = u"FictionBook/binary";
+	static constexpr auto BODY_BINARY     = u"FictionBook/body/binary";
+	static constexpr auto TITLE           = u"FictionBook/description/title-info/book-title";
+	static constexpr auto COVERPAGE_IMAGE = u"FictionBook/description/title-info/coverpage/image";
+	static constexpr auto ANNOTATION      = u"FictionBook/description/title-info/annotation";
 
-	static constexpr auto ID      = "id";
-	static constexpr auto SECTION = "section";
-	static constexpr auto IMAGE   = "image";
+	static constexpr auto ID      = u"id";
+	static constexpr auto SECTION = u"section";
+	static constexpr auto IMAGE   = u"image";
 
 	struct Section
 	{
@@ -81,7 +81,7 @@ class Fb2Parser final
 
 public:
 	explicit Fb2Parser(QIODevice& input)
-		: SaxParser(input, 512)
+		: SaxParser(input)
 	{
 		Parse();
 		//		assert(m_tags.empty());
@@ -128,7 +128,7 @@ private: // BookHash::IParser
 	}
 
 private: // Util::SaxParser
-	bool OnStartElement(const QString& name, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView name, const QStringView path, const XmlAttributes& attributes) override
 	{
 		if (name == SECTION)
 		{
@@ -139,7 +139,7 @@ private: // Util::SaxParser
 		if (IsOneOf(path, BINARY, BODY_BINARY))
 		{
 			m_isBinary = true;
-			m_picId    = attributes.GetAttribute(ID).trimmed();
+			m_picId    = attributes.GetAttribute(ID).toString().trimmed();
 			if (const auto it = std::ranges::find_if(
 					m_picId,
 					[](const auto ch) {
@@ -147,7 +147,7 @@ private: // Util::SaxParser
 					}
 				);
 			    it != m_picId.end())
-				m_picId = Last(m_picId, std::distance(it, m_picId.end())).trimmed();
+				m_picId = Last(m_picId, std::distance(it, m_picId.end())).toString().trimmed();
 			return true;
 		}
 
@@ -174,7 +174,7 @@ private: // Util::SaxParser
 		return true;
 	}
 
-	bool OnEndElement(const QString& name, const QString& path) override
+	bool OnEndElement(const QStringView name, const QStringView path) override
 	{
 		if (IsOneOf(path, BINARY, BODY_BINARY))
 		{
@@ -194,7 +194,7 @@ private: // Util::SaxParser
 		return true;
 	}
 
-	bool OnCharacters(const QString& path, const QString& value) override
+	bool OnCharacters(const QStringView path, const QStringView value) override
 	{
 		if (!m_picId.isEmpty())
 		{
@@ -214,9 +214,9 @@ private: // Util::SaxParser
 		}
 
 		if (m_isAnnotation)
-			m_annotation << value;
+			m_annotation << value.toString();
 
-		auto valueCopy = value;
+		auto valueCopy = value.toString();
 
 		PrepareTitle(valueCopy);
 

@@ -21,23 +21,23 @@ using namespace Fb2InpxParser;
 namespace
 {
 
-constexpr auto NAME                   = "name";
-constexpr auto NUMBER                 = "number";
-constexpr auto GENRE                  = "FictionBook/description/title-info/genre";
-constexpr auto AUTHOR                 = "FictionBook/description/title-info/author";
-constexpr auto AUTHOR_FIRST_NAME      = "FictionBook/description/title-info/author/first-name";
-constexpr auto AUTHOR_LAST_NAME       = "FictionBook/description/title-info/author/last-name";
-constexpr auto AUTHOR_MIDDLE_NAME     = "FictionBook/description/title-info/author/middle-name";
-constexpr auto ANNOTATION             = "FictionBook/description/title-info/annotation";
-constexpr auto AUTHOR_DOC             = "FictionBook/description/document-info/author";
-constexpr auto AUTHOR_FIRST_NAME_DOC  = "FictionBook/description/document-info/author/first-name";
-constexpr auto AUTHOR_LAST_NAME_DOC   = "FictionBook/description/document-info/author/last-name";
-constexpr auto AUTHOR_MIDDLE_NAME_DOC = "FictionBook/description/document-info/author/middle-name";
-constexpr auto BOOK_TITLE             = "FictionBook/description/title-info/book-title";
-constexpr auto LANG                   = "FictionBook/description/title-info/lang";
-constexpr auto SEQUENCE               = "FictionBook/description/title-info/sequence";
-constexpr auto KEYWORDS               = "FictionBook/description/title-info/keywords";
-constexpr auto PUBLISH_INFO_YEAR      = "FictionBook/description/publish-info/year";
+constexpr auto NAME                   = u"name";
+constexpr auto NUMBER                 = u"number";
+constexpr auto GENRE                  = u"FictionBook/description/title-info/genre";
+constexpr auto AUTHOR                 = u"FictionBook/description/title-info/author";
+constexpr auto AUTHOR_FIRST_NAME      = u"FictionBook/description/title-info/author/first-name";
+constexpr auto AUTHOR_LAST_NAME       = u"FictionBook/description/title-info/author/last-name";
+constexpr auto AUTHOR_MIDDLE_NAME     = u"FictionBook/description/title-info/author/middle-name";
+constexpr auto ANNOTATION             = u"FictionBook/description/title-info/annotation";
+constexpr auto AUTHOR_DOC             = u"FictionBook/description/document-info/author";
+constexpr auto AUTHOR_FIRST_NAME_DOC  = u"FictionBook/description/document-info/author/first-name";
+constexpr auto AUTHOR_LAST_NAME_DOC   = u"FictionBook/description/document-info/author/last-name";
+constexpr auto AUTHOR_MIDDLE_NAME_DOC = u"FictionBook/description/document-info/author/middle-name";
+constexpr auto BOOK_TITLE             = u"FictionBook/description/title-info/book-title";
+constexpr auto LANG                   = u"FictionBook/description/title-info/lang";
+constexpr auto SEQUENCE               = u"FictionBook/description/title-info/sequence";
+constexpr auto KEYWORDS               = u"FictionBook/description/title-info/keywords";
+constexpr auto PUBLISH_INFO_YEAR      = u"FictionBook/description/publish-info/year";
 
 struct Data
 {
@@ -84,7 +84,7 @@ class Fb2InpxParserImpl final : public SaxParser
 {
 public:
 	Fb2InpxParserImpl(QIODevice& stream, const QString& fileName)
-		: SaxParser(stream, 512)
+		: SaxParser(stream)
 		, m_fileName(fileName)
 	{
 	}
@@ -99,10 +99,10 @@ public:
 	}
 
 private: // SaxParser
-	bool OnStartElement(const QString& /*name*/, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView /*name*/, const QStringView path, const XmlAttributes& attributes) override
 	{
 		using ParseElementFunction = bool (Fb2InpxParserImpl::*)(const XmlAttributes&);
-		using ParseElementItem     = std::pair<const char*, ParseElementFunction>;
+		using ParseElementItem     = std::pair<const char16_t*, ParseElementFunction>;
 		static constexpr ParseElementItem PARSERS[] {
 			{     AUTHOR,     &Fb2InpxParserImpl::OnStartElementAuthor },
 			{ AUTHOR_DOC,  &Fb2InpxParserImpl::OnStartElementAuthorDoc },
@@ -113,10 +113,10 @@ private: // SaxParser
 		return Parse(*this, PARSERS, path, attributes);
 	}
 
-	bool OnEndElement(const QString& /*name*/, const QString& path) override
+	bool OnEndElement(QStringView /*name*/, const QStringView path) override
 	{
 		using ParseElementFunction = bool (Fb2InpxParserImpl::*)();
-		using ParseElementItem     = std::pair<const char*, ParseElementFunction>;
+		using ParseElementItem     = std::pair<const char16_t*, ParseElementFunction>;
 		static constexpr ParseElementItem PARSERS[] {
 			{     AUTHOR,     &Fb2InpxParserImpl::OnEndElementAuthor },
 			{ AUTHOR_DOC,     &Fb2InpxParserImpl::OnEndElementAuthor },
@@ -126,10 +126,10 @@ private: // SaxParser
 		return Parse(*this, PARSERS, path);
 	}
 
-	bool OnCharacters(const QString& path, const QString& value) override
+	bool OnCharacters(const QStringView path, const QStringView value) override
 	{
 		using ParseCharacterFunction = bool (Fb2InpxParserImpl::*)(const QString&);
-		using ParseCharacterItem     = std::pair<const char*, ParseCharacterFunction>;
+		using ParseCharacterItem     = std::pair<const char16_t*, ParseCharacterFunction>;
 		static constexpr ParseCharacterItem PARSERS[] {
 			{				  GENRE,            &Fb2InpxParserImpl::ParseGenre },
 			{      AUTHOR_FIRST_NAME,  &Fb2InpxParserImpl::ParseAuthorFirstName },
@@ -145,10 +145,10 @@ private: // SaxParser
 		};
 
 		if (m_annotationMode)
-			m_data.annotation << value.trimmed();
+			m_data.annotation << value.toString().trimmed();
 
 		{
-			auto valueCopy = value;
+			auto valueCopy = value.toString();
 			PrepareTitle(valueCopy);
 			RemoveIf(valueCopy, [](const QChar ch) {
 				const auto category = ch.category();
@@ -157,7 +157,7 @@ private: // SaxParser
 			m_data.size += valueCopy.length();
 		}
 
-		return Parse(*this, PARSERS, path, value.trimmed());
+		return Parse(*this, PARSERS, path, value.toString().trimmed());
 	}
 
 	bool OnWarning(const size_t line, const size_t column, const QString& text) override
@@ -193,8 +193,8 @@ private:
 
 	bool OnStartElementSequence(const XmlAttributes& attributes)
 	{
-		m_data.series    = attributes.GetAttribute(NAME).trimmed();
-		m_data.seqNumber = GetSeqNumber(attributes.GetAttribute(NUMBER));
+		m_data.series    = attributes.GetAttribute(NAME).toString().trimmed();
+		m_data.seqNumber = GetSeqNumber(attributes.GetAttribute(NUMBER).toString());
 		return true;
 	}
 

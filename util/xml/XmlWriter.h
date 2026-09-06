@@ -1,12 +1,14 @@
 #pragma once
 
+#include <QStringView>
+
 #include "fnd/NonCopyMovable.h"
 #include "fnd/memory.h"
 
 #include "export/util.h"
 
-class QString;
 class QIODevice;
+class QString;
 
 namespace HomeCompa::Util
 {
@@ -62,7 +64,7 @@ public:
 			return *this;
 		}
 
-		XmlNodeGuard(XmlWriter& writer, const QString& name)
+		XmlNodeGuard(XmlWriter& writer, const QStringView name)
 			: m_writer(&writer)
 		{
 			assert(m_writer);
@@ -89,15 +91,15 @@ public:
 	explicit XmlWriter(QIODevice& stream, const Options& options = Options {});
 	~XmlWriter();
 
-	XmlWriter& WriteProcessingInstruction(const QString& target, const QString& data);
-	XmlWriter& WriteStartElement(const QString& name);
-	XmlWriter& WriteStartElement(const QString& name, const XmlAttributes& attributes);
+	XmlWriter& WriteProcessingInstruction(QStringView target, QStringView data);
+	XmlWriter& WriteStartElement(QStringView name);
+	XmlWriter& WriteStartElement(QStringView name, const XmlAttributes& attributes);
 	XmlWriter& WriteEndElement();
-	XmlWriter& WriteAttribute(const QString& name, const QString& value);
-	XmlWriter& WriteCharacters(const QString& data);
+	XmlWriter& WriteAttribute(QStringView name, QStringView value);
+	XmlWriter& WriteCharacters(QStringView data);
 	XmlWriter& CloseTag();
 
-	XmlNodeGuard Guard(const QString& name);
+	XmlNodeGuard Guard(QStringView name);
 
 private:
 	class Impl;

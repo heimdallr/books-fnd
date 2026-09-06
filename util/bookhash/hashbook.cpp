@@ -173,16 +173,16 @@ struct HtmlParser final : private SaxParser
 	std::unordered_map<QString, size_t> hist;
 
 	HtmlParser(QIODevice& input, QCryptographicHash& md5)
-		: SaxParser(input, 512)
+		: SaxParser(input)
 		, m_md5 { md5 }
 	{
 		Parse();
 	}
 
 private: // SaxParser
-	bool OnCharacters(const QString&, const QString& value) override
+	bool OnCharacters(QStringView, const QStringView value) override
 	{
-		auto valueCopy = value;
+		auto valueCopy = value.toString();
 
 		PrepareTitle(valueCopy);
 		for (auto&& word : valueCopy.split(' ', Qt::SkipEmptyParts))

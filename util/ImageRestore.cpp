@@ -50,9 +50,9 @@ namespace
 
 using Covers = std::unordered_map<QString, std::pair<bool, QByteArray>>;
 
-constexpr auto BINARY       = "binary";
-constexpr auto ID           = "id";
-constexpr auto CONTENT_TYPE = "content-type";
+constexpr auto BINARY       = u"binary";
+constexpr auto ID           = u"id";
+constexpr auto CONTENT_TYPE = u"content-type";
 
 void ConvertToGrayscale(QImage& image)
 {
@@ -89,7 +89,7 @@ std::pair<QByteArray, const char*> RecodeImage(const bool isCover, const ImagePr
 
 class BinaryParser final : public SaxParser
 {
-	static constexpr auto COVERPAGE_IMAGE = "FictionBook/description/title-info/coverpage/image";
+	static constexpr auto COVERPAGE_IMAGE = u"FictionBook/description/title-info/coverpage/image";
 
 public:
 	BinaryParser(QIODevice& input, Covers& covers, const ImageProcessing imageProcessing)
@@ -102,10 +102,10 @@ public:
 	}
 
 private:
-	bool OnStartElement(const QString& name, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView name, const QStringView path, const XmlAttributes& attributes) override
 	{
 		if (name == BINARY)
-			return (m_id = attributes.GetAttribute(ID)), true;
+			return (m_id = attributes.GetAttribute(ID).toString()), true;
 
 		if (path == COVERPAGE_IMAGE)
 		{
@@ -113,7 +113,7 @@ private:
 			{
 				auto attributeName  = attributes.GetName(i);
 				auto attributeValue = attributes.GetValue(i);
-				if (attributeName.endsWith(":href"))
+				if (attributeName.endsWith(u":href"))
 				{
 					if (const auto it = std::ranges::find_if(
 							attributeValue,
@@ -122,7 +122,7 @@ private:
 							}
 						);
 					    it != attributeValue.end())
-						m_coverId = Last(attributeValue, std::distance(it, attributeValue.end())).trimmed();
+						m_coverId = Last(attributeValue, std::distance(it, attributeValue.end())).toString().trimmed();
 					break;
 				}
 			}
@@ -132,7 +132,7 @@ private:
 		return true;
 	}
 
-	bool OnCharacters(const QString&, const QString& value) override
+	bool OnCharacters(QStringView, const QStringView value) override
 	{
 		if (m_id.isEmpty())
 			return true;
@@ -156,17 +156,17 @@ private:
 
 class SaxPrinter final : public SaxParser
 {
-	static constexpr auto FICTION_BOOK       = "FictionBook";
-	static constexpr auto DESCRIPTION        = "FictionBook/description";
-	static constexpr auto DOCUMENT_INFO      = "FictionBook/description/document-info";
-	static constexpr auto PROGRAM_USED       = "FictionBook/description/document-info/program-used";
-	static constexpr auto TITLE_INFO         = "FictionBook/description/title-info";
-	static constexpr auto AUTHOR             = "FictionBook/description/title-info/author";
-	static constexpr auto AUTHOR_FIRST_NAME  = "first-name";
-	static constexpr auto AUTHOR_LAST_NAME   = "last-name";
-	static constexpr auto AUTHOR_MIDDLE_NAME = "middle-name";
-	static constexpr auto BOOK_TITLE         = "FictionBook/description/title-info/book-title";
-	static constexpr auto SEQUENCE           = "FictionBook/description/title-info/sequence";
+	static constexpr auto FICTION_BOOK       = u"FictionBook";
+	static constexpr auto DESCRIPTION        = u"FictionBook/description";
+	static constexpr auto DOCUMENT_INFO      = u"FictionBook/description/document-info";
+	static constexpr auto PROGRAM_USED       = u"FictionBook/description/document-info/program-used";
+	static constexpr auto TITLE_INFO         = u"FictionBook/description/title-info";
+	static constexpr auto AUTHOR             = u"FictionBook/description/title-info/author";
+	static constexpr auto AUTHOR_FIRST_NAME  = u"first-name";
+	static constexpr auto AUTHOR_LAST_NAME   = u"last-name";
+	static constexpr auto AUTHOR_MIDDLE_NAME = u"middle-name";
+	static constexpr auto BOOK_TITLE         = u"FictionBook/description/title-info/book-title";
+	static constexpr auto SEQUENCE           = u"FictionBook/description/title-info/sequence";
 
 public:
 	SaxPrinter(QIODevice& input, QIODevice& output, Covers covers, std::unique_ptr<const ExtractedBook> metadataReplacement, const ImageProcessing imageProcessing)
@@ -186,12 +186,12 @@ public:
 	}
 
 private: // Util::SaxParser
-	bool OnProcessingInstruction(const QString& target, const QString& data) override
+	bool OnProcessingInstruction(const QStringView target, const QStringView data) override
 	{
 		return m_writer.WriteProcessingInstruction(target, data), true;
 	}
 
-	bool OnStartElement(const QString& name, const QString& path, const XmlAttributes& attributes) override
+	bool OnStartElement(const QStringView name, const QStringView path, const XmlAttributes& attributes) override
 	{
 		if (m_specialNode || (m_metadataReplacement && IsOneOf(path, AUTHOR, BOOK_TITLE, SEQUENCE)))
 			return m_specialNode = true;
@@ -212,7 +212,7 @@ private: // Util::SaxParser
 		return true;
 	}
 
-	bool OnEndElement(const QString& name, const QString& path) override
+	bool OnEndElement(const QStringView name, const QStringView path) override
 	{
 		if (m_specialNode)
 		{
@@ -226,7 +226,7 @@ private: // Util::SaxParser
 
 		if (path == DOCUMENT_INFO && !m_hasProgramUsed)
 		{
-			m_writer.WriteStartElement("program-used").WriteCharacters(QString("%1 %2").arg(PRODUCT_ID, PRODUCT_VERSION)).WriteEndElement();
+			m_writer.WriteStartElement(u"program-used").WriteCharacters(QString("%1 %2").arg(PRODUCT_ID, PRODUCT_VERSION)).WriteEndElement();
 			m_hasProgramUsed = true;
 		}
 
@@ -234,7 +234,7 @@ private: // Util::SaxParser
 		{
 			if (!m_hasProgramUsed)
 			{
-				m_writer.WriteStartElement("document-info").WriteStartElement("program-used").WriteCharacters(QString("%1 %2").arg(PRODUCT_ID, PRODUCT_VERSION)).WriteEndElement().WriteEndElement();
+				m_writer.WriteStartElement(u"document-info").WriteStartElement(u"program-used").WriteCharacters(QString("%1 %2").arg(PRODUCT_ID, PRODUCT_VERSION)).WriteEndElement().WriteEndElement();
 				m_hasProgramUsed = true;
 			}
 		}
@@ -245,7 +245,7 @@ private: // Util::SaxParser
 		return m_writer.WriteEndElement(), true;
 	}
 
-	bool OnCharacters(const QString& path, const QString& value) override
+	bool OnCharacters(const QStringView path, const QStringView value) override
 	{
 		if (m_specialNode)
 			return true;
@@ -279,7 +279,7 @@ private:
 	void WriteAuthor()
 	{
 		assert(m_metadataReplacement);
-		const auto node = m_writer.Guard("author");
+		const auto node = m_writer.Guard(u"author");
 		node->WriteStartElement(AUTHOR_FIRST_NAME).WriteCharacters(m_metadataReplacement->authorFull.firstName).WriteEndElement();
 		node->WriteStartElement(AUTHOR_MIDDLE_NAME).WriteCharacters(m_metadataReplacement->authorFull.middleName).WriteEndElement();
 		node->WriteStartElement(AUTHOR_LAST_NAME).WriteCharacters(m_metadataReplacement->authorFull.lastName).WriteEndElement();
@@ -288,7 +288,7 @@ private:
 	void WriteTitle()
 	{
 		assert(m_metadataReplacement);
-		m_writer.WriteStartElement("book-title").WriteCharacters(m_metadataReplacement->title).WriteEndElement();
+		m_writer.WriteStartElement(u"book-title").WriteCharacters(m_metadataReplacement->title).WriteEndElement();
 	}
 
 	void WriteSeries()
@@ -297,20 +297,20 @@ private:
 		if (m_metadataReplacement->series.isEmpty())
 			return;
 
-		const auto node = m_writer.Guard("sequence");
-		node->WriteAttribute("name", m_metadataReplacement->series);
+		const auto node = m_writer.Guard(u"sequence");
+		node->WriteAttribute(u"name", m_metadataReplacement->series);
 		if (m_metadataReplacement->seqNumber > 0)
-			node->WriteAttribute("number", QString::number(m_metadataReplacement->seqNumber));
+			node->WriteAttribute(u"number", QString::number(m_metadataReplacement->seqNumber));
 	}
 
-	void WriteImage(const QString& imageFileName)
+	void WriteImage(const QStringView imageFileName)
 	{
 		m_specialNode = true;
 
 		const auto [isCover, body] = [&]() -> std::pair<bool, QByteArray> {
 			try
 			{
-				const auto it = m_covers.find(imageFileName);
+				const auto it = m_covers.find(imageFileName.toString());
 				if (it == m_covers.end())
 					return {};
 
@@ -344,10 +344,10 @@ private:
 		m_covers.clear();
 	}
 
-	void WriteImage(const QString& name, const bool isCover, const QByteArray& body)
+	void WriteImage(const QStringView name, const bool isCover, const QByteArray& body)
 	{
 		if (const auto [bytes, mediaType] = RecodeImage(isCover, m_imageProcessing, body); !bytes.isEmpty())
-			m_writer.WriteStartElement(BINARY).WriteAttribute(ID, name).WriteAttribute(CONTENT_TYPE, mediaType).WriteCharacters(QString::fromUtf8(bytes.toBase64())).WriteEndElement();
+			m_writer.WriteStartElement(BINARY).WriteAttribute(ID, name).WriteAttribute(CONTENT_TYPE, QString(mediaType)).WriteCharacters(QString::fromUtf8(bytes.toBase64())).WriteEndElement();
 	}
 
 private:

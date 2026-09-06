@@ -8,9 +8,8 @@
 #include <xercesc/sax/InputSource.hpp>
 #include <xercesc/util/BinInputStream.hpp>
 
-#include "fnd/ScopedCall.h"
-
 #include "Initializer.h"
+#include "QtTypes.h"
 #include "XmlAttributes.h"
 #include "log.h"
 
@@ -30,10 +29,10 @@ public:
 	}
 
 private: // SaxParser::Attributes
-	QString GetAttribute(const QString& key) const override
+	QStringView GetAttribute(const QStringView key) const override
 	{
-		if (const auto value = m_attributes->getValue(key.toStdU16String().data()))
-			return QString::fromStdU16String(value);
+		if (const auto value = m_attributes->getValue(key.utf16()))
+			return value;
 		return {};
 	}
 
@@ -42,16 +41,16 @@ private: // SaxParser::Attributes
 		return m_attributes->getLength();
 	}
 
-	QString GetName(const size_t index) const override
+	QStringView GetName(const size_t index) const override
 	{
 		assert(index < GetCount());
-		return QString::fromStdU16String(m_attributes->getName(index));
+		return m_attributes->getName(index);
 	}
 
-	QString GetValue(const size_t index) const override
+	QStringView GetValue(const size_t index) const override
 	{
 		assert(index < GetCount());
-		return QString::fromStdU16String(m_attributes->getValue(index));
+		return m_attributes->getValue(index);
 	}
 
 private:
@@ -63,39 +62,45 @@ class XmlStack
 public:
 	void Push(const QStringView tag) //-V801
 	{
-		m_data.push_back(tag.toString());
-		m_key.reset();
+		const auto lastSize = m_stack.back();
+		m_stack.push_back(lastSize + tag.size() + 1);
+		if (m_buffer.size() >= m_stack.back())
+		{
+			m_buffer[lastSize] = '/';
+			std::ranges::copy(tag, m_buffer.begin() + lastSize + 1);
+		}
+		else
+		{
+			m_buffer.truncate(lastSize);
+			m_buffer.append('/').append(tag);
+		}
 	}
 
-	void Pop(const QStringView tag) //-V801
+	void Pop([[maybe_unused]] const QStringView tag) //-V801
 	{
-		assert(!m_data.isEmpty());
-		if (tag != m_data.back())
-			return;
+		[[maybe_unused]] const auto to = m_stack.back();
+		m_stack.pop_back();
+		[[maybe_unused]] const auto        from = m_stack.back() + 1;
+		[[maybe_unused]] const QStringView buffered { m_buffer.begin() + from, m_buffer.begin() + to };
 
-		m_data.pop_back();
-		m_key.reset();
+		assert(tag == buffered);
 	}
 
-	const QString& ToString() const
+	QStringView ToString() const
 	{
-		if (!m_key)
-			m_key = m_data.join('/');
-
-		return *m_key;
+		return QStringView { std::next(m_buffer.begin()), std::next(m_buffer.begin(), m_stack.back()) };
 	}
 
 private:
-	mutable std::optional<QString> m_key;
-	QStringList                    m_data;
+	QString                  m_buffer;
+	std::vector<qsizetype_t> m_stack { 0 };
 };
 
 class BinInputStream final : public xercesc_3_3::BinInputStream
 {
 public:
-	BinInputStream(QIODevice& source, const int64_t maxChunkSize)
+	explicit BinInputStream(QIODevice& source)
 		: m_source(source)
-		, m_maxChunkSize(maxChunkSize)
 	{
 	}
 
@@ -122,20 +127,19 @@ private: // xercesc::BinInputStream
 
 	XMLSize_t readBytes(XMLByte* const toFill, const XMLSize_t maxToRead) override
 	{
-		return m_stopped ? 0 : m_source.read(reinterpret_cast<char*>(toFill), std::min(static_cast<int64_t>(maxToRead), m_maxChunkSize));
+		return m_stopped ? 0 : m_source.read(reinterpret_cast<char*>(toFill), static_cast<int64_t>(maxToRead));
 	}
 
 private:
-	QIODevice&    m_source;
-	const int64_t m_maxChunkSize;
-	bool          m_stopped { false };
+	QIODevice& m_source;
+	bool       m_stopped { false };
 };
 
 class InputSource final : public xercesc::InputSource
 {
 public:
-	InputSource(QIODevice& source, const int64_t maxChunkSize)
-		: m_binInputStream(new BinInputStream(source, maxChunkSize))
+	InputSource(QIODevice& source)
+		: m_binInputStream(new BinInputStream(source))
 	{
 	}
 
@@ -159,12 +163,12 @@ private:
 	BinInputStream* m_binInputStream;
 };
 
-class IDeclHandler
+class IDeclHandler // NOLINT(cppcoreguidelines-special-member-functions)
 {
 public:
 	virtual ~IDeclHandler() = default;
 
-	virtual void XMLDecl(const XMLCh* const versionStr, const XMLCh* const encodingStr, const XMLCh* const standaloneStr, const XMLCh* const actualEncodingStr) = 0;
+	virtual void XMLDecl(const XMLCh* versionStr, const XMLCh* encodingStr, const XMLCh* standaloneStr, const XMLCh* actualEncodingStr) = 0;
 };
 
 class SaxHandler final
@@ -181,24 +185,22 @@ public:
 private: // xercesc::DocumentHandler
 	void processingInstruction(const XMLCh* const target, const XMLCh* const data) override
 	{
-		ProcessCharacters();
 		if (m_inputSource.IsStopped())
 			return;
 
-		if (!m_parser.OnProcessingInstruction(QString::fromStdU16String(target), QString::fromStdU16String(data)))
+		if (!m_parser.OnProcessingInstruction(QStringView { target }, QStringView { data }))
 			m_inputSource.SetStopped(true);
 	}
 
 	void startElement(const XMLCh* const name, xercesc::AttributeList& args) override
 	{
-		ProcessCharacters();
 		if (m_inputSource.IsStopped())
 			return;
 
 		m_stack.Push(name);
-		const auto& key = m_stack.ToString();
+		const auto key = m_stack.ToString();
 		m_attributes.SetAttributeList(args);
-		if (!m_parser.OnStartElement(QString::fromStdU16String(name), key, m_attributes))
+		if (!m_parser.OnStartElement(QStringView { name }, key, m_attributes))
 			m_inputSource.SetStopped(true);
 	}
 
@@ -207,9 +209,7 @@ private: // xercesc::DocumentHandler
 		if (m_inputSource.IsStopped())
 			return;
 
-		ProcessCharacters();
-
-		if (const auto& key = m_stack.ToString(); !m_parser.OnEndElement(QString::fromStdU16String(name), key))
+		if (const auto key = m_stack.ToString(); !m_parser.OnEndElement(QStringView { name }, key))
 			m_inputSource.SetStopped(true);
 
 		m_stack.Pop(name);
@@ -217,11 +217,11 @@ private: // xercesc::DocumentHandler
 
 	void characters(const XMLCh* const chars, const XMLSize_t length) override
 	{
-		if (m_inputSource.IsStopped())
+		if (m_inputSource.IsStopped() || length == 0)
 			return;
 
-		if (length != 0)
-			m_characters.append(QString::fromStdU16String(chars));
+		if (const auto key = m_stack.ToString(); !m_parser.OnCharacters(key, QStringView { chars, chars + length }))
+			m_inputSource.SetStopped(true);
 	}
 
 private: // xercesc::ErrorHandler
@@ -258,24 +258,7 @@ private: // IDeclHandler
 		if (m_inputSource.IsStopped())
 			return;
 
-		if (!m_parser.OnXMLDecl(QString::fromStdU16String(versionStr), QString::fromStdU16String(encodingStr), QString::fromStdU16String(standaloneStr), QString::fromStdU16String(actualEncodingStr)))
-			m_inputSource.SetStopped(true);
-	}
-
-private:
-	void ProcessCharacters()
-	{
-		if (m_inputSource.IsStopped())
-			return;
-
-		ScopedCall clearGuard([&] {
-			m_characters.clear();
-		});
-
-		if (m_characters.simplified().isEmpty())
-			return;
-
-		if (const auto& key = m_stack.ToString(); !m_parser.OnCharacters(key, m_characters))
+		if (!m_parser.OnXMLDecl(QStringView { versionStr }, QStringView { encodingStr }, QStringView { standaloneStr }, QStringView { actualEncodingStr }))
 			m_inputSource.SetStopped(true);
 	}
 
@@ -285,7 +268,6 @@ private:
 
 	SaxParser&   m_parser;
 	InputSource& m_inputSource;
-	QString      m_characters;
 };
 
 class SAXParserImpl : public xercesc::SAXParser
@@ -312,11 +294,11 @@ private:
 class SaxParser::Impl
 {
 public:
-	Impl(SaxParser& self, QIODevice& stream, const int64_t maxChunkSize)
+	Impl(SaxParser& self, QIODevice& stream)
 		: m_self(self)
-		, m_inputSource(stream, maxChunkSize)
+		, m_inputSource(stream)
 	{
-		m_saxParser.setValidationScheme(xercesc::SAXParser::Val_Auto);
+		m_saxParser.setValidationScheme(xercesc::SAXParser::Val_Never);
 		m_saxParser.setDoNamespaces(false);
 		m_saxParser.setDoSchema(false);
 		m_saxParser.setHandleMultipleImports(true);
@@ -340,8 +322,8 @@ private:
 	InputSource            m_inputSource;
 };
 
-SaxParser::SaxParser(QIODevice& stream, const int64_t maxChunkSize)
-	: m_impl(*this, stream, maxChunkSize)
+SaxParser::SaxParser(QIODevice& stream)
+	: m_impl(*this, stream)
 {
 }
 
@@ -357,27 +339,27 @@ bool SaxParser::IsLastItemProcessed() const noexcept
 	return m_processed;
 }
 
-bool SaxParser::OnProcessingInstruction(const QString& /*target*/, const QString& /*data*/)
+bool SaxParser::OnProcessingInstruction(QStringView /*target*/, QStringView /*data*/)
 {
 	return true;
 }
 
-bool SaxParser::OnXMLDecl(const QString& /*versionStr*/, const QString& /*encodingStr*/, const QString& /*standaloneStr*/, const QString& /*actualEncodingStr*/)
+bool SaxParser::OnXMLDecl(QStringView /*versionStr*/, QStringView /*encodingStr*/, QStringView /*standaloneStr*/, QStringView /*actualEncodingStr*/)
 {
 	return true;
 }
 
-bool SaxParser::OnStartElement(const QString& /*name*/, const QString& /*path*/, const XmlAttributes& /*attributes*/)
+bool SaxParser::OnStartElement(QStringView /*name*/, QStringView /*path*/, const XmlAttributes& /*attributes*/)
 {
 	return true;
 }
 
-bool SaxParser::OnEndElement(const QString& /*name*/, const QString& /*path*/)
+bool SaxParser::OnEndElement(QStringView /*name*/, QStringView /*path*/)
 {
 	return true;
 }
 
-bool SaxParser::OnCharacters(const QString& /*path*/, const QString& /*value*/)
+bool SaxParser::OnCharacters(QStringView /*path*/, QStringView /*value*/)
 {
 	return true;
 }
