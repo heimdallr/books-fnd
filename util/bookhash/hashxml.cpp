@@ -40,8 +40,7 @@ private: // HashParser::IObserver
 		HashParser::Section::Ptr,
 		size_t /*size*/,
 		uint64_t /*simHash*/,
-		TextHistogram textHistogram,
-		QStringList   annotation
+		TextHistogram textHistogram
 	) override
 	{
 		if (file != m_file)
