@@ -187,9 +187,11 @@ private: // Util::SaxParser
 			m_currentSection = m_currentSection->parent;
 			assert(m_currentSection);
 		}
-		else if (path == ANNOTATION)
+		else if (path.startsWith(ANNOTATION))
 		{
-			if (path != ANNOTATION)
+			if (m_annotation.endsWith(QString("<%1>").arg(name)))
+				m_annotation.chop(name.length() + 2);
+			else
 				m_annotation.append(QString("</%1>").arg(name));
 		}
 
@@ -215,7 +217,8 @@ private: // Util::SaxParser
 			return true;
 		}
 
-		m_annotation.append(value);
+		if (path.startsWith(ANNOTATION))
+			m_annotation.append(value);
 
 		auto valueCopy = value.toString();
 

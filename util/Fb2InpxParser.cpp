@@ -130,7 +130,9 @@ private: // SaxParser
 
 		if (path.startsWith(ANNOTATION))
 		{
-			if (path != ANNOTATION)
+			if (m_data.annotation.endsWith(QString("<%1>").arg(name)))
+				m_data.annotation.chop(name.length() + 2);
+			else
 				m_data.annotation.append(QString("</%1>").arg(name));
 			return true;
 		}

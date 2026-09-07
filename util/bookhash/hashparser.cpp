@@ -119,7 +119,12 @@ private: // Util::SaxParser
 		else if (path.startsWith(ANNOTATION))
 		{
 			if (path != ANNOTATION)
-				m_annotation.append(QString("</%1>").arg(name));
+			{
+				if (m_annotation.endsWith(QString("<%1>").arg(name)))
+					m_annotation.chop(name.length() + 2);
+				else
+					m_annotation.append(QString("</%1>").arg(name));
+			}
 		}
 
 		return true;
@@ -131,7 +136,7 @@ private: // Util::SaxParser
 			m_cover.hash = value.toString();
 		else if (path == IMAGE)
 			m_images.back().hash = value.toString();
-		else if (path == ANNOTATION)
+		else if (path.startsWith(ANNOTATION))
 			m_annotation.append(value);
 		return true;
 	}
