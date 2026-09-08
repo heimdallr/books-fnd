@@ -1,5 +1,6 @@
 #pragma once
 
+#include <expected>
 #include <memory>
 
 #include <QStringList>
@@ -31,6 +32,8 @@ public:
 
 	[[nodiscard]] virtual std::unique_ptr<IFile>                  Read(const QString& filename) const = 0;
 	[[nodiscard]] virtual std::unordered_map<QString, QByteArray> ReadAll() const                     = 0;
+
+	[[nodiscard]] virtual std::expected<void, QString> Test() const noexcept = 0;
 
 	virtual void SetProperty(PropertyId id, QVariant value)     = 0;
 	virtual bool Write(const IZipFileProvider& zipFileProvider) = 0;

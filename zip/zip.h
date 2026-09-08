@@ -1,5 +1,6 @@
 #pragma once
 
+#include <expected>
 #include <memory>
 
 #include "zip/interface/ProgressCallback.h"
@@ -52,6 +53,8 @@ public:
 
 	[[nodiscard]] std::unique_ptr<Stream>                 Read(const QString& filename) const;
 	[[nodiscard]] std::unordered_map<QString, QByteArray> ReadAll() const;
+
+	[[nodiscard]] std::expected<void, QString> Test() const noexcept;
 
 	void SetProperty(PropertyId id, QVariant value);
 	bool Write(const IZipFileProvider& zipFileProvider);

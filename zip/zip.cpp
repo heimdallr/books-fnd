@@ -206,6 +206,11 @@ public:
 		return m_zip->ReadAll();
 	}
 
+	std::expected<void, QString> Test() const noexcept
+	{
+		return m_zip->Test();
+	}
+
 	bool Write(const IZipFileProvider& zipFileProvider)
 	{
 		return m_zip->Write(zipFileProvider);
@@ -281,6 +286,11 @@ std::unique_ptr<Stream> Zip::Read(const QString& filename) const
 std::unordered_map<QString, QByteArray> Zip::ReadAll() const
 {
 	return m_impl->ReadAll();
+}
+
+std::expected<void, QString> Zip::Test() const noexcept
+{
+	return m_impl->Test();
 }
 
 QStringList Zip::GetFileNameList() const

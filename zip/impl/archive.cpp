@@ -277,6 +277,21 @@ private: // IZip
 		     | std::ranges::to<std::unordered_map>();
 	}
 
+	std::expected<void, QString> Test() const noexcept override
+	try
+	{
+		m_archive->test();
+		return {};
+	}
+	catch (const bit7z::BitException& ex)
+	{
+		return std::unexpected(QString { ex.what() });
+	}
+	catch (...)
+	{
+		return std::unexpected(QString { "unknown archive test error" });
+	}
+
 protected:
 	std::unique_ptr<bit7z::BitArchiveReader> m_archive;
 };
@@ -362,6 +377,12 @@ protected:
 	{
 		if (const auto* inputArchive = m_archive->toInputArchive())
 			m_files = CreateFileList(*inputArchive);
+	}
+
+	std::expected<void, QString> Test() const noexcept override
+	{
+		assert(false && "cannot test writable archive");
+		return {};
 	}
 
 private:
