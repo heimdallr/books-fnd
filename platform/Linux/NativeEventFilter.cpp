@@ -41,7 +41,7 @@ private:
     static void termSignalHandler(int)
     {
         char a = 1;
-        (void)::write(sigFd[0], &a, sizeof(a));
+        std::ignore = ::write(sigFd[0], &a, sizeof(a));
     }
 
     void setupSignalHandlers()
@@ -59,7 +59,7 @@ private:
     {
         snRead->setEnabled(false);
         char tmp;
-        (void)::read(sigFd[1], &tmp, sizeof(tmp));
+        std::ignore = read(sigFd[1], &tmp, sizeof(tmp));
 
         m_onSignal();
 
