@@ -1,5 +1,9 @@
 #include "NativeEventFilter.h"
 
+#include <functional>
+
+#include "fnd/observable.h"
+
 #include <QCoreApplication>
 #include <QSocketNotifier>
 #include <QObject>
@@ -14,8 +18,9 @@ namespace
 
 class SignalHandler : public QObject {
 public:
-    explicit SignalHandler(QObject *parent = nullptr)
+    explicit SignalHandler(std::function<void()> onSignal, QObject *parent = nullptr)
         : QObject(parent)
+        , m_onSignal{std::move(onSignal)}
     {
         if (::socketpair(AF_UNIX, SOCK_STREAM, 0, sigFd) == -1)
             qFatal("Couldn't create socketpair");
@@ -32,6 +37,7 @@ public:
         ::close(sigFd[1]);
     }
 
+private:
     static void termSignalHandler(int)
     {
         char a = 1;
@@ -49,14 +55,13 @@ public:
         sigaction(SIGTERM, &action, nullptr);
     }
 
-private:
     void handleSignal()
     {
         snRead->setEnabled(false);
         char tmp;
         (void)::read(sigFd[1], &tmp, sizeof(tmp));
 
-        QCoreApplication::exit();
+        m_onSignal();
 
         snRead->setEnabled(true);
     }
@@ -64,6 +69,7 @@ private:
 private:
     static int sigFd[2];
     QSocketNotifier *snRead;
+    const std::function<void()> m_onSignal;
 };
 
 int SignalHandler::sigFd[2];
@@ -71,9 +77,12 @@ int SignalHandler::sigFd[2];
 }
 
 
-class NativeEventFilter::Impl
+class NativeEventFilter::Impl : public Observable<IObserver>
 {
-    SignalHandler m_signalHandler;
+    SignalHandler m_signalHandler{[this]{
+        qintptr_t result = 0;
+        Perform(&IObserver::OnQueryEndSession, &result);
+    }};
 };
 
 NativeEventFilter::NativeEventFilter(QCoreApplication& /*app*/)
@@ -82,10 +91,12 @@ NativeEventFilter::NativeEventFilter(QCoreApplication& /*app*/)
 
 NativeEventFilter::~NativeEventFilter() = default;
 
-void NativeEventFilter::Register(IObserver*)
+void NativeEventFilter::Register(IObserver* observer)
 {
+    m_impl->Register(observer);
 }
 
-void NativeEventFilter::Unregister(IObserver*)
+void NativeEventFilter::Unregister(IObserver* observer)
 {
+    m_impl->Unregister(observer);
 }
