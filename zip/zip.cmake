@@ -7,7 +7,7 @@ AddTarget(zip	shared_lib
     INCLUDE_DIRECTORIES
         "${EXT_ROOT}/bit7z/include"
 	LINK_LIBRARIES
-		Qt${QT_MAJOR_VERSION}::Gui
+		Qt${QT_MAJOR_VERSION}::Core
         bit7z
 	LINK_TARGETS
 		fnd
