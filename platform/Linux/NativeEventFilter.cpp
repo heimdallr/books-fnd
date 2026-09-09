@@ -35,7 +35,7 @@ public:
     static void termSignalHandler(int)
     {
         char a = 1;
-        ::write(sigFd[0], &a, sizeof(a));
+        (void)::write(sigFd[0], &a, sizeof(a));
     }
 
     void setupSignalHandlers()
@@ -54,7 +54,7 @@ private:
     {
         snRead->setEnabled(false);
         char tmp;
-        ::read(sigFd[1], &tmp, sizeof(tmp));
+        (void)::read(sigFd[1], &tmp, sizeof(tmp));
 
         QCoreApplication::exit();
 
