@@ -5,7 +5,7 @@
 #include <QBuffer>
 #include <QDir>
 #include <QFileInfo>
-#include <QPixmap>
+#include <QImage>
 
 #include "fnd/EnumBitmask.h"
 #include "fnd/IsOneOf.h"
@@ -77,7 +77,7 @@ std::pair<QByteArray, const char*> RecodeImage(const bool isCover, const ImagePr
 	if (body.isEmpty() || (isCover && !!(imageProcessing & ImageProcessing::RemoveCovers)) || (!isCover && !!(imageProcessing & ImageProcessing::RemoveImages)))
 		return {};
 
-	auto image = Decode(body).toImage();
+	auto image = Decode(body);
 	if (image.isNull())
 		return {};
 

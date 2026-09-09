@@ -2,7 +2,7 @@
 
 // clang-format off
 #include <QBuffer>
-#include <QPixmap>
+#include <QImage>
 #include "QtTypes.h"
 
 #include "canny.h"
@@ -59,11 +59,10 @@ const CImg<float> MEAN_FILTER(7, 7, 1, 1, 1);
 
 uint64_t GetPHash(const ImageHashItem& item)
 {
-	auto pixmap = Decode(item.body);
-	if (pixmap.isNull())
+	auto image = Decode(item.body);
+	if (image.isNull())
 		return 0;
 
-	auto       image    = pixmap.toImage();
 	const auto hasAlpha = image.pixelFormat().alphaUsage() == QPixelFormat::UsesAlpha;
 	image.convertTo(hasAlpha ? QImage::Format_RGBA8888 : QImage::Format_Grayscale8);
 

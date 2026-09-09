@@ -10,7 +10,6 @@
 class QByteArray;
 class QImage;
 class QIODevice;
-class QPixmap;
 class QString;
 
 namespace HomeCompa

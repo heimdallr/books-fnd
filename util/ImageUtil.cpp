@@ -1,7 +1,7 @@
 #include "ImageUtil.h"
 
 #include <QBuffer>
-#include <QPixmap>
+#include <QImage>
 
 #include "jxl/jxl.h"
 
@@ -11,7 +11,7 @@ namespace HomeCompa::Util
 namespace
 {
 
-using Decoder = QPixmap (*)(const QByteArray&);
+using Decoder = QImage (*)(const QByteArray&);
 using Recoder = std::pair<QByteArray, const char*> (*)(const QByteArray& bytes, const char* type);
 
 std::pair<QByteArray, const char*> QtEncoder(const QImage& image, const QString& format)
@@ -43,18 +43,17 @@ std::pair<QByteArray, const char*> QtEncoder(const QImage& image)
 	return result;
 }
 
-QPixmap QtDecoder(const QByteArray& data)
+QImage QtDecoder(const QByteArray& data)
 {
-	if (QPixmap pixmap; pixmap.loadFromData(data))
-		return pixmap;
+	if (QImage image; image.loadFromData(data))
+		return image;
 
 	return {};
 }
 
-QPixmap JxlDecoder(const QByteArray& data)
+QImage JxlDecoder(const QByteArray& data)
 {
-	auto image = JXL::Decode(data);
-	return QPixmap::fromImage(std::move(image));
+	return JXL::Decode(data);
 }
 
 std::pair<QByteArray, const char*> StubRecoder(const QByteArray& data, const char* type)
@@ -64,7 +63,7 @@ std::pair<QByteArray, const char*> StubRecoder(const QByteArray& data, const cha
 
 std::pair<QByteArray, const char*> QtRecoder(const QByteArray& data, const char*)
 {
-	return QtEncoder(QtDecoder(data).toImage());
+	return QtEncoder(QtDecoder(data));
 }
 
 std::pair<QByteArray, const char*> JxlRecoder(const QByteArray& data, const char*)
@@ -89,7 +88,7 @@ constexpr std::pair<const char*, ImageFormatDescription> SIGNATURES[] {
 
 } // namespace
 
-QPixmap Decode(const QByteArray& bytes)
+QImage Decode(const QByteArray& bytes)
 {
 	assert(!bytes.isEmpty());
 	const auto it      = std::ranges::find_if(SIGNATURES, [&](const auto& item) {
