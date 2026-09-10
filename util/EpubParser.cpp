@@ -7,6 +7,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
+#include "fnd/IsOneOf.h"
 #include "fnd/StrUtil.h"
 
 #include "xml/SaxParser.h"
@@ -91,7 +92,7 @@ private:
 	QString m_opfPath;
 };
 
-class HtmlParser final : SaxParser
+class HtmlParserImagePathFinder final : SaxParser
 {
 public:
 	static QString GetImagePath(std::unordered_map<QString, QByteArray>& zipData, const QString& htmlPath)
@@ -109,7 +110,7 @@ public:
 			QBuffer stream(&bytes);
 			stream.open(QIODevice::ReadOnly);
 
-			HtmlParser parser(stream);
+			HtmlParserImagePathFinder parser(stream);
 			return parser.m_imagePath.isEmpty() ? QString {} : CleanPath(QFileInfo(htmlPath).dir().path() + "/", parser.m_imagePath);
 		}
 		catch (const std::exception& ex)
@@ -124,7 +125,7 @@ public:
 	}
 
 private:
-	explicit HtmlParser(QIODevice& stream)
+	explicit HtmlParserImagePathFinder(QIODevice& stream)
 		: SaxParser(stream)
 	{
 		Parse();
@@ -160,6 +161,30 @@ private: // SaxParser
 
 private:
 	QString m_imagePath;
+};
+
+struct HtmlParserSymbolCounter final : private SaxParser
+{
+	HtmlParserSymbolCounter(QIODevice& input, ParseResult& result)
+		: SaxParser(input)
+		, m_result { result }
+	{
+		Parse();
+	}
+
+private: // SaxParser
+	bool OnCharacters(const QStringView path, const QStringView value) override
+	{
+		if (!path.startsWith(u"html/body"))
+			return true;
+
+		m_result.textSize  += value.length();
+		m_result.wordCount += value.split(' ', Qt::SkipEmptyParts).size();
+		return true;
+	}
+
+private:
+	ParseResult& m_result;
 };
 
 QString RemoveNS(const QString& path)
@@ -203,8 +228,11 @@ class OpfParser final : SaxParser
 	};
 
 public:
-	static ParseResult Parse(const Zip& zip, const Mode mode)
+	static ParseResult Parse(const Zip& zip, Mode mode)
 	{
+		if (!!(mode & Mode::TextsStatistics))
+			mode |= Mode::Texts;
+
 		auto zipData = zip.ReadAll();
 
 		const auto      opfPath = ContainerParser::GetOpfPath(zipData);
@@ -262,6 +290,18 @@ public:
 		if (!!(mode & Mode::Images))
 			ProcessImages(zipData, relativePath, parser, std::move(images), result);
 
+		if (!!(mode & Mode::TextsStatistics))
+		{
+			for (auto [id, body] : result.texts | std::views::filter([](const auto& item) {
+									   return EpubParser::IsEPubTextFile(item.id);
+								   }))
+			{
+				QBuffer buffer(&body);
+				buffer.open(QIODevice::ReadOnly);
+				[[maybe_unused]] const HtmlParserSymbolCounter counter(buffer, result);
+			}
+		}
+
 		if (!result.texts.empty())
 		{
 			while (true)
@@ -305,7 +345,7 @@ public:
 		const auto findCover = [&](const QString& path) {
 			auto cleanPath = CleanPath(relativePath, path);
 			if (cleanPath.endsWith(".xhtml", Qt::CaseInsensitive) || cleanPath.endsWith(".html", Qt::CaseInsensitive))
-				cleanPath = HtmlParser::GetImagePath(zipData, cleanPath);
+				cleanPath = HtmlParserImagePathFinder::GetImagePath(zipData, cleanPath);
 			if (cleanPath.isEmpty())
 				return;
 			if (const auto it = std::ranges::find(
@@ -540,6 +580,14 @@ ImageIndex GetImageIndex(const QByteArray& bytes)
 			   return std::make_pair(item[Epub::IMAGE_INDEX_ID].toString(), item[Epub::IMAGE_INDEX_NUM].toInt());
 		   })
 	     | std::ranges::to<std::vector>();
+}
+
+bool IsEPubTextFile(const QStringView fileName)
+{
+	constexpr const char16_t* TEXT_EXTENSIONS[] { u".htm", u".html", u".xhtml", u".xml" };
+	return std::ranges::any_of(TEXT_EXTENSIONS, [&](const auto* ext) {
+		return fileName.endsWith(ext, Qt::CaseInsensitive);
+	});
 }
 
 } // namespace HomeCompa::Util::EpubParser

@@ -54,15 +54,13 @@ class EpubParserImpl final : public BookHash::IParser
 {
 public:
 	explicit EpubParserImpl(QIODevice& stream)
-		: m_result { EpubParser::Parse(stream, CommonParser::Mode::All) }
+		: m_result { EpubParser::Parse(stream, CommonParser::Mode::Images | CommonParser::Mode::Texts) }
 	{
 	}
 
 private: // BookHash::IParser
 	HashParseResult GetResult() override
 	{
-		static constexpr const char* textExt[] { ".htm", ".html", ".xhtml", ".xml" };
-
 		QCryptographicHash                  md5 { QCryptographicHash::Md5 };
 		QStringList                         sections;
 		std::unordered_map<QString, size_t> hist;
@@ -70,9 +68,7 @@ private: // BookHash::IParser
 		std::unordered_set<QString> linkedImage;
 
 		for (auto [id, body] : m_result.texts | std::views::filter([](const auto& item) {
-								   return std::ranges::any_of(textExt, [&](const char* ext) {
-									   return item.id.endsWith(ext, Qt::CaseInsensitive);
-								   });
+								   return EpubParser::IsEPubTextFile(item.id);
 							   }))
 		{
 #ifdef ADDITIONAL_LOG_ENABLED

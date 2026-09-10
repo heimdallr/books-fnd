@@ -15,10 +15,10 @@ struct ContentItem
 
 enum class Mode
 {
-	None   = 0,
-	Images = 1 << 0,
-	Texts  = 1 << 1,
-	All    = Images | Texts
+	None            = 0,
+	Images          = 1 << 0,
+	Texts           = 1 << 1,
+	TextsStatistics = 1 << 2,
 };
 
 struct ParseResult
@@ -32,6 +32,8 @@ struct ParseResult
 	bool                     coverExists { false };
 	std::vector<ContentItem> images;
 	std::vector<ContentItem> texts;
+	size_t                   textSize { 0 };
+	size_t                   wordCount { 0 };
 };
 
 QStringList ParseAuthor(const QString& str);
