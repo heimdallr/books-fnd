@@ -559,6 +559,9 @@ ParseResult Parse(const Zip& zip, const QString& fileName, const Mode mode)
 
 ImageIndex GetImageIndex(const QByteArray& bytes)
 {
+	if (bytes.isEmpty())
+		return {};
+
 	QJsonParseError parseError;
 	const auto      doc = QJsonDocument::fromJson(bytes, &parseError);
 	if (parseError.error != QJsonParseError::NoError)
