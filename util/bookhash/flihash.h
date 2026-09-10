@@ -3,6 +3,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include <QSize>
 #include <QStringList>
 
 #include "fnd/NonCopyMovable.h"
@@ -35,6 +36,10 @@ struct ImageHashItem
 	QByteArray body;
 	QString    hash;
 	uint64_t   pHash { 0 };
+	size_t     encodedSize { 0 };
+	size_t     decodedSize { 0 };
+	QSize      size;
+	bool       hasAlpha;
 };
 
 using ImageHashItems = std::vector<ImageHashItem>;

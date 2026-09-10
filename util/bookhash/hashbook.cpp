@@ -57,20 +57,24 @@ const CImg<float> DCT   = GetDctMatrix(32);
 const CImg<float> DCT_T = DCT.get_transpose();
 const CImg<float> MEAN_FILTER(7, 7, 1, 1, 1);
 
-uint64_t GetPHash(const ImageHashItem& item)
+void GetPHash(ImageHashItem& item)
 {
-	auto image = Decode(item.body);
+	item.encodedSize = item.body.size();
+	auto image       = Decode(item.body);
 	if (image.isNull())
-		return 0;
+		return;
 
-	const auto hasAlpha = image.pixelFormat().alphaUsage() == QPixelFormat::UsesAlpha;
-	image.convertTo(hasAlpha ? QImage::Format_RGBA8888 : QImage::Format_Grayscale8);
+	item.size = image.size();
+
+	item.decodedSize = image.bytesPerLine() * image.height();
+	item.hasAlpha = image.pixelFormat().alphaUsage() == QPixelFormat::UsesAlpha;
+	image.convertTo(item.hasAlpha ? QImage::Format_RGBA8888 : QImage::Format_Grayscale8);
 
 	auto          data = new uint8_t[static_cast<size_t>(image.width()) * image.height()];
 	CImg<uint8_t> img(data, image.width(), image.height(), 1, 1, true);
 	img._is_shared = false;
 
-	if (hasAlpha)
+	if (item.hasAlpha)
 	{
 		auto* dst = img.data();
 		for (auto h = 0, szh = image.height(), szw = image.width(); h < szh; ++h)
@@ -104,7 +108,7 @@ uint64_t GetPHash(const ImageHashItem& item)
 	});
 #endif
 
-	return std::accumulate(dct._data, dct._data + 64, uint64_t { 0 }, [&, median = dct.median()](const uint64_t init, const float value) {
+	item.pHash = std::accumulate(dct._data, dct._data + 64, uint64_t { 0 }, [&, median = dct.median()](const uint64_t init, const float value) {
 		auto result = init << 1;
 		if (value > median)
 			result |= 1;
@@ -223,7 +227,7 @@ void SetHash(ImageHashItem& item, QCryptographicHash& cryptographicHash)
 	cryptographicHash.reset();
 	cryptographicHash.addData(item.body);
 	item.hash  = QString::fromUtf8(cryptographicHash.result().toHex());
-	item.pHash = GetPHash(item);
+	GetPHash(item);
 	item.body.clear();
 #ifdef ADDITIONAL_LOG_ENABLED
 	PLOGV << item.file;
