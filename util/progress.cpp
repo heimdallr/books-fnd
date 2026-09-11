@@ -34,7 +34,7 @@ Progress::Progress(const size_t total, std::string name)
 	, m_total { total }
 	, m_name { std::move(name) }
 {
-	PLOGI << m_name << " started";
+	PLOGI << m_name << " started, total: " << m_total;
 }
 
 Progress::~Progress()
