@@ -10,6 +10,7 @@ class QString;
 namespace HomeCompa::Util
 {
 
+UTIL_EXPORT std::vector<QString> UniqTitle(QString value);
 UTIL_EXPORT QString& SimplifyTitle(QString& value);
 UTIL_EXPORT QString& PrepareTitle(QString& value);
 UTIL_EXPORT void     AppendTitle(QString& title, const QString& str, const QString& delimiter = " ");

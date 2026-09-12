@@ -9,6 +9,11 @@
 namespace HomeCompa::Util
 {
 
+std::vector<QString> UniqTitle(QString value)
+{
+	return SimplifyTitle(PrepareTitle(value)).split(' ', Qt::SkipEmptyParts) | std::views::as_rvalue | std::ranges::to<std::vector>();
+}
+
 QString& SimplifyTitle(QString& value)
 {
 	RemoveIf(value, [](const QChar ch) {
