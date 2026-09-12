@@ -11,6 +11,11 @@
 
 #include "export/util.h"
 
+namespace HomeCompa::DB
+{
+class IDatabase;
+}
+
 namespace HomeCompa::Util
 {
 
@@ -39,7 +44,8 @@ struct ImageHashItem
 	size_t     encodedSize { 0 };
 	size_t     decodedSize { 0 };
 	QSize      size;
-	bool       hasAlpha;
+	bool       linked { true };
+	bool       hasAlpha { false };
 };
 
 using ImageHashItems = std::vector<ImageHashItem>;
@@ -72,6 +78,7 @@ private:
 };
 
 UTIL_EXPORT BookHashItem GetHash(const QString& path, const QString& file);
+UTIL_EXPORT BookHashItem GetHash(DB::IDatabase& db, const QString& folder, const QString& file);
 UTIL_EXPORT std::ostream& operator<<(std::ostream& stream, const BookHashItem& bookHashItem);
 UTIL_EXPORT QByteArray    Serialize(const BookHashItem& bookHashItem);
 UTIL_EXPORT BookHashItem  Deserialize(const QByteArray& bytes);

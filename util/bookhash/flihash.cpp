@@ -16,7 +16,7 @@
 
 #include "Constant.h"
 #include "hashbook.h"
-#include "hashxml.h"
+#include "hashdb.h"
 #include "log.h"
 #include "zip.h"
 
@@ -56,28 +56,6 @@ constexpr auto KEY_COUNT     = "count";
 
 using ImageHash   = std::pair<uint64_t, QString>;
 using ImageHashes = std::unordered_multimap<uint64_t, QString>;
-
-BookHashItem GetHash_7z(const QString& path, const QString& file)
-{
-	try
-	{
-		QCryptographicHash md5 { QCryptographicHash::Md5 };
-		auto               bookHashItem = BookHashItemProvider(path).Get(file);
-		ParseBookHash(bookHashItem, md5);
-		return bookHashItem;
-	}
-	catch (const std::exception& ex)
-	{
-		PLOGE << ex.what();
-	}
-
-	return {};
-}
-
-BookHashItem GetHash_xml(const QString& path, const QString& file)
-{
-	return ParseXmlHash(path, file);
-}
 
 std::unique_ptr<Zip> GetZip(const QFileInfo& fileInfo, const char* type)
 {
@@ -200,14 +178,16 @@ CompareResult CompareImages(QStringList& result, const ImageHashItems& lhs, cons
 	{
 		if (lIt->hash < rIt->hash)
 		{
-			lpHashes.emplace(lIt->pHash, lIt->file);
+			if (lIt->linked)
+				lpHashes.emplace(lIt->pHash, lIt->file);
 			++lIt;
 			continue;
 		}
 
 		if (lIt->hash > rIt->hash)
 		{
-			rpHashes.emplace(rIt->pHash, rIt->file);
+			if (rIt->linked)
+				rpHashes.emplace(rIt->pHash, rIt->file);
 			++rIt;
 			continue;
 		}
@@ -219,8 +199,20 @@ CompareResult CompareImages(QStringList& result, const ImageHashItems& lhs, cons
 	const auto transform = [](const auto& item) {
 		return std::make_pair(item.pHash, item.file);
 	};
-	std::transform(lIt, lhs.cend(), std::inserter(lpHashes, lpHashes.end()), transform);
-	std::transform(rIt, rhs.cend(), std::inserter(rpHashes, rpHashes.end()), transform);
+	std::ranges::transform(
+		std::ranges::subrange(lIt, lhs.cend()) | std::views::filter([](const auto& item) {
+			return item.linked;
+		}),
+		std::inserter(lpHashes, lpHashes.end()),
+		transform
+	);
+	std::ranges::transform(
+		std::ranges::subrange(rIt, rhs.cend()) | std::views::filter([](const auto& item) {
+			return item.linked;
+		}),
+		std::inserter(rpHashes, rpHashes.end()),
+		transform
+	);
 
 	if (lpHashes.empty() && rpHashes.empty())
 		return (result << "images are equal"), CompareResult::None;
@@ -295,16 +287,25 @@ namespace HomeCompa::Util
 
 BookHashItem GetHash(const QString& path, const QString& file)
 {
-	static constexpr std::pair<const char*, BookHashItem (*)(const QString&, const QString&)> parsers[] {
-#define ITEM(NAME) { #NAME, &GetHash_##NAME }
-		ITEM(xml),
-#undef ITEM
-	};
+	try
+	{
+		QCryptographicHash md5 { QCryptographicHash::Md5 };
+		auto               bookHashItem = BookHashItemProvider(path).Get(file);
+		ParseBookHash(bookHashItem, md5);
+		bookHashItem.body.clear();
+		return bookHashItem;
+	}
+	catch (const std::exception& ex)
+	{
+		PLOGE << ex.what();
+	}
 
-	auto bookHashItem = FindSecond(parsers, QFileInfo(path).suffix().toLower().toStdString().data(), &GetHash_7z, PszComparer {})(path, file);
-	bookHashItem.body.clear();
+	return {};
+}
 
-	return bookHashItem;
+BookHashItem GetHash(DB::IDatabase& db, const QString& folder, const QString& file)
+{
+	return ParseDbHash(db, folder, file);
 }
 
 std::ostream& operator<<(std::ostream& stream, const BookHashItem& bookHashItem)
@@ -428,7 +429,6 @@ QStringList Compare(const BookHashItem& lhs, const BookHashItem& rhs)
 	QStringList result { QString("%1/%2 vs %3/%4:").arg(lhs.folder, lhs.file, rhs.folder, rhs.file) };
 
 	auto compareResult  = CompareTexts(result, lhs.parseResult, rhs.parseResult);
-	compareResult      |= CompareCovers(result, lhs.cover, rhs.cover);
 	compareResult      |= CompareImages(result, lhs.images, rhs.images);
 
 	result
