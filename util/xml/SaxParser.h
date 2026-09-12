@@ -45,7 +45,7 @@ protected:
 	{
 		m_processed       = true;
 		const auto it     = std::ranges::find_if(array, [&](const auto& item) {
-			return key == item.first;
+			return key.endsWith(item.first, Qt::CaseInsensitive);
 		});
 		const auto parser = it != std::end(array) ? it->second : &SaxParser::Stub<ARGS...>;
 		return std::invoke(parser, obj, std::cref(args)...);
