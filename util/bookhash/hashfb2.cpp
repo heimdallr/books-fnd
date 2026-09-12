@@ -222,10 +222,10 @@ private: // Util::SaxParser
 
 		auto valueCopy = value.toString();
 
-		PrepareTitle(valueCopy);
-
 		if (path == TITLE)
-			return (m_title = SimplifyTitle(valueCopy)), true;
+			return (m_title = std::move(valueCopy)), true;
+
+		PrepareTitle(valueCopy);
 
 		if (path.startsWith(BODY, Qt::CaseInsensitive))
 		{

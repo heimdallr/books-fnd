@@ -9,10 +9,8 @@
 namespace HomeCompa::Util
 {
 
-std::vector<QString> UniqTitle(QString value)
+namespace
 {
-	return SimplifyTitle(PrepareTitle(value)).split(' ', Qt::SkipEmptyParts) | std::views::as_rvalue | std::ranges::to<std::vector>();
-}
 
 QString& SimplifyTitle(QString& value)
 {
@@ -41,6 +39,13 @@ QString& SimplifyTitle(QString& value)
 	std::ranges::move(std::move(digits), std::back_inserter(split));
 
 	return value;
+}
+
+} // namespace
+
+std::vector<QString> UniqTitle(QString value)
+{
+	return SimplifyTitle(PrepareTitle(value)).split(' ', Qt::SkipEmptyParts) | std::views::as_rvalue | std::ranges::to<std::vector>();
 }
 
 QString& PrepareTitle(QString& value)
