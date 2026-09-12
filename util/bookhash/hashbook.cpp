@@ -187,7 +187,7 @@ private: // SaxParser
 	{
 		auto valueCopy = value.toString();
 
-		PrepareTitle(valueCopy);
+		Normalize(valueCopy);
 		for (auto&& word : valueCopy.split(' ', Qt::SkipEmptyParts))
 		{
 			UpdateHash(word);

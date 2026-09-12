@@ -225,7 +225,7 @@ private: // Util::SaxParser
 		if (path == TITLE)
 			return (m_title = std::move(valueCopy)), true;
 
-		PrepareTitle(valueCopy);
+		Normalize(valueCopy);
 
 		if (path.startsWith(BODY, Qt::CaseInsensitive))
 		{

@@ -45,10 +45,10 @@ QString& SimplifyTitle(QString& value)
 
 std::vector<QString> UniqTitle(QString value)
 {
-	return SimplifyTitle(PrepareTitle(value)).split(' ', Qt::SkipEmptyParts) | std::views::as_rvalue | std::ranges::to<std::vector>();
+	return SimplifyTitle(Normalize(value)).split(' ', Qt::SkipEmptyParts) | std::views::as_rvalue | std::ranges::to<std::vector>();
 }
 
-QString& PrepareTitle(QString& value)
+QString& Normalize(QString& value)
 {
 	static constexpr std::pair<char16_t, char16_t> replacementChar[] {
 		{ 0x0451, 0x0435 },

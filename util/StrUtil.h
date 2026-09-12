@@ -11,8 +11,8 @@ namespace HomeCompa::Util
 {
 
 UTIL_EXPORT std::vector<QString> UniqTitle(QString value);
-UTIL_EXPORT QString& PrepareTitle(QString& value);
-UTIL_EXPORT void     AppendTitle(QString& title, const QString& str, const QString& delimiter = " ");
+UTIL_EXPORT QString&             Normalize(QString& value);
+UTIL_EXPORT void                 AppendTitle(QString& title, const QString& str, const QString& delimiter = " ");
 
 template <typename T>
 T ToInteger(const QStringView value, T defaultValue = 0)

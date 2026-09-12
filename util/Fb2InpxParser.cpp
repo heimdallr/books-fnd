@@ -163,7 +163,7 @@ private: // SaxParser
 
 		{
 			auto valueCopy = value.toString();
-			PrepareTitle(valueCopy);
+			Normalize(valueCopy);
 			RemoveIf(valueCopy, [](const QChar ch) {
 				const auto category = ch.category();
 				return category < QChar::Letter_Lowercase || category > QChar::Letter_Other;
