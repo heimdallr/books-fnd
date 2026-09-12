@@ -84,32 +84,6 @@ CompareResult FromHammingDistance(const int hammingDistance) noexcept
 	return hammingDistance == 0 ? CompareResult::None : hammingDistance <= HAMMING_DISTANCE_THRESHOLD ? CompareResult::Images : CompareResult::All;
 }
 
-CompareResult CompareCovers(QStringList& result, const ImageHashItem& lhs, const ImageHashItem& rhs)
-{
-	if (lhs.hash == rhs.hash)
-	{
-		if (!lhs.hash.isEmpty())
-			result << "covers are equal";
-		return CompareResult::None;
-	}
-
-	if (lhs.hash.isEmpty())
-		return (result << QString("left: no cover")), CompareResult::Right;
-
-	if (rhs.hash.isEmpty())
-		return (result << QString("right: no cover")), CompareResult::Left;
-
-	const auto hammingDistance    = std::popcount(lhs.pHash ^ rhs.pHash);
-	const auto imageCompareResult = FromHammingDistance(hammingDistance);
-	result << QString("covers are %4: %1 vs %2, Hamming distance: %3")
-				  .arg(lhs.pHash, 16, 16, QChar { '0' })
-				  .arg(rhs.pHash, 16, 16, QChar { '0' })
-				  .arg(hammingDistance)
-				  .arg(imageCompareResult == CompareResult::All ? "different" : "probably the same");
-
-	return imageCompareResult;
-}
-
 QString GetComparable(const QString& str)
 {
 	bool       ok     = false;
