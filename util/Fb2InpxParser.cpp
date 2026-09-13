@@ -104,9 +104,9 @@ private: // SaxParser
 		using ParseElementFunction = bool (Fb2InpxParserImpl::*)(const XmlAttributes&);
 		using ParseElementItem     = std::pair<const char16_t*, ParseElementFunction>;
 		static constexpr ParseElementItem PARSERS[] {
-			{     AUTHOR,     &Fb2InpxParserImpl::OnStartElementAuthor },
-			{ AUTHOR_DOC,  &Fb2InpxParserImpl::OnStartElementAuthorDoc },
-			{   SEQUENCE,   &Fb2InpxParserImpl::OnStartElementSequence },
+			{     AUTHOR,    &Fb2InpxParserImpl::OnStartElementAuthor },
+			{ AUTHOR_DOC, &Fb2InpxParserImpl::OnStartElementAuthorDoc },
+			{   SEQUENCE,  &Fb2InpxParserImpl::OnStartElementSequence },
 		};
 
 		if (path.startsWith(ANNOTATION))
@@ -124,8 +124,8 @@ private: // SaxParser
 		using ParseElementFunction = bool (Fb2InpxParserImpl::*)();
 		using ParseElementItem     = std::pair<const char16_t*, ParseElementFunction>;
 		static constexpr ParseElementItem PARSERS[] {
-			{     AUTHOR,     &Fb2InpxParserImpl::OnEndElementAuthor },
-			{ AUTHOR_DOC,     &Fb2InpxParserImpl::OnEndElementAuthor },
+			{     AUTHOR, &Fb2InpxParserImpl::OnEndElementAuthor },
+			{ AUTHOR_DOC, &Fb2InpxParserImpl::OnEndElementAuthor },
 		};
 
 		if (path.startsWith(ANNOTATION))
