@@ -32,8 +32,9 @@ public:
 	virtual ~ISettings() = default;
 
 public:
-	[[nodiscard]] virtual QVariant Get(const QString& key, const QVariant& defaultValue = {}) const = 0;
-	virtual bool                   Set(const QString& key, const QVariant& value, bool sync = true) = 0;
+	[[nodiscard]] virtual QVariant Get(const QString& key, const QVariant& defaultValue = {}) const                   = 0;
+	[[nodiscard]] virtual QVariant Get(const QString& key, const std::function<QVariant()>& defaultValueGetter) const = 0;
+	virtual bool                   Set(const QString& key, const QVariant& value, bool sync = true)                   = 0;
 
 	[[nodiscard]] virtual bool HasKey(const QString& key) const     = 0;
 	[[nodiscard]] virtual bool HasGroup(const QString& group) const = 0;

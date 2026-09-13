@@ -43,6 +43,11 @@ private: // ISettings
 		return defaultValue;
 	}
 
+	[[nodiscard]] QVariant Get(const QString& /*key*/, const std::function<QVariant()>& defaultValueGetter) const override
+	{
+		return defaultValueGetter();
+	}
+
 	bool Set(const QString& /*key*/, const QVariant& /*value*/, bool /*sync*/) override
 	{
 		return true;
@@ -117,6 +122,14 @@ private: // ISettings
 			return it->second;
 
 		return m_impl->Get(key, defaultValue);
+	}
+
+	QVariant Get(const QString& key, const std::function<QVariant()>& defaultValueGetter) const override
+	{
+		if (const auto it = m_replacement.find(key); it != m_replacement.end())
+			return it->second;
+
+		return m_impl->Get(key, defaultValueGetter);
 	}
 
 	bool Set(const QString& key, const QVariant& value, const bool sync) override
@@ -218,6 +231,14 @@ private: // ISettings
 		if (auto value = m_settings.value(key); value.isValid())
 			return value;
 		return defaultValue;
+	}
+
+	QVariant Get(const QString& key, const std::function<QVariant()>& defaultValueGetter) const override
+	{
+		std::lock_guard lock(m_mutex);
+		if (auto value = m_settings.value(key); value.isValid())
+			return value;
+		return defaultValueGetter();
 	}
 
 	bool Set(const QString& key, const QVariant& value, const bool sync) override
