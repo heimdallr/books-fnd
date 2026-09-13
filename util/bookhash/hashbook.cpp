@@ -12,6 +12,7 @@
 #include <set>
 
 #include "fnd/ScopedCall.h"
+#include "fnd/linear.h"
 
 #include "xml/SaxParser.h"
 #include "xml/XmlUtil.h"
@@ -42,6 +43,8 @@ using namespace cimg_library;
 namespace
 {
 
+constexpr Linear<size_t, int64_t> WORD_WEIGHT_CORRECTOR(4, 1, 20, 4);
+
 CImg<float> GetDctMatrix(const int N)
 {
 	const auto  n = static_cast<float>(N);
@@ -67,7 +70,7 @@ void GetPHash(ImageHashItem& item)
 	item.size = image.size();
 
 	item.decodedSize = image.bytesPerLine() * image.height();
-	item.hasAlpha = image.pixelFormat().alphaUsage() == QPixelFormat::UsesAlpha;
+	item.hasAlpha    = image.pixelFormat().alphaUsage() == QPixelFormat::UsesAlpha;
 	image.convertTo(item.hasAlpha ? QImage::Format_RGBA8888 : QImage::Format_Grayscale8);
 
 	auto          data = new uint8_t[static_cast<size_t>(image.width()) * image.height()];
@@ -226,7 +229,7 @@ void SetHash(ImageHashItem& item, QCryptographicHash& cryptographicHash)
 {
 	cryptographicHash.reset();
 	cryptographicHash.addData(item.body);
-	item.hash  = QString::fromUtf8(cryptographicHash.result().toHex());
+	item.hash = QString::fromUtf8(cryptographicHash.result().toHex());
 	GetPHash(item);
 	item.body.clear();
 #ifdef ADDITIONAL_LOG_ENABLED
@@ -249,7 +252,10 @@ CalculateHashResult CalculateHash(Hist& hist)
 		const auto md5  = cryptographicHash.result();
 		const auto hash = *reinterpret_cast<const uint64_t*>(md5.data()) ^ *reinterpret_cast<const uint64_t*>(md5.data() + 8);
 		for (int i = 0; i < 64; ++i)
-			((1ULL << i) & hash) ? counters[i] += static_cast<int64_t>(count) : counters[i] -= static_cast<int64_t>(count);
+		{
+			const auto weight = WORD_WEIGHT_CORRECTOR(count * word.size());
+			((1ULL << i) & hash) ? counters[i] += weight : counters[i] -= weight;
+		}
 	}
 
 	uint64_t simHash = 0;
