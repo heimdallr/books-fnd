@@ -7,8 +7,7 @@
 class QByteArray;
 class QIODevice;
 
-namespace HomeCompa::DjVu
-{
+namespace HomeCompa::DjVu {
 
 FLIDJVU_EXPORT QByteArray GetCover(QIODevice& stream);
 
@@ -21,4 +20,4 @@ public:
 	~Initializer();
 };
 
-}
+} // namespace HomeCompa::DjVu

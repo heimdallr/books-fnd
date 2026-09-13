@@ -16,8 +16,7 @@ class QHttpHeaders;
 class QIODevice;
 class QString;
 
-namespace HomeCompa::Network
-{
+namespace HomeCompa::Network {
 
 class NETWORK_EXPORT Downloader
 {

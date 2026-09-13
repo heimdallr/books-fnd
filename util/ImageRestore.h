@@ -12,20 +12,18 @@ class QImage;
 class QIODevice;
 class QString;
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 class ISettings;
 class Zip;
 
-}
+} // namespace HomeCompa
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 UTIL_EXPORT QByteArray PrepareToExport(QIODevice& input, const QString& folder, const QString& fileName, const ISettings& settings, std::unique_ptr<const ExtractedBook> metadataReplacement = {});
 
 using ExtractBookImagesCallback = std::function<bool(QString /*name*/, bool /*isCover*/, QByteArray /*body*/)>;
 UTIL_EXPORT void ExtractBookImages(const QString& folder, const QString& fileName, const ISettings& settings, const ExtractBookImagesCallback& callback);
 
-}
+} // namespace HomeCompa::Util

@@ -4,8 +4,7 @@
 
 #include "log.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 template <typename R, typename S, typename T>
 R Try(const S& name, const T& functor, const std::string_view file, const int line)

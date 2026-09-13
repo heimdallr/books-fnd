@@ -7,14 +7,12 @@
 #include "ITransaction.h"
 #include "sqlite3ppext.h"
 
-namespace HomeCompa::DB::Impl::Sqlite
-{
+namespace HomeCompa::DB::Impl::Sqlite {
 
 std::unique_ptr<ICommand> CreateCommandImpl(sqlite3pp::database& db, std::string_view command);
 std::unique_ptr<IQuery>   CreateQueryImpl(std::mutex& mutex, sqlite3pp::database& db, std::string_view query);
 
-namespace
-{
+namespace {
 
 class Transaction final : virtual public ITransaction
 {

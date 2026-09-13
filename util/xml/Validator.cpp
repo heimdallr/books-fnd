@@ -19,8 +19,7 @@
 using namespace HomeCompa::Util;
 namespace xercesc = xercesc_3_3;
 
-namespace
-{
+namespace {
 
 class StrX
 {

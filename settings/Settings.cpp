@@ -10,11 +10,9 @@
 
 #include "ISettingsObserver.h"
 
-namespace HomeCompa::SettingsFactory
-{
+namespace HomeCompa::SettingsFactory {
 
-namespace
-{
+namespace {
 
 void Copy(ISettings& dst, const ISettings& src)
 {
@@ -210,8 +208,8 @@ private:
 };
 
 class Settings final
-	: public AbstractSettings
-	, Observable<ISettingsObserver>
+    : public AbstractSettings
+    , Observable<ISettingsObserver>
 {
 public:
 	explicit Settings(const QString& fileName)

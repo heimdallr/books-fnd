@@ -7,8 +7,7 @@
 #include <ranges>
 #include <thread>
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 template <typename T = size_t>
 class ThreadPool

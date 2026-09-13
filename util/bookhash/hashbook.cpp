@@ -22,26 +22,24 @@
 #include "log.h"
 #include "parser.h"
 
-#define BOOK_HASH_PARSER_ITEMS_X_MACRO \
-	BOOK_HASH_PARSER_ITEM(fb2)         \
+#define BOOK_HASH_PARSER_ITEMS_X_MACRO                                                                                                                                                                         \
+	BOOK_HASH_PARSER_ITEM(fb2)                                                                                                                                                                                 \
 	BOOK_HASH_PARSER_ITEM(epub)
 
-namespace HomeCompa::Util::BookHash
-{
+namespace HomeCompa::Util::BookHash {
 
-#define BOOK_HASH_PARSER_ITEM(NAME) std::unique_ptr<BookHash::IParser> create_##NAME##_parser(QIODevice& stream);
+#define BOOK_HASH_PARSER_ITEM(NAME) std::unique_ptr<BookHash::IParser> create_##NAME##_parser(QIODevice &stream);
 BOOK_HASH_PARSER_ITEMS_X_MACRO
 #undef BOOK_HASH_PARSER_ITEM
 
-}
+} // namespace HomeCompa::Util::BookHash
 
 using namespace HomeCompa::Util::BookHash;
 using namespace HomeCompa::Util;
 using namespace HomeCompa;
 using namespace cimg_library;
 
-namespace
-{
+namespace {
 
 constexpr Linear<size_t, int64_t> WORD_WEIGHT_CORRECTOR(4, 1, 20, 4);
 
@@ -166,12 +164,10 @@ std::pair<std::vector<std::pair<size_t, QString>>, size_t> GetHashValues(const H
 		return std::make_pair(item.second, item.first);
 	});
 
-	return std::make_pair(
-		counter | std::views::take(10) | std::ranges::to<std::vector<std::pair<size_t, QString>>>(),
+	return std::make_pair(counter | std::views::take(10) | std::ranges::to<std::vector<std::pair<size_t, QString>>>(),
 		std::accumulate(hist.cbegin(), hist.cend(), size_t { 0 }, [](const auto init, const auto& item) {
 			return init + item.first.length() * item.second;
-		})
-	);
+		}));
 }
 
 struct HtmlParser final : private SaxParser
@@ -222,8 +218,7 @@ private:
 
 } // namespace
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 void SetHash(ImageHashItem& item, QCryptographicHash& cryptographicHash)
 {
@@ -244,8 +239,8 @@ CalculateHashResult CalculateHash(Hist& hist)
 	std::array<int64_t, 64> counters;
 	counters.fill(0);
 	for (const auto& [word, count] : hist | std::views::filter([](const auto& item) {
-										 return item.first.length() > 3;
-									 }))
+			 return item.first.length() > 3;
+		 }))
 	{
 		cryptographicHash.reset();
 		cryptographicHash.addData(word.toUtf8());

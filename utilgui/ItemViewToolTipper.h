@@ -8,8 +8,7 @@
 
 class QAbstractScrollArea;
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 class UTILGUI_EXPORT ItemViewToolTipper final : public QObject
 {
@@ -25,4 +24,4 @@ private:
 	std::set<int> m_showForceColumns;
 };
 
-}
+} // namespace HomeCompa::Util

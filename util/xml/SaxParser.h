@@ -10,8 +10,7 @@
 
 class QIODevice;
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 class XmlAttributes;
 

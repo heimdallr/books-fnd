@@ -3,8 +3,7 @@
 #include <QCoreApplication>
 #include <QDir>
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 std::vector<QString> ResolveWildcard(const QString& wildcard)
 {

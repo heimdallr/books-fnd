@@ -5,11 +5,9 @@
 #include <unordered_map>
 #include <utility>
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
-namespace
-{
+namespace {
 
 using MetaPair    = std::pair<const QObject*, std::string>;
 using MetaObjects = std::unordered_map<QString, std::list<MetaPair>>;

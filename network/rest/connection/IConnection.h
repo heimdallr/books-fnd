@@ -7,8 +7,7 @@
 
 class QJsonValue;
 
-namespace HomeCompa::RestAPI
-{
+namespace HomeCompa::RestAPI {
 
 struct IConnection // NOLINT(cppcoreguidelines-special-member-functions)
 {

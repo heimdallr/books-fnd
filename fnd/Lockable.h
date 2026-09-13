@@ -2,8 +2,7 @@
 
 #include <memory>
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 template <typename T>
 class Lockable
@@ -24,4 +23,4 @@ public:
 	}
 };
 
-}
+} // namespace HomeCompa

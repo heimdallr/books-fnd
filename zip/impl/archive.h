@@ -7,17 +7,15 @@
 class QIODevice;
 class QString;
 
-namespace HomeCompa::ZipDetails
-{
+namespace HomeCompa::ZipDetails {
 
 enum class Format;
 class IZip;
 class ProgressCallback;
 
-}
+} // namespace HomeCompa::ZipDetails
 
-namespace HomeCompa::ZipDetails::SevenZip
-{
+namespace HomeCompa::ZipDetails::SevenZip {
 
 struct Archive
 {
@@ -29,4 +27,4 @@ struct Archive
 	static QStringList           GetTypes();
 };
 
-}
+} // namespace HomeCompa::ZipDetails::SevenZip

@@ -7,8 +7,7 @@
 
 class QNetworkAccessManager;
 
-namespace HomeCompa::RestAPI::QtLib
-{
+namespace HomeCompa::RestAPI::QtLib {
 
 class Connection : public BaseConnection
 {
@@ -26,4 +25,4 @@ private:
 	PropagateConstPtr<Impl> m_impl;
 };
 
-}
+} // namespace HomeCompa::RestAPI::QtLib

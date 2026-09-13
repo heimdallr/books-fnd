@@ -8,8 +8,7 @@
 
 class QNetworkRequest;
 
-namespace HomeCompa::Network
-{
+namespace HomeCompa::Network {
 
 class NETWORK_EXPORT Headers
 {
@@ -32,4 +31,4 @@ private:
 	PropagateConstPtr<Impl, std::shared_ptr> m_impl;
 };
 
-}
+} // namespace HomeCompa::Network

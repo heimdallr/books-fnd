@@ -7,8 +7,7 @@
 
 #include "private/ObserverHelpers.h"
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 template <typename T>
 class Observable : public ObserverHelper::IObservable
@@ -44,8 +43,7 @@ public:
 				[&](auto&&... tupleArgs) {
 					std::invoke(function, observer, tupleArgs...);
 				},
-				tuple
-			);
+				tuple);
 	}
 
 protected:

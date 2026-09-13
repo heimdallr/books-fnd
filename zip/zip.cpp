@@ -19,8 +19,7 @@
 using namespace HomeCompa;
 using namespace ZipDetails;
 
-namespace
-{
+namespace {
 
 class ProgressCallbackStub final : public ProgressCallback
 {

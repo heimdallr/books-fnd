@@ -6,11 +6,9 @@
 
 #include "QtTypes.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
-namespace
-{
+namespace {
 
 QString& SimplifyTitle(QString& value)
 {

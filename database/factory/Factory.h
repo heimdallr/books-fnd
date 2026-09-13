@@ -5,15 +5,13 @@
 
 #include "export/dbfactory.h"
 
-namespace HomeCompa::DB
-{
+namespace HomeCompa::DB {
 
 class IDatabase;
 
 }
 
-namespace HomeCompa::DB::Factory
-{
+namespace HomeCompa::DB::Factory {
 
 enum class Impl
 {
@@ -22,4 +20,4 @@ enum class Impl
 
 DBFACTORY_EXPORT std::unique_ptr<IDatabase> Create(Impl impl, const std::string& connection);
 
-}
+} // namespace HomeCompa::DB::Factory

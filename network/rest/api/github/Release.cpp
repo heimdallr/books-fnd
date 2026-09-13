@@ -8,8 +8,7 @@
 
 using namespace HomeCompa::RestAPI::Github;
 
-namespace
-{
+namespace {
 
 template <typename T>
 T deserialize(const QJsonObject& data, const QString& key)
@@ -31,7 +30,7 @@ QStringList ParseBody(const QJsonValue& data)
 	return result;
 }
 
-}
+} // namespace
 
 Assets Asset::ParseAssets(const QJsonValue& data)
 {

@@ -4,11 +4,9 @@
 
 #include "settings/ISettings.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
-namespace
-{
+namespace {
 
 constexpr auto FAMILY              = "family";
 constexpr auto POINT_SIZE_F        = "pointSizeF";
@@ -26,7 +24,7 @@ constexpr auto WORD_SPACING        = "wordSpacing";
 constexpr auto STRETCH             = "stretch";
 constexpr auto STYLE_STRATEGY      = "styleStrategy";
 
-}
+} // namespace
 
 void Serialize(const QFont& font, ISettings& settings)
 {

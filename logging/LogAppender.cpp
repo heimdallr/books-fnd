@@ -6,11 +6,9 @@
 #include <plog/Appenders/IAppender.h>
 #include <plog/Init.h>
 
-namespace HomeCompa::Log
-{
+namespace HomeCompa::Log {
 
-namespace
-{
+namespace {
 
 std::unique_ptr<plog::DynamicAppender> g_dynamicAppender;
 

@@ -15,8 +15,7 @@ using namespace HomeCompa::Util::CommonParser;
 using namespace HomeCompa::Util;
 using namespace HomeCompa;
 
-namespace
-{
+namespace {
 
 std::unique_ptr<MOBIRawml, void (*)(MOBIRawml*)> CreateMobiRawMl(MOBIData* mobiData, MobiReader* mobiReader)
 {
@@ -45,11 +44,11 @@ public:
 
 	ParseResult Parse(const Mode mode) const
 	{
-		ParseResult result { .title      = GetString(&mobi_meta_get_title),
-			                 .language   = GetString(&mobi_meta_get_language),
-			                 .genres     = GetGenres(),
-			                 .authors    = GetAuthors(),
-			                 .annotation = GetString(&mobi_meta_get_description) };
+		ParseResult result { .title = GetString(&mobi_meta_get_title),
+			.language               = GetString(&mobi_meta_get_language),
+			.genres                 = GetGenres(),
+			.authors                = GetAuthors(),
+			.annotation             = GetString(&mobi_meta_get_description) };
 
 		if (!!(mode & Mode::Texts))
 		{
@@ -138,8 +137,7 @@ private:
 
 } // namespace
 
-namespace HomeCompa::Util::MobiParser
-{
+namespace HomeCompa::Util::MobiParser {
 
 ParseResult Parse(QIODevice& stream, const Mode mode)
 {

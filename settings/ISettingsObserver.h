@@ -5,8 +5,7 @@
 class QString;
 class QVariant;
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 class ISettingsObserver : public Observer
 {
@@ -14,4 +13,4 @@ public:
 	virtual void HandleValueChanged(const QString& key, const QVariant& value) = 0;
 };
 
-}
+} // namespace HomeCompa

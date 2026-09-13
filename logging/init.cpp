@@ -14,8 +14,7 @@
 
 using namespace HomeCompa::Log;
 
-namespace
-{
+namespace {
 
 std::string CheckForAppend(QString path)
 {
@@ -30,7 +29,7 @@ std::string CheckForAppend(QString path)
 	return path.toStdString();
 }
 
-}
+} // namespace
 
 struct LoggingInitializer::Impl
 {
@@ -55,12 +54,10 @@ LoggingInitializer::~LoggingInitializer() = default;
 QString LoggingInitializer::AddLogFileOption(QCommandLineParser& parser, const QString& defaultPath)
 {
 	static constexpr auto LOG = "log";
-	parser.addOption(
-		{
-			{ QString(LOG[0]), QString(LOG) },
-			"Log file path",
-			defaultPath
-    }
-	);
+	parser.addOption({
+		{ QString(LOG[0]), QString(LOG) },
+		"Log file path",
+		defaultPath
+    });
 	return LOG;
 }

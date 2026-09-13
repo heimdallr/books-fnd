@@ -2,11 +2,9 @@
 #include "ICommand.h"
 #include "sqlite3ppext.h"
 
-namespace HomeCompa::DB::Impl::Sqlite
-{
+namespace HomeCompa::DB::Impl::Sqlite {
 
-namespace
-{
+namespace {
 
 int Index(const size_t index)
 {

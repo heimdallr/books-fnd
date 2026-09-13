@@ -2,8 +2,7 @@
 
 #include "flihash.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 struct HashParser
 {

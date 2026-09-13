@@ -28,30 +28,109 @@
 #include "log.h"
 #include "reader.h"
 
-namespace HomeCompa::ZipDetails::SevenZip
-{
+namespace HomeCompa::ZipDetails::SevenZip {
 
-namespace
-{
+namespace {
 
 constexpr const char* ARCHIVE_EXTENSIONS[] {
-	"7z",   "zip",   "rar",  "bzip2", "bz2",    "tbz2", "tbz",      "gz",  "gzip", "tgz", "tar",  "ova",   "wim",  "swm", "xz",  "txz",  "zipx",   "jar", "xpi",  "odt",    "ods",  "odp",
-	"docx", "xlsx",  "pptx", "epub",  "001",    "ar",   "deb",      "apm", "arj",  "cab", "chm",  "chi",   "msi",  "doc", "xls", "ppt",  "msg",    "obj", "cpio", "cramfs", "dmg",  "dll",
-	"exe",  "dylib", "ext",  "ext2",  "ext3",   "ext4", "fat",      "flv", "gpt",  "hfs", "hfsx", "hxs",   "ihex", "lzh", "lha", "lzma", "lzma86", "mbr", "mslz", "mub",    "nsis", "ntfs",
-	"pmd",  "ppmd",  "qcow", "qcow2", "qcow2c", "rpm",  "squashfs", "swf", "te",   "udf", "scap", "uefif", "vmdk", "vdi", "vhd", "xar",  "pkg",    "z",   "taz",
+	"7z",
+	"zip",
+	"rar",
+	"bzip2",
+	"bz2",
+	"tbz2",
+	"tbz",
+	"gz",
+	"gzip",
+	"tgz",
+	"tar",
+	"ova",
+	"wim",
+	"swm",
+	"xz",
+	"txz",
+	"zipx",
+	"jar",
+	"xpi",
+	"odt",
+	"ods",
+	"odp",
+	"docx",
+	"xlsx",
+	"pptx",
+	"epub",
+	"001",
+	"ar",
+	"deb",
+	"apm",
+	"arj",
+	"cab",
+	"chm",
+	"chi",
+	"msi",
+	"doc",
+	"xls",
+	"ppt",
+	"msg",
+	"obj",
+	"cpio",
+	"cramfs",
+	"dmg",
+	"dll",
+	"exe",
+	"dylib",
+	"ext",
+	"ext2",
+	"ext3",
+	"ext4",
+	"fat",
+	"flv",
+	"gpt",
+	"hfs",
+	"hfsx",
+	"hxs",
+	"ihex",
+	"lzh",
+	"lha",
+	"lzma",
+	"lzma86",
+	"mbr",
+	"mslz",
+	"mub",
+	"nsis",
+	"ntfs",
+	"pmd",
+	"ppmd",
+	"qcow",
+	"qcow2",
+	"qcow2c",
+	"rpm",
+	"squashfs",
+	"swf",
+	"te",
+	"udf",
+	"scap",
+	"uefif",
+	"vmdk",
+	"vdi",
+	"vhd",
+	"xar",
+	"pkg",
+	"z",
+	"taz",
 };
 
 #ifdef _WIN32
 constexpr std::pair<QChar, QChar> FIX_TABLE[] {
 	{ QChar { 0x22 }, QChar { 0xF022 } },
-    { QChar { 0x2A }, QChar { 0xF02A } },
-    { QChar { 0x2F }, QChar { 0xF02F } },
-    { QChar { 0x3A }, QChar { 0xF03A } },
-    { QChar { 0x3C }, QChar { 0xF03C } },
+	{ QChar { 0x2A }, QChar { 0xF02A } },
+	{ QChar { 0x2F }, QChar { 0xF02F } },
+	{ QChar { 0x3A }, QChar { 0xF03A } },
+	{ QChar { 0x3C }, QChar { 0xF03C } },
 	{ QChar { 0x3E }, QChar { 0xF03E } },
-    { QChar { 0x3F }, QChar { 0xF03F } },
-    { QChar { 0x5C }, QChar { 0xF05C } },
-    { QChar { 0x7C }, QChar { 0xF07C } },
+	{ QChar { 0x3F }, QChar { 0xF03F } },
+	{ QChar { 0x5C }, QChar { 0xF05C } },
+	{ QChar { 0x7C }, QChar { 0xF07C } },
 };
 
 QString FixFileName(QString fileName)
@@ -169,12 +248,10 @@ private: // IZip
 	QStringList GetFileNameList() const override
 	{
 		return m_files.files | std::views::filter([](const auto& item) {
-				   return !item.isDir;
-			   })
-		     | std::views::transform([](const auto& item) {
-				   return item.name;
-			   })
-		     | std::ranges::to<QStringList>();
+			return !item.isDir;
+		}) | std::views::transform([](const auto& item) {
+			return item.name;
+		}) | std::ranges::to<QStringList>();
 	}
 
 	size_t GetFileSize(const QString& filename) const override
@@ -269,12 +346,9 @@ private: // IZip
 		std::map<bit7z::tstring, std::vector<bit7z::byte_t>> output;
 		m_archive->extractTo(output);
 		return output | std::views::transform([](auto& item) {
-				   return std::make_pair(
-					   QDir::fromNativeSeparators(QString::fromBit7zString(item.first)),
-					   QByteArray { reinterpret_cast<const char*>(item.second.data()), static_cast<qsizetype_t>(item.second.size()) }
-				   );
-			   })
-		     | std::ranges::to<std::unordered_map>();
+			return std::make_pair(QDir::fromNativeSeparators(QString::fromBit7zString(item.first)),
+				QByteArray { reinterpret_cast<const char*>(item.second.data()), static_cast<qsizetype_t>(item.second.size()) });
+		}) | std::ranges::to<std::unordered_map>();
 	}
 
 	std::expected<void, QString> Test() const noexcept override
@@ -448,10 +522,9 @@ private: // IZip
 			throw std::runtime_error("Cannot remove with writer");
 
 		const auto sorted = m_files.files | std::views::transform([](const auto& item) {
-								auto list = item.name.split('/');
-								return list.size() < 2 ? std::make_pair(item.name, item.name) : std::make_pair(list.front() + '/', item.name);
-							})
-		                  | std::ranges::to<std::multimap>();
+			auto list = item.name.split('/');
+			return list.size() < 2 ? std::make_pair(item.name, item.name) : std::make_pair(list.front() + '/', item.name);
+		}) | std::ranges::to<std::multimap>();
 
 		size_t count = 0;
 		for (const auto& fileName : fileNames)
@@ -488,7 +561,13 @@ private:
 			return CreateArchive<bit7z::BitArchiveWriter>(format);
 
 		const bit7z::BitInOutFormat* outFormats[] {
-			&bit7z::BitFormat::Zip, &bit7z::BitFormat::BZip2, &bit7z::BitFormat::SevenZip, &bit7z::BitFormat::Xz, &bit7z::BitFormat::Wim, &bit7z::BitFormat::Tar, &bit7z::BitFormat::GZip,
+			&bit7z::BitFormat::Zip,
+			&bit7z::BitFormat::BZip2,
+			&bit7z::BitFormat::SevenZip,
+			&bit7z::BitFormat::Xz,
+			&bit7z::BitFormat::Wim,
+			&bit7z::BitFormat::Tar,
+			&bit7z::BitFormat::GZip,
 		};
 
 		const bit7z::BitArchiveReader reader(m_lib, m_filename.toBit7zString());
@@ -565,9 +644,8 @@ bool Archive::IsArchive(const QString& filename)
 QStringList Archive::GetTypes()
 {
 	return ARCHIVE_EXTENSIONS | std::views::transform([](const char* item) {
-			   return QString(item);
-		   })
-	     | std::ranges::to<QStringList>();
+		return QString(item);
+	}) | std::ranges::to<QStringList>();
 }
 
 } // namespace HomeCompa::ZipDetails::SevenZip

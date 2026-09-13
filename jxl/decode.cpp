@@ -8,8 +8,7 @@
 #include "jxl.h"
 #include "log.h"
 
-namespace HomeCompa::JXL
-{
+namespace HomeCompa::JXL {
 
 QImage Decode(const QByteArray& bytes)
 {

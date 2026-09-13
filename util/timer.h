@@ -6,8 +6,7 @@
 
 #include "log.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 class Timer
 {
@@ -31,4 +30,4 @@ private:
 	const QString                                        m_process;
 };
 
-}
+} // namespace HomeCompa::Util

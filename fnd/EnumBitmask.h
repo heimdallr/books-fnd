@@ -67,9 +67,7 @@ constexpr E& operator^=(E& lhs, E rhs) noexcept
 	return lhs;
 }
 
-#define ENABLE_BITMASK_OPERATORS(TYPE)       \
-	template <>                              \
-	struct enable_bitmask_operators<TYPE>    \
-	{                                        \
-		static constexpr bool enable = true; \
+#define ENABLE_BITMASK_OPERATORS(TYPE)                                                                                                                                                                         \
+	template <> struct enable_bitmask_operators<TYPE> {                                                                                                                                                        \
+		static constexpr bool enable = true;                                                                                                                                                                   \
 	}

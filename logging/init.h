@@ -8,8 +8,7 @@
 class QCommandLineParser;
 class QString;
 
-namespace HomeCompa::Log
-{
+namespace HomeCompa::Log {
 
 class LOGGING_EXPORT LoggingInitializer final
 {
@@ -27,4 +26,4 @@ private:
 	PropagateConstPtr<Impl> m_impl;
 };
 
-}
+} // namespace HomeCompa::Log

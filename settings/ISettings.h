@@ -6,8 +6,7 @@
 
 #include "fnd/NonCopyMovable.h"
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 class ISettingsObserver;
 

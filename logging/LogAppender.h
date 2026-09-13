@@ -4,15 +4,13 @@
 
 #include "export/logging.h"
 
-namespace plog
-{
+namespace plog {
 
 class IAppender;
 
 }
 
-namespace HomeCompa::Log
-{
+namespace HomeCompa::Log {
 
 class LOGGING_EXPORT LogAppender
 {
@@ -26,4 +24,4 @@ private:
 	plog::IAppender* m_appender;
 };
 
-}
+} // namespace HomeCompa::Log

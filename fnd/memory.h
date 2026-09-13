@@ -5,8 +5,7 @@
 #include <stdexcept>
 #include <type_traits>
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 template <class T>
 class NotNull
@@ -111,8 +110,7 @@ private:
 	}
 };
 
-namespace details
-{
+namespace details {
 
 template <class T>
 struct PropagateConstCreator;

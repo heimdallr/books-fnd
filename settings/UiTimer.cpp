@@ -2,8 +2,7 @@
 
 #include <QTimer>
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 std::unique_ptr<QTimer> CreateUiTimer(std::function<void()> f)
 {
@@ -17,4 +16,4 @@ std::unique_ptr<QTimer> CreateUiTimer(std::function<void()> f)
 	return timer;
 }
 
-}
+} // namespace HomeCompa::Util

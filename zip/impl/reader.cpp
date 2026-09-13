@@ -12,11 +12,9 @@
 #include "QtTypes.h"
 #include "log.h"
 
-namespace HomeCompa::ZipDetails::SevenZip
-{
+namespace HomeCompa::ZipDetails::SevenZip {
 
-namespace
-{
+namespace {
 
 class StreamImpl final : public Stream
 {
@@ -30,8 +28,7 @@ public:
 			},
 			[this] {
 				m_outStream.close();
-			}
-		);
+			});
 		std::vector<std::byte> buffer;
 		zip.extractTo(buffer, fileItem.index);
 		m_bytes = QByteArray { reinterpret_cast<char*>(buffer.data()), static_cast<qsizetype_t>(buffer.size()) };
@@ -91,14 +88,13 @@ private:
 
 } // namespace
 
-namespace File
-{
+namespace File {
 
 std::unique_ptr<IFile> Read(const bit7z::BitInputArchive& zip, const FileItem& fileItem)
 {
 	return std::make_unique<FileReader>(zip, fileItem);
 }
 
-}
+} // namespace File
 
 } // namespace HomeCompa::ZipDetails::SevenZip

@@ -2,30 +2,26 @@
 
 #include <memory>
 
-namespace bit7z
-{
+namespace bit7z {
 
 class BitInputArchive;
 
 }
 
-namespace HomeCompa::ZipDetails
-{
+namespace HomeCompa::ZipDetails {
 
 class IFile;
 
 }
 
-namespace HomeCompa::ZipDetails::SevenZip
-{
+namespace HomeCompa::ZipDetails::SevenZip {
 
 struct FileItem;
 
-namespace File
-{
+namespace File {
 
 std::unique_ptr<IFile> Read(const bit7z::BitInputArchive& zip, const FileItem& fileItem);
 
 };
 
-}
+} // namespace HomeCompa::ZipDetails::SevenZip

@@ -6,8 +6,7 @@
 
 class QCryptographicHash;
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 using HashValues = std::vector<std::pair<size_t, QString>>;
 using Hist       = std::unordered_map<QString, size_t>;
@@ -28,4 +27,4 @@ UTIL_EXPORT CalculateHashResult CalculateHash(Hist& hist);
 
 void SetHash(ImageHashItem& item, QCryptographicHash& cryptographicHash);
 
-}
+} // namespace HomeCompa::Util

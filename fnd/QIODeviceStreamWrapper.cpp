@@ -2,8 +2,7 @@
 
 #include <QIODevice>
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 class QStdStreamBuf : public std::streambuf
 {

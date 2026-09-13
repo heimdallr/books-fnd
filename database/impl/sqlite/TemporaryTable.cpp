@@ -9,11 +9,9 @@
 #include "ITemporaryTable.h"
 #include "ITransaction.h"
 
-namespace HomeCompa::DB::Impl::Sqlite
-{
+namespace HomeCompa::DB::Impl::Sqlite {
 
-namespace
-{
+namespace {
 
 int id { 0 };
 

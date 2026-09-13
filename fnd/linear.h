@@ -1,7 +1,6 @@
 #pragma once
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 template <typename X, typename Y>
 class Linear

@@ -6,8 +6,7 @@
 
 using namespace HomeCompa::ZipDetails;
 
-namespace
-{
+namespace {
 
 constexpr auto CANNOT_OPEN_FILE           = "Cannot open file '%1'";
 constexpr auto CANNOT_OPEN_ARCHIVE        = "Cannot open archive '%1'";
@@ -25,7 +24,7 @@ constexpr auto CANNOT_CREATE_OBJECT       = "Cannot  create object";
 	throw std::ios_base::failure(QString(str).arg(QFileInfo(filename).fileName()).toStdString());
 }
 
-}
+} // namespace
 
 void Error::CannotOpenFile(const QString& filename)
 {

@@ -4,8 +4,7 @@
 
 #include "fnd/EnumBitmask.h"
 
-namespace HomeCompa::Util::CommonParser
-{
+namespace HomeCompa::Util::CommonParser {
 
 struct ContentItem
 {

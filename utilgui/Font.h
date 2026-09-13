@@ -2,8 +2,7 @@
 
 #include "export/utilgui.h"
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 class ISettings;
 
@@ -11,10 +10,9 @@ class ISettings;
 
 class QFont;
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 UTILGUI_EXPORT void Serialize(const QFont& font, ISettings& settings);
 UTILGUI_EXPORT void Deserialize(QFont& font, const ISettings& settings);
 
-}
+} // namespace HomeCompa::Util

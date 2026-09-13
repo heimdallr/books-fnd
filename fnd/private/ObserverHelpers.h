@@ -1,14 +1,12 @@
 #pragma once
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 class Observer;
 
 }
 
-namespace HomeCompa::ObserverHelper
-{
+namespace HomeCompa::ObserverHelper {
 
 class IObservable
 {
@@ -17,4 +15,4 @@ public:
 	virtual void HandleObserverDestructed(Observer* observer) = 0;
 };
 
-}
+} // namespace HomeCompa::ObserverHelper

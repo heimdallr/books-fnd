@@ -10,8 +10,7 @@
 
 class QCoreApplication;
 
-namespace HomeCompa::Platform
-{
+namespace HomeCompa::Platform {
 
 class PLATFORM_EXPORT NativeEventFilter
 {

@@ -1,7 +1,6 @@
 #pragma once
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 template <typename T>
 bool IsOneOf(const T&)
@@ -16,4 +15,4 @@ bool IsOneOf(const T& x, const Args&... args)
 	return ((args == x) || ...);
 }
 
-}
+} // namespace HomeCompa

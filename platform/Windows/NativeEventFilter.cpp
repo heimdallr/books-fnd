@@ -15,8 +15,8 @@
 using namespace HomeCompa::Platform;
 
 class NativeEventFilter::Impl final
-	: QAbstractNativeEventFilter
-	, public Observable<IObserver>
+    : QAbstractNativeEventFilter
+    , public Observable<IObserver>
 {
 	NON_COPY_MOVABLE(Impl)
 

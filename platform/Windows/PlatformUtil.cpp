@@ -8,11 +8,9 @@
 
 #include "fnd/FindPair.h"
 
-namespace HomeCompa::Platform
-{
+namespace HomeCompa::Platform {
 
-namespace
-{
+namespace {
 
 constexpr std::pair<const char*, const wchar_t*> LOCALES[] {
 	{ "en", L"00000409" },
@@ -31,7 +29,7 @@ QString GetStartupKey(const QString& key)
 	return QString(STARTUP_KEY_TEMPLATE).arg(key);
 }
 
-}
+} // namespace
 
 PlatformType GetPlatformType() noexcept
 {

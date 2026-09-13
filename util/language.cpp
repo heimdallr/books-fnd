@@ -8,11 +8,9 @@
 #include "StrUtil.h"
 #include "log.h"
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
-namespace
-{
+namespace {
 
 struct Storage
 {

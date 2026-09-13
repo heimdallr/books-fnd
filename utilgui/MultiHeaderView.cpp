@@ -6,8 +6,7 @@
 
 using namespace HomeCompa::Util;
 
-namespace
-{
+namespace {
 
 class TableHeaderItem
 {

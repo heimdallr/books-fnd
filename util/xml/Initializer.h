@@ -4,8 +4,7 @@
 
 #include "export/util.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 class UTIL_EXPORT XMLPlatformInitializer
 {
@@ -16,4 +15,4 @@ public:
 	~XMLPlatformInitializer();
 };
 
-}
+} // namespace HomeCompa::Util

@@ -7,8 +7,7 @@
 
 class QString;
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 class UTIL_EXPORT Transliterator
 {
@@ -25,4 +24,4 @@ private:
 	PropagateConstPtr<Impl> m_impl;
 };
 
-}
+} // namespace HomeCompa::Util

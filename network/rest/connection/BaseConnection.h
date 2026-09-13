@@ -9,8 +9,7 @@
 
 class QJsonDocument;
 
-namespace HomeCompa::RestAPI
-{
+namespace HomeCompa::RestAPI {
 
 class BaseConnection : virtual public IConnection
 {

@@ -4,8 +4,7 @@
 
 #include "export/platform.h"
 
-namespace HomeCompa::Platform
-{
+namespace HomeCompa::Platform {
 
 PLATFORM_EXPORT QString RemoveIllegalPathCharacters(QString str);
 

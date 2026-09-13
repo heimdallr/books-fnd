@@ -4,8 +4,7 @@
 
 #include "ICommand.h"
 
-namespace HomeCompa::DB
-{
+namespace HomeCompa::DB {
 
 class IQuery;
 template <typename T>

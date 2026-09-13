@@ -15,8 +15,7 @@
 using namespace HomeCompa::Platform;
 using namespace HomeCompa;
 
-namespace
-{
+namespace {
 
 class SignalHandler : public QObject
 {

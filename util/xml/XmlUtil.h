@@ -2,8 +2,7 @@
 
 #include <QByteArray>
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 QByteArray RemoveDocType(QByteArray bytesSrc);
 

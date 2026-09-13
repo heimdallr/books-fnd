@@ -2,8 +2,7 @@
 
 class QString;
 
-namespace HomeCompa::ZipDetails
-{
+namespace HomeCompa::ZipDetails {
 
 struct Error
 {
@@ -18,4 +17,4 @@ struct Error
 	[[noreturn]] static void CannotCreateObject();
 };
 
-}
+} // namespace HomeCompa::ZipDetails

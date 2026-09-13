@@ -9,8 +9,7 @@ using namespace cimg_library;
 
 using namespace HomeCompa::Util;
 
-namespace
-{
+namespace {
 
 template <std::integral U, std::floating_point V>
 U Round(const V v)
@@ -65,17 +64,19 @@ CImg<T> ApplyFilter(CImg<T> src, const std::vector<std::vector<double>>& filterI
 
 std::pair<CImg<unsigned char>, CImg<float>> ApplySobel(const CImg<unsigned char>& src)
 {
-	static constexpr std::array<std::array<double, 3>, 3>
-		xSobelFilter = {{
-			{ -1.0, 0, 1.0 },
-			{ -2.0, 0, 2.0 },
-			{ -1.0, 0, 1.0 },
-		}},
-		ySobelFilter = {{
-			{ 1.0, 2.0, 1.0 },
-			{ 0, 0, 0 },
-			{ -1.0, -2.0, -1.0 },
-		}};
+	static constexpr std::array<std::array<double, 3>, 3> xSobelFilter =
+															  {
+																  {
+																   {-1.0, 0, 1.0},
+																   {-2.0, 0, 2.0},
+																   {-1.0, 0, 1.0},
+																   }
+    },
+														  ySobelFilter = {{
+															  {1.0, 2.0, 1.0},
+															  {0, 0, 0},
+															  {-1.0, -2.0, -1.0},
+														  }};
 	static_assert(xSobelFilter.size() == ySobelFilter.size());
 
 	static constexpr auto size = static_cast<unsigned int>(xSobelFilter.size()) / 2;
@@ -130,8 +131,8 @@ CImg<unsigned char> ApplyThreshold(const CImg<unsigned char>& src, int low, int 
 				{
 					for (auto y = j - 1; y < j + 2; ++y)
 					{
-						//Wang Note: a missing "x" in Hasan's code.
-						if (x < 0 || y < 0 || x >= static_cast<int>(result._width) || y >= static_cast<int>(result._height)) //Out of bounds
+						// Wang Note: a missing "x" in Hasan's code.
+						if (x < 0 || y < 0 || x >= static_cast<int>(result._width) || y >= static_cast<int>(result._height)) // Out of bounds
 							continue;
 
 						if (src(x, y) > high)
@@ -152,7 +153,7 @@ CImg<unsigned char> ApplyThreshold(const CImg<unsigned char>& src, int low, int 
 					{
 						for (auto y = j - 1; y < j + 3; ++y)
 						{
-							if (x < 0 || y < 0 || x >= static_cast<int>(result._width) || y >= static_cast<int>(result._height)) //Out of bounds
+							if (x < 0 || y < 0 || x >= static_cast<int>(result._width) || y >= static_cast<int>(result._height)) // Out of bounds
 								continue;
 
 							if (src(x, y) > high)
@@ -184,13 +185,13 @@ CImg<unsigned char> nonMaxSupp(const CImg<unsigned char>& sFiltered, const CImg<
 			float Tangent = angles(i, j) * 57.296f;
 			// cout << Tangent << ' ';
 			result(i - 1, j - 1) = sFiltered(i, j);
-			//Horizontal Edge
+			// Horizontal Edge
 			if (-22.5 < Tangent && Tangent <= 22.5)
 			{
 				if ((sFiltered(i, j) < sFiltered(i + 1, j)) || (sFiltered(i, j) < sFiltered(i - 1, j)))
 					result(i - 1, j - 1) = 0;
 			}
-			//Vertical Edge
+			// Vertical Edge
 			if (((-112.5 < Tangent) && (Tangent <= -67.5)) || ((67.5 < Tangent) && (Tangent <= 112.5)))
 			{
 				if ((sFiltered(i, j) < sFiltered(i, j + 1)) || (sFiltered(i, j) < sFiltered(i, j - 1)))
@@ -204,7 +205,7 @@ CImg<unsigned char> nonMaxSupp(const CImg<unsigned char>& sFiltered, const CImg<
 					result(i - 1, j - 1) = 0;
 			}
 
-			//45 Degree Edge
+			// 45 Degree Edge
 			if (((-157.5 < Tangent) && (Tangent <= -112.5)) || ((22.5 < Tangent) && (Tangent <= 67.5)))
 			{
 				if ((sFiltered(i, j) < sFiltered(i - 1, j + 1)) || (sFiltered(i, j) < sFiltered(i + 1, j - 1)))

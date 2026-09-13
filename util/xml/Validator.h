@@ -8,8 +8,7 @@
 class QIODevice;
 class QString;
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 class UTIL_EXPORT XmlValidator
 {
@@ -27,4 +26,4 @@ private:
 	PropagateConstPtr<Impl> m_impl;
 };
 
-}
+} // namespace HomeCompa::Util

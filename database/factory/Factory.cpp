@@ -6,11 +6,9 @@
 
 #include "database/impl/sqlite/Database.h"
 
-namespace HomeCompa::DB::Factory
-{
+namespace HomeCompa::DB::Factory {
 
-namespace
-{
+namespace {
 
 using FactoryCreator = std::unique_ptr<IDatabase> (*)(const std::string& connection);
 constexpr FactoryCreator g_creators[] {
@@ -29,7 +27,7 @@ auto GetCreator(const Impl impl)
 	return g_creators[ToIndex(impl)];
 }
 
-}
+} // namespace
 
 std::unique_ptr<IDatabase> Create(const Impl impl, const std::string& connection)
 {

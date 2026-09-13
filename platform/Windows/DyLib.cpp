@@ -7,8 +7,7 @@
 
 using namespace HomeCompa::Platform;
 
-namespace
-{
+namespace {
 
 int WideCharToMultiByteImpl(const wchar_t* lpWideCharStr, const int cchWideChar, char* lpMultiByteStr, const int cbMultiByte)
 {
@@ -50,15 +49,13 @@ std::string DyLib::InnerGetErrorDescription()
 
 	LPWSTR lpMsg        = nullptr;
 	LPVOID lpBuf        = &lpMsg;
-	size_t literalCount = FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+	size_t literalCount = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 		nullptr,
 		errCode,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		static_cast<LPWSTR>(lpBuf),
 		0,
-		nullptr
-	);
+		nullptr);
 	assert(literalCount > 0);
 
 	while (literalCount > 1 && std::iswspace(lpMsg[literalCount - 1]))

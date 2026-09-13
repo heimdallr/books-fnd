@@ -2,8 +2,7 @@
 
 #include <QString>
 
-namespace HomeCompa::DB
-{
+namespace HomeCompa::DB {
 
 class ICommand;
 template <typename T>

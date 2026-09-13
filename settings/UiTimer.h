@@ -7,8 +7,7 @@
 
 class QTimer;
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 SETTINGS_EXPORT std::unique_ptr<QTimer> CreateUiTimer(std::function<void()> f);
 

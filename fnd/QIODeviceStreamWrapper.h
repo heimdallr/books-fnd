@@ -9,8 +9,7 @@ class QIODevice;
 
 #include "export/fnd.h"
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 class QStdIStream final : public std::istream
 {

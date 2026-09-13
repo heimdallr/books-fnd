@@ -6,8 +6,7 @@
 
 #include "export/settings.h"
 
-namespace HomeCompa::SettingsFactory
-{
+namespace HomeCompa::SettingsFactory {
 
 class AbstractSettings : virtual public ISettings
 {

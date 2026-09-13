@@ -4,8 +4,7 @@
 
 #include "export/util.h"
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 class Zip;
 
@@ -13,8 +12,7 @@ class Zip;
 
 class QDateTime;
 
-namespace HomeCompa::Util::Fb2InpxParser
-{
+namespace HomeCompa::Util::Fb2InpxParser {
 
 static constexpr char NAMES_SEPARATOR  = ',';
 static constexpr char FIELDS_SEPARATOR = '\x04';

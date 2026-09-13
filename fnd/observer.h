@@ -5,8 +5,7 @@
 
 #include "private/ObserverHelpers.h"
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 class Observer
 {

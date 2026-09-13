@@ -7,8 +7,7 @@
 
 #include "log.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 QStringList SplitStringWithQuotes(const QString& str)
 {

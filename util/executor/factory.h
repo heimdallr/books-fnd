@@ -5,11 +5,10 @@
 
 #include "export/util.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
-#define UTIL_EXECUTOR_IMPLS_XMACRO \
-	UTIL_EXECUTOR_IMPL(Sync)       \
+#define UTIL_EXECUTOR_IMPLS_XMACRO                                                                                                                                                                             \
+	UTIL_EXECUTOR_IMPL(Sync)                                                                                                                                                                                   \
 	UTIL_EXECUTOR_IMPL(Async)
 
 class IExecutor;
@@ -33,10 +32,9 @@ struct ExecutorInitializer
 	} };
 };
 
-}
+} // namespace HomeCompa::Util
 
-namespace HomeCompa::Util::ExecutorFactory
-{
+namespace HomeCompa::Util::ExecutorFactory {
 
 UTIL_EXPORT std::unique_ptr<IExecutor> Create(ExecutorImpl impl, ExecutorInitializer initializer = {});
 

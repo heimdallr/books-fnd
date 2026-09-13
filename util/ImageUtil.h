@@ -9,8 +9,7 @@
 class QByteArray;
 class QImage;
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 inline constexpr auto IMAGE_JPEG = "image/jpeg";
 inline constexpr auto IMAGE_PNG  = "image/png";
@@ -23,4 +22,4 @@ UTIL_EXPORT std::pair<QByteArray, const char*> Recode(const QByteArray& bytes);
 UTIL_EXPORT std::pair<QByteArray, const char*> Encode(const QImage& image, const QString& format = {});
 UTIL_EXPORT bool                               IsImage(const QString& fileName);
 
-}
+} // namespace HomeCompa::Util

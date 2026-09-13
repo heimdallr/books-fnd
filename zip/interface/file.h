@@ -2,8 +2,7 @@
 
 class Stream;
 
-namespace HomeCompa::ZipDetails
-{
+namespace HomeCompa::ZipDetails {
 
 class IFile
 {
@@ -13,4 +12,4 @@ public:
 	virtual std::unique_ptr<Stream> Write() = 0;
 };
 
-}
+} // namespace HomeCompa::ZipDetails

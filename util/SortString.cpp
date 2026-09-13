@@ -12,8 +12,7 @@
 
 using namespace HomeCompa::Util;
 
-namespace
-{
+namespace {
 
 constexpr int CATEGORIES[] {
 	0, //		Mark_NonSpacing,          //   Mn

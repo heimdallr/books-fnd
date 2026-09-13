@@ -2,8 +2,7 @@
 
 #include "QtTypes.h"
 
-namespace HomeCompa::Util::CommonParser
-{
+namespace HomeCompa::Util::CommonParser {
 
 QStringList ParseAuthor(const QString& str)
 {

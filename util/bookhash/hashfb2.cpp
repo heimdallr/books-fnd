@@ -16,8 +16,7 @@
 using namespace HomeCompa::Util;
 using namespace HomeCompa;
 
-namespace
-{
+namespace {
 
 QString GetImageId(const XmlAttributes& attributes)
 {
@@ -27,13 +26,11 @@ QString GetImageId(const XmlAttributes& attributes)
 		auto attributeValue = attributes.GetValue(i);
 		if (attributeName.endsWith(u":href"))
 		{
-			if (const auto it = std::ranges::find_if(
-					attributeValue,
+			if (const auto it = std::ranges::find_if(attributeValue,
 					[](const auto ch) {
 						return ch != '#';
-					}
-				);
-			    it != attributeValue.end())
+					});
+				it != attributeValue.end())
 				return Last(attributeValue, std::distance(it, attributeValue.end())).toString().trimmed();
 		}
 	}
@@ -42,8 +39,8 @@ QString GetImageId(const XmlAttributes& attributes)
 }
 
 class Fb2Parser final
-	: public SaxParser
-	, public BookHash::IParser
+    : public SaxParser
+    , public BookHash::IParser
 {
 	static constexpr auto BODY            = u"FictionBook/body";
 	static constexpr auto BINARY          = u"FictionBook/binary";
@@ -140,13 +137,11 @@ private: // Util::SaxParser
 		{
 			m_isBinary = true;
 			m_picId    = attributes.GetAttribute(ID).toString().trimmed();
-			if (const auto it = std::ranges::find_if(
-					m_picId,
+			if (const auto it = std::ranges::find_if(m_picId,
 					[](const auto ch) {
 						return ch != '#';
-					}
-				);
-			    it != m_picId.end())
+					});
+				it != m_picId.end())
 				m_picId = Last(m_picId, std::distance(it, m_picId.end())).toString().trimmed();
 			return true;
 		}
@@ -281,8 +276,7 @@ private:
 
 } // namespace
 
-namespace HomeCompa::Util::BookHash
-{
+namespace HomeCompa::Util::BookHash {
 
 std::unique_ptr<IParser> create_fb2_parser(QIODevice& stream)
 {

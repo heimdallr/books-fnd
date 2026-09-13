@@ -17,25 +17,23 @@
 using namespace HomeCompa::Pdf;
 using namespace HomeCompa;
 
-namespace
-{
+namespace {
 
 constexpr auto DPI            = 300;
 constexpr auto MAX_IMAGE_SIZE = 1440;
 
 constexpr std::pair<poppler::image::format_enum, QImage::Format> PIXEL_FORMATS[] {
 	{    poppler::image::format_mono,       QImage::Format_Mono },
-    {   poppler::image::format_rgb24,     QImage::Format_RGB888 },
-    {  poppler::image::format_argb32,     QImage::Format_ARGB32 },
+	{   poppler::image::format_rgb24,     QImage::Format_RGB888 },
+	{  poppler::image::format_argb32,     QImage::Format_ARGB32 },
 	{   poppler::image::format_gray8, QImage::Format_Grayscale8 },
-    {   poppler::image::format_bgr24,     QImage::Format_BGR888 },
-    { poppler::image::format_invalid,    QImage::Format_Invalid },
+	{   poppler::image::format_bgr24,     QImage::Format_BGR888 },
+	{ poppler::image::format_invalid,    QImage::Format_Invalid },
 };
 
-}
+} // namespace
 
-namespace HomeCompa::Pdf
-{
+namespace HomeCompa::Pdf {
 
 QByteArray GetCover(QIODevice& stream)
 {

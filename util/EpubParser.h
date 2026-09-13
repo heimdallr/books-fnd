@@ -6,15 +6,13 @@
 
 class QIODevice;
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 class Zip;
 
 }
 
-namespace HomeCompa::Util::EpubParser
-{
+namespace HomeCompa::Util::EpubParser {
 
 using ImageIndex = std::vector<std::pair<QString, int>>;
 

@@ -7,15 +7,13 @@
 
 #include "export/dbsqlite.h"
 
-namespace HomeCompa::DB
-{
+namespace HomeCompa::DB {
 
 class IDatabase;
 
 }
 
-namespace HomeCompa::DB::Impl::Sqlite
-{
+namespace HomeCompa::DB::Impl::Sqlite {
 
 DBSQLITE_EXPORT std::unique_ptr<IDatabase> CreateDatabase(const std::string& connection);
 
@@ -27,4 +25,4 @@ inline std::string_view LogStatement(const std::string_view statement)
 	return statement;
 }
 
-}
+} // namespace HomeCompa::DB::Impl::Sqlite

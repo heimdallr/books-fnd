@@ -4,8 +4,7 @@
 
 #include "export/util.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 struct ExtractedBook
 {
@@ -38,8 +37,7 @@ using ExtractedBooks = std::vector<ExtractedBook>;
 
 } // namespace HomeCompa::Util
 
-namespace HomeCompa::Util::Remove
-{
+namespace HomeCompa::Util::Remove {
 
 struct Book
 {
@@ -56,4 +54,4 @@ UTIL_EXPORT AllFiles CollectBookFiles(Books& books, const std::function<std::sha
 UTIL_EXPORT AllFiles CollectImageFiles(const AllFiles& bookFiles, const QString& collectionFolder, const std::function<std::shared_ptr<Zip::ProgressCallback>()>& progressProvider);
 UTIL_EXPORT void     RemoveFiles(AllFiles& allFiles, const QString& collectionFolder);
 
-}
+} // namespace HomeCompa::Util::Remove

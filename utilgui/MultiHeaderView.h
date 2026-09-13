@@ -7,8 +7,7 @@
 
 #include "export/utilgui.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 class UTILGUI_EXPORT MultiHeaderView final : public QHeaderView
 {

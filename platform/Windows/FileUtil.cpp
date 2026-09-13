@@ -2,8 +2,7 @@
 
 #include <QRegularExpression>
 
-namespace HomeCompa::Platform
-{
+namespace HomeCompa::Platform {
 
 QString RemoveIllegalPathCharacters(QString str)
 {
@@ -15,4 +14,4 @@ QString RemoveIllegalPathCharacters(QString str)
 	return str.simplified();
 }
 
-}
+} // namespace HomeCompa::Platform

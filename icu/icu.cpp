@@ -35,8 +35,7 @@ bool ICU_Transliterate(const char* id, const std::u32string* src, std::u32string
 
 using namespace HomeCompa::ICU;
 
-namespace
-{
+namespace {
 
 UConverter* CreateDecoder(const char* id)
 {

@@ -7,8 +7,7 @@
 
 #include "export/platform.h"
 
-namespace HomeCompa::Platform
-{
+namespace HomeCompa::Platform {
 
 class PLATFORM_EXPORT DyLib
 {

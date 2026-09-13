@@ -8,8 +8,7 @@
 
 #include "export/util.h"
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 constexpr auto LANGUAGES_CONTEXT = "Language";
 constexpr auto UNDEFINED_KEY     = "un";

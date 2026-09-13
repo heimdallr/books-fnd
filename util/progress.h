@@ -8,8 +8,7 @@
 
 #include "export/util.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 class UTIL_EXPORT Progress
 {
@@ -31,4 +30,4 @@ private:
 	std::atomic<size_t> m_count { 0 };
 };
 
-}
+} // namespace HomeCompa::Util

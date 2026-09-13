@@ -4,8 +4,7 @@
 
 class QJsonValue;
 
-namespace HomeCompa::RestAPI::Github
-{
+namespace HomeCompa::RestAPI::Github {
 
 class IClient;
 

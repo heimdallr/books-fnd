@@ -6,8 +6,7 @@
 
 #include "export/util.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 class UTIL_EXPORT IExecutor
 {

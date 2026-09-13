@@ -9,8 +9,7 @@
 
 #include "export/rest.h"
 
-namespace HomeCompa::RestAPI::Github
-{
+namespace HomeCompa::RestAPI::Github {
 
 struct Release;
 
@@ -274,10 +273,10 @@ public:
 	 * Returns the total number of commits authored by the
 	 *         contributor. In addition, the response includes a Weekly
 	 *         Hash (weeks array) with the following information:
-			w - Start of the week, given as a Unix timestamp.
-			a - Number of additions
-			d - Number of deletions
-			c - Number of commits
+	        w - Start of the week, given as a Unix timestamp.
+	        a - Number of additions
+	        d - Number of deletions
+	        c - Number of commits
 	*/
 	void GetContributorsActivity(std::weak_ptr<IClient> client, const std::string& owner, const std::string& repo);
 

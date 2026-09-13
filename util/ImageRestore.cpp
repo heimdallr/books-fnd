@@ -28,8 +28,7 @@
 using namespace HomeCompa::Util;
 using namespace HomeCompa;
 
-namespace
-{
+namespace {
 
 enum class ImageProcessing
 {
@@ -45,8 +44,7 @@ enum class ImageProcessing
 
 ENABLE_BITMASK_OPERATORS(ImageProcessing);
 
-namespace
-{
+namespace {
 
 using Covers = std::unordered_map<QString, std::pair<bool, QByteArray>>;
 
@@ -115,13 +113,11 @@ private:
 				auto attributeValue = attributes.GetValue(i);
 				if (attributeName.endsWith(u":href"))
 				{
-					if (const auto it = std::ranges::find_if(
-							attributeValue,
+					if (const auto it = std::ranges::find_if(attributeValue,
 							[](const auto ch) {
 								return ch != '#';
-							}
-						);
-					    it != attributeValue.end())
+							});
+						it != attributeValue.end())
 						m_coverId = Last(attributeValue, std::distance(it, attributeValue.end())).toString().trimmed();
 					break;
 				}
@@ -391,19 +387,18 @@ QByteArray PrepareToExport_epub(QIODevice& stream, Covers covers, std::unique_pt
 	if (!parseResult.imageIndex.isEmpty())
 	{
 		auto imageIndex = EpubParser::GetImageIndex(parseResult.imageIndex) | std::views::as_rvalue | std::views::transform([](auto&& item) {
-							  return std::make_pair(item.second, std::move(item.first));
-						  })
-		                | std::ranges::to<std::unordered_map>();
+			return std::make_pair(item.second, std::move(item.first));
+		}) | std::ranges::to<std::unordered_map>();
 
 		for (auto&& [id, cover] : covers)
 		{
 			auto&& [isCover, body] = cover;
 			if (const auto name =
-			        [&] {
+					[&] {
 						const auto it = imageIndex.find(isCover ? -1 : id.toInt());
 						return it != imageIndex.end() ? it->second : QString {};
 					}();
-			    !name.isEmpty())
+				!name.isEmpty())
 				addImage(name, body, isCover);
 		}
 	}
@@ -428,7 +423,7 @@ QByteArray PrepareToExport_epub(QIODevice& stream, Covers covers, std::unique_pt
 using ExportPrepares = QByteArray (*)(QIODevice&, Covers, std::unique_ptr<const ExtractedBook>, ImageProcessing);
 
 constexpr std::pair<const char*, ExportPrepares> EXPORT_PREPARERS[] {
-#define ITEM(NAME) {"."#NAME, &PrepareToExport_##NAME}
+#define ITEM(NAME) { "." #NAME, &PrepareToExport_##NAME }
 	ITEM(fb2),
 	ITEM(epub),
 #undef ITEM
@@ -490,13 +485,11 @@ void ParseImages(const QString& folder, const QString& fileName, const ExtractBo
 	const Zip  zip(folder);
 	auto       fileList   = zip.GetFileNameList();
 	const auto filePrefix = QString("%1/").arg(QFileInfo(fileName).completeBaseName());
-	if (const auto [begin, end] = std::ranges::remove_if(
-			fileList,
+	if (const auto [begin, end] = std::ranges::remove_if(fileList,
 			[&](const auto& item) {
 				return !item.startsWith(filePrefix) /*|| item == filePrefix*/;
-			}
-		);
-	    begin != end)
+			});
+		begin != end)
 		fileList.erase(begin, end);
 
 	for (const auto& file : fileList)
@@ -540,8 +533,7 @@ void ExtractBookImagesImagesImpl(const QFileInfo& fileInfo, const QString& fileN
 
 } // namespace
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 QByteArray PrepareToExport(QIODevice& input, const QString& folder, const QString& fileName, const ISettings& settings, std::unique_ptr<const ExtractedBook> metadataReplacement)
 {

@@ -4,8 +4,7 @@
 
 #include <vector>
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 class Canny
 {

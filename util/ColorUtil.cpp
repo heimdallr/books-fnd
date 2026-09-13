@@ -1,7 +1,6 @@
 #include "ColorUtil.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 QString ToString(const QColor& color)
 {
@@ -13,4 +12,4 @@ QString ToString(const QPalette& palette, const QPalette::ColorRole role)
 	return ToString(palette.color(role));
 }
 
-}
+} // namespace HomeCompa::Util

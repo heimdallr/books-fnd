@@ -11,8 +11,7 @@
 
 #include "platform/StrUtil.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 template <typename T>
 bool InBounds(const T value, std::convertible_to<T> auto min, std::convertible_to<T> auto max)
@@ -226,8 +225,7 @@ struct TupleHash
 			[&]<typename... T>(const T&... e) {
 				((update(e)), ...);
 			},
-			value
-		);
+			value);
 
 		return result;
 	}

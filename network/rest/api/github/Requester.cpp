@@ -14,8 +14,7 @@
 
 using namespace HomeCompa::RestAPI::Github;
 
-namespace
-{
+namespace {
 
 enum class RequestType
 {
@@ -69,7 +68,7 @@ enum class RequestType
 	RepoContributors,
 };
 
-}
+} // namespace
 
 class Requester::Impl : IConnection::IObserver
 {

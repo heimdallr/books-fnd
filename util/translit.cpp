@@ -5,11 +5,9 @@
 #include "icu/icu.h"
 #include "platform/DyLib.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
-namespace
-{
+namespace {
 
 bool TransliterateImpl(const ICU::TransliterateType transliterate, const char* id, QString& str)
 {
@@ -24,7 +22,7 @@ bool TransliterateImpl(const ICU::TransliterateType transliterate, const char* i
 	return true;
 }
 
-}
+} // namespace
 
 struct Transliterator::Impl
 {
@@ -37,7 +35,7 @@ struct Transliterator::Impl
 			return fileName.replace(' ', '_');
 
 		if (auto result = fileName;
-		    TransliterateImpl(transliterate, "ru-ru_Latn/BGN", result) && TransliterateImpl(transliterate, "Any-Latin", result) && TransliterateImpl(transliterate, "Latin-ASCII", result))
+			TransliterateImpl(transliterate, "ru-ru_Latn/BGN", result) && TransliterateImpl(transliterate, "Any-Latin", result) && TransliterateImpl(transliterate, "Latin-ASCII", result))
 			fileName = std::move(result);
 
 		return fileName.replace(' ', '_');

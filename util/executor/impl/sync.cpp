@@ -5,11 +5,9 @@
 #include "IExecutor.h"
 #include "log.h"
 
-namespace HomeCompa::Util::ExecutorPrivate::Sync
-{
+namespace HomeCompa::Util::ExecutorPrivate::Sync {
 
-namespace
-{
+namespace {
 
 class Executor : virtual public Util::IExecutor
 {

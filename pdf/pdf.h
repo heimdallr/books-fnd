@@ -5,8 +5,7 @@
 class QByteArray;
 class QIODevice;
 
-namespace HomeCompa::Pdf
-{
+namespace HomeCompa::Pdf {
 
 FLIPDF_EXPORT QByteArray GetCover(QIODevice& stream);
 

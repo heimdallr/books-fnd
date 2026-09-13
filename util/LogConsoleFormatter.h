@@ -2,8 +2,7 @@
 
 #include <iomanip>
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 class LogConsoleFormatter
 {
@@ -24,4 +23,4 @@ public:
 	}
 };
 
-}
+} // namespace HomeCompa::Util

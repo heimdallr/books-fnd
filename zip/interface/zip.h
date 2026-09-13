@@ -9,15 +9,13 @@
 
 class QVariant;
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 class IZipFileProvider;
 
 }
 
-namespace HomeCompa::ZipDetails
-{
+namespace HomeCompa::ZipDetails {
 
 class IFile;
 
@@ -41,4 +39,4 @@ public:
 	virtual bool Remove(const std::vector<QString>& fileNames) = 0;
 };
 
-}
+} // namespace HomeCompa::ZipDetails

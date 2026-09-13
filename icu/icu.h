@@ -5,8 +5,7 @@
 
 #include "export/flicu.h"
 
-namespace HomeCompa::ICU
-{
+namespace HomeCompa::ICU {
 
 static constexpr auto LIB_NAME           = "flicu";
 static constexpr auto TRANSLITERATE_NAME = "ICU_Transliterate";
@@ -23,6 +22,6 @@ public:
 	virtual std::string Decode(std::string_view src) const = 0;
 };
 
-}
+} // namespace HomeCompa::ICU
 
 extern "C" FLICU_EXPORT bool ICU_Transliterate(const char* id, const std::u32string* src, std::u32string* dst);

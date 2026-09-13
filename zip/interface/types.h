@@ -2,8 +2,7 @@
 
 #include <qmetatype.h>
 
-namespace HomeCompa::ZipDetails
-{
+namespace HomeCompa::ZipDetails {
 
 constexpr auto INVALID_INDEX = std::numeric_limits<size_t>::max();
 
@@ -36,7 +35,7 @@ enum class CompressionMethod
 	Ppmd
 };
 
-}
+} // namespace HomeCompa::ZipDetails
 
 Q_DECLARE_METATYPE(HomeCompa::ZipDetails::CompressionLevel)
 Q_DECLARE_METATYPE(HomeCompa::ZipDetails::CompressionMethod)

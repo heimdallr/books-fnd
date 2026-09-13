@@ -9,13 +9,12 @@ using namespace HomeCompa;
 using namespace Util;
 namespace xercesc = xercesc_3_3;
 
-namespace
-{
+namespace {
 
 std::mutex g_xercescGuard;
 int64_t    g_counter { 0 };
 
-}
+} // namespace
 
 XMLPlatformInitializer::XMLPlatformInitializer()
 {

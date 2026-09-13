@@ -2,8 +2,7 @@
 
 #include "QtTypes.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 QByteArray RemoveDocType(QByteArray bytesSrc)
 {
@@ -21,4 +20,4 @@ QByteArray RemoveDocType(QByteArray bytesSrc)
 	return bytes;
 }
 
-}
+} // namespace HomeCompa::Util

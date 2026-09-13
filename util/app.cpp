@@ -8,11 +8,9 @@
 
 #include "log.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
-namespace
-{
+namespace {
 
 constexpr InstallerDescription MODES[] {
 #define INSTALLER_MODE_ITEM(NAME, EXT, INSTALLABLE, PORTABLE) { InstallerType::NAME, #NAME, EXT, INSTALLABLE, PORTABLE },
@@ -31,7 +29,7 @@ const InstallerDescription& GetDefaultInstallerDescription()
 	return *it;
 }
 
-}
+} // namespace
 
 const InstallerDescription& GetInstallerDescription()
 {

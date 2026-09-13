@@ -6,8 +6,7 @@
 
 #include "log.h"
 
-namespace
-{
+namespace {
 
 QString FileName(const QMessageLogContext& ctx)
 {

@@ -2,8 +2,7 @@
 
 #include <QWidget>
 
-namespace HomeCompa::Platform
-{
+namespace HomeCompa::Platform {
 
 void SetGeometry(QWidget& widget, const QRect& rect)
 {

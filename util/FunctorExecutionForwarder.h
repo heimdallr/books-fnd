@@ -6,8 +6,7 @@
 
 #include "export/util.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 class UTIL_EXPORT FunctorExecutionForwarder : public QObject
 {
@@ -25,4 +24,4 @@ private slots:
 	void OnExecuteFunctor(FunctorType f) const;
 };
 
-}
+} // namespace HomeCompa::Util

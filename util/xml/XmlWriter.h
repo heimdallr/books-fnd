@@ -10,13 +10,11 @@
 class QIODevice;
 class QString;
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 class XmlAttributes;
 
-namespace details
-{
+namespace details {
 
 enum class XmlWriterType
 {
@@ -32,7 +30,7 @@ struct XmlWriterOptions
 	const char*   encoding { "utf-8" };
 };
 
-}
+} // namespace details
 
 class UTIL_EXPORT XmlWriter
 {

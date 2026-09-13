@@ -2,8 +2,7 @@
 
 #include <QString>
 
-namespace HomeCompa::Platform
-{
+namespace HomeCompa::Platform {
 
 PlatformType GetPlatformType() noexcept
 {

@@ -2,8 +2,7 @@
 
 #include <memory>
 
-namespace HomeCompa::DB
-{
+namespace HomeCompa::DB {
 
 class ICommand;
 class IQuery;

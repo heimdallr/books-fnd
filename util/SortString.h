@@ -6,8 +6,7 @@
 
 class QString;
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 struct UTIL_EXPORT QStringWrapper
 {
@@ -21,4 +20,4 @@ struct UTIL_EXPORT QStringWrapper
 	bool operator==(const QStringWrapper& rhs) const;
 };
 
-}
+} // namespace HomeCompa::Util

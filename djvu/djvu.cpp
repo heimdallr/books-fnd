@@ -17,22 +17,21 @@
 using namespace HomeCompa::DjVu;
 using namespace HomeCompa;
 
-namespace
-{
+namespace {
 
 unsigned int MASKS[4] = { 0xff0000, 0x00ff00, 0x0000ff, 0xff000000 };
 
 using DjvuContextCreate      = ddjvu_context_t* (*)(const char* programName);
 using DjvuContextRelease     = void (*)(ddjvu_context_t* context);
-using DjvuDocumentCreate     = DDJVUAPI ddjvu_document_t* (*)(ddjvu_context_t * context, const char* url, int cache);
-using DjvuDocumentJob        = ddjvu_job_t* (*)(ddjvu_document_t * document);
+using DjvuDocumentCreate     = DDJVUAPI ddjvu_document_t* (*)(ddjvu_context_t* context, const char* url, int cache);
+using DjvuDocumentJob        = ddjvu_job_t* (*)(ddjvu_document_t* document);
 using DjvuJobStatus          = ddjvu_status_t (*)(ddjvu_job_t* job);
 using DjvuJobRelease         = void (*)(ddjvu_job_t* job);
-using DjvuMessageWait        = ddjvu_message_t* (*)(ddjvu_context_t * context);
-using DjvuMessagePeek        = ddjvu_message_t* (*)(ddjvu_context_t * context);
+using DjvuMessageWait        = ddjvu_message_t* (*)(ddjvu_context_t* context);
+using DjvuMessagePeek        = ddjvu_message_t* (*)(ddjvu_context_t* context);
 using DjvuMessagePop         = void (*)(ddjvu_context_t* context);
-using DjvuPageCreateByPageNo = ddjvu_page_t* (*)(ddjvu_document_t * document, int pageNo);
-using DjvuPageJob            = ddjvu_job_t* (*)(ddjvu_page_t * page);
+using DjvuPageCreateByPageNo = ddjvu_page_t* (*)(ddjvu_document_t* document, int pageNo);
+using DjvuPageJob            = ddjvu_job_t* (*)(ddjvu_page_t* page);
 using DjvuPageRender =
 	int (*)(ddjvu_page_t* page, ddjvu_render_mode_t mode, const ddjvu_rect_t* pageRect, const ddjvu_rect_t* renderRect, const ddjvu_format_t* pixelFormat, unsigned long rowSize, char* imageBuffer);
 using DjvuPageGetWidth      = int (*)(ddjvu_page_t* page);
@@ -180,8 +179,7 @@ private:
 	void WaitForDjvuMessage(
 		const ddjvu_message_tag_t                          tag,
 		const std::function<void(const ddjvu_message_s&)>& callback = [](const auto&) {
-		}
-	) const
+		}) const
 	{
 		m_djvu_message_wait(m_context.get());
 		for (const ddjvu_message_t* msg = m_djvu_message_peek(m_context.get()); msg; msg = m_djvu_message_peek(m_context.get()))
@@ -272,8 +270,7 @@ Initializer::~Initializer()
 	DJVU_PARSER.reset();
 }
 
-namespace HomeCompa::DjVu
-{
+namespace HomeCompa::DjVu {
 
 QByteArray GetCover(QIODevice& stream)
 {

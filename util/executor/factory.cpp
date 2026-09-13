@@ -4,21 +4,17 @@
 
 #include "IExecutor.h"
 
-#define UTIL_EXECUTOR_IMPL(NAME)                                    \
-	namespace HomeCompa::Util::ExecutorPrivate::NAME                \
-	{                                                               \
-                                                                    \
-	std::unique_ptr<IExecutor> CreateExecutor(ExecutorInitializer); \
-                                                                    \
+#define UTIL_EXECUTOR_IMPL(NAME)                                                                                                                                                                               \
+	namespace HomeCompa::Util::ExecutorPrivate::NAME {                                                                                                                                                         \
+                                                                                                                                                                                                               \
+	std::unique_ptr<IExecutor> CreateExecutor(ExecutorInitializer);                                                                                                                                            \
 	}
 UTIL_EXECUTOR_IMPLS_XMACRO
 #undef UTIL_EXECUTOR_IMPL
 
-namespace HomeCompa::Util::ExecutorFactory
-{
+namespace HomeCompa::Util::ExecutorFactory {
 
-namespace
-{
+namespace {
 
 using FactoryCreator = std::unique_ptr<IExecutor> (*)(ExecutorInitializer);
 constexpr FactoryCreator g_creators[] {
@@ -39,7 +35,7 @@ auto GetCreator(const ExecutorImpl impl)
 	return g_creators[ToIndex(impl)];
 }
 
-}
+} // namespace
 
 std::unique_ptr<IExecutor> Create(const ExecutorImpl impl, ExecutorInitializer initializer)
 {

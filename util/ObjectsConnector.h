@@ -6,8 +6,7 @@
 
 #include "export/util.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 class UTIL_EXPORT ObjectsConnector final : public QObject
 {
@@ -28,4 +27,4 @@ public:
 	Q_INVOKABLE static void unregisterReceiver(const QString& ID, QObject* receiver, const QString& slot);
 };
 
-}
+} // namespace HomeCompa::Util

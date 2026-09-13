@@ -2,8 +2,7 @@
 
 #include <QCryptographicHash>
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 QString md5(const QByteArray& data)
 {
@@ -24,4 +23,4 @@ QString GetSaltedHash(const QString& user, const QString& password)
 	return GetSaltedHash(QString("%1:%2").arg(user, password));
 }
 
-}
+} // namespace HomeCompa::Util

@@ -8,8 +8,7 @@
 
 using namespace HomeCompa::Util;
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 BookHashItem ParseDbHash(DB::IDatabase& db, const QString& folder, const QString& file)
 {
@@ -31,16 +30,18 @@ BookHashItem ParseDbHash(DB::IDatabase& db, const QString& folder, const QString
 			return {};
 
 		return BookHashItem {
-			.folder      = folder,
-			.file        = file,
-			.parseResult = { .id         = query->Get<const char*>(0),
-                            .title      = query->Get<const char*>(1),
-                            .hashText   = query->Get<const char*>(2),
-                            .annotation = query->Get<const char*>(3),
-                            .count      = query->Get<size_t>(4),
-                            .size       = query->Get<size_t>(5),
-                            .simHash    = query->Get<QString>(6).toULongLong(nullptr, 16),
-			},
+			.folder = folder,
+			.file   = file,
+			.parseResult =
+				{
+							  .id         = query->Get<const char*>(0),
+							  .title      = query->Get<const char*>(1),
+							  .hashText   = query->Get<const char*>(2),
+							  .annotation = query->Get<const char*>(3),
+							  .count      = query->Get<size_t>(4),
+							  .size       = query->Get<size_t>(5),
+							  .simHash    = query->Get<QString>(6).toULongLong(nullptr, 16),
+							  },
 		};
 	}();
 

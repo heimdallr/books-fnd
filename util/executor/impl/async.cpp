@@ -14,11 +14,9 @@
 #include "IExecutor.h"
 #include "log.h"
 
-namespace HomeCompa::Util::ExecutorPrivate::Async
-{
+namespace HomeCompa::Util::ExecutorPrivate::Async {
 
-namespace
-{
+namespace {
 
 class IPool // NOLINT(cppcoreguidelines-special-member-functions)
 {
@@ -40,8 +38,8 @@ private:
 };
 
 class Executor final
-	: virtual public IExecutor
-	, virtual public IPool
+    : virtual public IExecutor
+    , virtual public IPool
 {
 	NON_COPY_MOVABLE(Executor)
 

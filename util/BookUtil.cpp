@@ -4,8 +4,7 @@
 
 #include "Constant.h"
 
-namespace HomeCompa::Util::Remove
-{
+namespace HomeCompa::Util::Remove {
 
 AllFiles CollectBookFiles(Books& books, const std::function<std::shared_ptr<Zip::ProgressCallback>()>& progressProvider)
 {

@@ -16,15 +16,13 @@
 #include "log.h"
 #include "sqlite3ppext.h"
 
-namespace HomeCompa::DB::Impl::Sqlite
-{
+namespace HomeCompa::DB::Impl::Sqlite {
 
 std::unique_ptr<ITransaction>    CreateTransactionImpl(std::mutex& mutex, sqlite3pp::database& db);
 std::unique_ptr<IQuery>          CreateQueryImpl(std::mutex& mutex, sqlite3pp::database& db, std::string_view query);
 std::unique_ptr<ITemporaryTable> CreateTemporaryTableImpl(IDatabase& db, const std::vector<std::string_view>& fields, const std::vector<std::string_view>& additional);
 
-namespace
-{
+namespace {
 
 constexpr auto PATH      = "path";
 constexpr auto EXTENSION = "extension";
@@ -42,8 +40,26 @@ constexpr std::pair<int, ObserverMethod> g_opCodeToObserverMethod[] {
 
 constexpr std::pair<const char*, int> g_openFlags[] {
 #define ITEM(NAME) { #NAME, SQLITE_OPEN_##NAME }
-	ITEM(READONLY),     ITEM(READWRITE),    ITEM(CREATE),       ITEM(DELETEONCLOSE), ITEM(EXCLUSIVE),      ITEM(AUTOPROXY), ITEM(URI),       ITEM(MEMORY),      ITEM(MAIN_DB),      ITEM(TEMP_DB),
-	ITEM(TRANSIENT_DB), ITEM(MAIN_JOURNAL), ITEM(TEMP_JOURNAL), ITEM(SUBJOURNAL),    ITEM(MASTER_JOURNAL), ITEM(NOMUTEX),   ITEM(FULLMUTEX), ITEM(SHAREDCACHE), ITEM(PRIVATECACHE), ITEM(WAL),
+	ITEM(READONLY),
+	ITEM(READWRITE),
+	ITEM(CREATE),
+	ITEM(DELETEONCLOSE),
+	ITEM(EXCLUSIVE),
+	ITEM(AUTOPROXY),
+	ITEM(URI),
+	ITEM(MEMORY),
+	ITEM(MAIN_DB),
+	ITEM(TEMP_DB),
+	ITEM(TRANSIENT_DB),
+	ITEM(MAIN_JOURNAL),
+	ITEM(TEMP_JOURNAL),
+	ITEM(SUBJOURNAL),
+	ITEM(MASTER_JOURNAL),
+	ITEM(NOMUTEX),
+	ITEM(FULLMUTEX),
+	ITEM(SHAREDCACHE),
+	ITEM(PRIVATECACHE),
+	ITEM(WAL),
 #undef ITEM
 };
 
@@ -112,8 +128,8 @@ private:
 };
 
 class Database final
-	: virtual public IDatabase
-	, public Observable<IDatabaseObserver>
+    : virtual public IDatabase
+    , public Observable<IDatabaseObserver>
 {
 	NON_COPY_MOVABLE(Database)
 

@@ -2,8 +2,7 @@
 
 class QStringView;
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 class XmlAttributes // NOLINT(cppcoreguidelines-special-member-functions)
 {
@@ -15,4 +14,4 @@ public:
 	virtual QStringView GetValue(size_t index) const        = 0;
 };
 
-}
+} // namespace HomeCompa::Util

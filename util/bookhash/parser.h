@@ -1,7 +1,6 @@
 #pragma once
 
-namespace HomeCompa::Util::BookHash
-{
+namespace HomeCompa::Util::BookHash {
 
 class IParser
 {
@@ -13,4 +12,4 @@ public:
 	virtual ImageHashItems  GetImages() = 0;
 };
 
-}
+} // namespace HomeCompa::Util::BookHash

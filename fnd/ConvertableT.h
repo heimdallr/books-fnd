@@ -1,7 +1,6 @@
 #pragma once
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 template <typename T>
 class ConvertibleT
@@ -20,4 +19,4 @@ public:
 	}
 };
 
-}
+} // namespace HomeCompa

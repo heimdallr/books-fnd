@@ -1,5 +1,4 @@
-namespace HomeCompa::Global
-{
+namespace HomeCompa::Global {
 
 constexpr auto COVER    = "cover";
 constexpr auto IMAGE    = "image";
@@ -21,17 +20,15 @@ constexpr auto FONT_SIZE_DEFAULT = 9;
 
 constexpr auto AUTHOR_UNKNOWN = QT_TRANSLATE_NOOP("Global", "Unknown author");
 
-}
+} // namespace HomeCompa::Global
 
-namespace HomeCompa::Preferences
-{
+namespace HomeCompa::Preferences {
 
 constexpr auto PREFER_HIDE_SCROLLBARS_KEY = "Preferences/hideScrollBars";
 
 }
 
-namespace HomeCompa::Export
-{
+namespace HomeCompa::Export {
 
 constexpr auto GRAYSCALE_COVER_KEY  = "ui/Export/GrayscaleCover";
 constexpr auto GRAYSCALE_IMAGES_KEY = "ui/Export/GrayscaleImages";
@@ -39,10 +36,9 @@ constexpr auto REMOVE_COVER_KEY     = "ui/Export/RemoveCover";
 constexpr auto REMOVE_IMAGES_KEY    = "ui/Export/RemoveImages";
 constexpr auto CONVERT_IMAGES_KEY   = "ui/Export/ConvertImagesToJpegPng";
 
-}
+} // namespace HomeCompa::Export
 
-namespace HomeCompa::Inpx
-{
+namespace HomeCompa::Inpx {
 
 constexpr char LIST_SEPARATOR = ':';
 
@@ -81,8 +77,7 @@ constexpr std::pair<char, const char*> PATH_FIX[] {
 
 } // namespace HomeCompa::Inpx
 
-namespace HomeCompa::Epub
-{
+namespace HomeCompa::Epub {
 
 constexpr std::string_view CONTAINER_FILE_NAME = "META-INF/container.xml";
 
@@ -90,4 +85,4 @@ constexpr auto IMAGE_INDEX_FILE_NAME = "FLibraryImageIndex.json";
 constexpr auto IMAGE_INDEX_ID        = "id";
 constexpr auto IMAGE_INDEX_NUM       = "num";
 
-}
+} // namespace HomeCompa::Epub

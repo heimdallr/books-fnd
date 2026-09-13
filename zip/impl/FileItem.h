@@ -5,8 +5,7 @@
 
 #include "zip/interface/error.h"
 
-namespace HomeCompa::ZipDetails::SevenZip
-{
+namespace HomeCompa::ZipDetails::SevenZip {
 
 struct FileItem
 {

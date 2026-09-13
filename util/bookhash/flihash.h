@@ -11,15 +11,13 @@
 
 #include "export/util.h"
 
-namespace HomeCompa::DB
-{
+namespace HomeCompa::DB {
 
 class IDatabase;
 
 }
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 using TextHistogram = std::vector<std::pair<size_t, QString>>;
 

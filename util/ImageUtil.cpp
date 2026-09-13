@@ -5,11 +5,9 @@
 
 #include "jxl/jxl.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
-namespace
-{
+namespace {
 
 using Decoder = QImage (*)(const QByteArray&);
 using Recoder = std::pair<QByteArray, const char*> (*)(const QByteArray& bytes, const char* type);
@@ -83,7 +81,7 @@ constexpr ImageFormatDescription DEFAULT_DESCRIPTION { IMAGE_JPEG, &QtDecoder, &
 constexpr std::pair<const char*, ImageFormatDescription> SIGNATURES[] {
 	{ "\xFF\xD8\xFF\xE0", { IMAGE_JPEG, &QtDecoder, &StubRecoder } },
 	{ "\x89\x50\x4E\x47",  { IMAGE_PNG, &QtDecoder, &StubRecoder } },
-	{		 "\xFF\x0A",    { nullptr, &JxlDecoder, &JxlRecoder } },
+	{         "\xFF\x0A",    { nullptr, &JxlDecoder, &JxlRecoder } },
 };
 
 } // namespace

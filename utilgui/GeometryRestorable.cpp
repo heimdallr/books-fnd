@@ -19,8 +19,7 @@
 using namespace HomeCompa::Util;
 using namespace HomeCompa;
 
-namespace
-{
+namespace {
 
 constexpr auto STATE_KEY_TEMPLATE    = "ui/%1/State";
 constexpr auto GEOMETRY_KEY_TEMPLATE = "ui/%1/Geometry";
@@ -65,8 +64,8 @@ void SetGeometry(QWidget& widget, QRect rect)
 } // namespace
 
 class GeometryRestorable::Impl final
-	: QObject
-	, ISettingsObserver
+    : QObject
+    , ISettingsObserver
 {
 	NON_COPY_MOVABLE(Impl)
 
@@ -234,8 +233,7 @@ QWidget& GeometryRestorableObserver::GetWidget() noexcept
 	return m_widget;
 }
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 void MoveToParentCenter(QWidget& widget)
 {

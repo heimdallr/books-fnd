@@ -13,8 +13,7 @@
 class QVariant;
 class QDateTime;
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 class ZIP_EXPORT Zip
 {

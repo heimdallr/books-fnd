@@ -2,8 +2,7 @@
 
 #include <QtCore>
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 FunctorExecutionForwarder::FunctorExecutionForwarder()
 {
@@ -23,4 +22,4 @@ void FunctorExecutionForwarder::OnExecuteFunctor(FunctorType f) const
 	f();
 }
 
-}
+} // namespace HomeCompa::Util

@@ -20,8 +20,7 @@ using namespace HomeCompa::Util;
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 
-namespace
-{
+namespace {
 
 constexpr auto MENU_ITEM_ENABLED_TEMPLATE = "ui/ScrollBarContextMenu/Items/%1";
 
@@ -52,26 +51,25 @@ private: // QWidget
 
 		menu->addSeparator();
 		menu->addAction(Tr(OPTIONS), [this, strings = [this, menu] {
-							std::vector<std::pair<QString, bool>> result;
-							for (qsizetype i = 0, j = 0, sz = menu->actions().count(); i < sz; ++i)
-							{
-								auto* action = menu->actions().at(i);
-								if (auto text = action->text(); !text.isEmpty())
-								{
-									const auto checked = m_settings->Get(QString(MENU_ITEM_ENABLED_TEMPLATE).arg(j++), true);
-									action->setVisible(checked);
-									result.emplace_back(std::move(text), checked);
-								}
-							}
-							return result;
-						}()] {
+			std::vector<std::pair<QString, bool>> result;
+			for (qsizetype i = 0, j = 0, sz = menu->actions().count(); i < sz; ++i)
+			{
+				auto* action = menu->actions().at(i);
+				if (auto text = action->text(); !text.isEmpty())
+				{
+					const auto checked = m_settings->Get(QString(MENU_ITEM_ENABLED_TEMPLATE).arg(j++), true);
+					action->setVisible(checked);
+					result.emplace_back(std::move(text), checked);
+				}
+			}
+			return result;
+		}()] {
 			auto* optionsMenu = CreateCheckableMenu(
 				strings,
 				[this](const int row, const bool value) {
 					m_settings->Set(QString(MENU_ITEM_ENABLED_TEMPLATE).arg(row), value);
 				},
-				parentWidget()
-			);
+				parentWidget());
 
 			optionsMenu->setAttribute(Qt::WA_DeleteOnClose);
 			optionsMenu->popup(QCursor::pos());

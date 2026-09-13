@@ -1,7 +1,6 @@
 #pragma once
 
-namespace HomeCompa::DB
-{
+namespace HomeCompa::DB {
 
 class ITemporaryTable // NOLINT(cppcoreguidelines-special-member-functions)
 {
@@ -13,4 +12,4 @@ public:
 	virtual const std::string& GetTableName() const noexcept  = 0;
 };
 
-}
+} // namespace HomeCompa::DB

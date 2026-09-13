@@ -12,8 +12,7 @@
 using namespace HomeCompa;
 using namespace HomeCompa::Util;
 
-namespace
-{
+namespace {
 
 class Model final : public QStringListModel
 {
@@ -78,8 +77,7 @@ public:
 
 } // namespace
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 QMenu* CreateCheckableMenu(const std::vector<std::pair<QString, bool>>& values, std::function<void(int, bool)> callback, QWidget* parent)
 {

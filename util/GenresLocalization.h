@@ -7,8 +7,7 @@
 
 #include "export/util.h"
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 inline constexpr auto GENRE           = "Genre";
 inline constexpr auto UNORDERED_GENRE = QT_TRANSLATE_NOOP("Genre", "unordered");

@@ -10,8 +10,7 @@
 class QScreen;
 class QSplitter;
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 class UTILGUI_EXPORT GeometryRestorable
 {

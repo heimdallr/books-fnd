@@ -18,8 +18,7 @@ using namespace HomeCompa;
 using namespace Util;
 using namespace Fb2InpxParser;
 
-namespace
-{
+namespace {
 
 constexpr auto NAME                   = u"name";
 constexpr auto NUMBER                 = u"number";
@@ -145,7 +144,7 @@ private: // SaxParser
 		using ParseCharacterFunction = bool (Fb2InpxParserImpl::*)(const QString&);
 		using ParseCharacterItem     = std::pair<const char16_t*, ParseCharacterFunction>;
 		static constexpr ParseCharacterItem PARSERS[] {
-			{				  GENRE,            &Fb2InpxParserImpl::ParseGenre },
+			{                  GENRE,            &Fb2InpxParserImpl::ParseGenre },
 			{      AUTHOR_FIRST_NAME,  &Fb2InpxParserImpl::ParseAuthorFirstName },
 			{       AUTHOR_LAST_NAME,   &Fb2InpxParserImpl::ParseAuthorLastName },
 			{     AUTHOR_MIDDLE_NAME, &Fb2InpxParserImpl::ParseAuthorMiddleName },
@@ -153,8 +152,8 @@ private: // SaxParser
 			{   AUTHOR_LAST_NAME_DOC,   &Fb2InpxParserImpl::ParseAuthorLastName },
 			{ AUTHOR_MIDDLE_NAME_DOC, &Fb2InpxParserImpl::ParseAuthorMiddleName },
 			{             BOOK_TITLE,        &Fb2InpxParserImpl::ParseBookTitle },
-			{				   LANG,             &Fb2InpxParserImpl::ParseLang },
-			{			   KEYWORDS,         &Fb2InpxParserImpl::ParseKeywords },
+			{                   LANG,             &Fb2InpxParserImpl::ParseLang },
+			{               KEYWORDS,         &Fb2InpxParserImpl::ParseKeywords },
 			{      PUBLISH_INFO_YEAR,      &Fb2InpxParserImpl::ParsePublishYear },
 		};
 
@@ -285,8 +284,7 @@ private:
 
 } // namespace
 
-namespace HomeCompa::Util::Fb2InpxParser
-{
+namespace HomeCompa::Util::Fb2InpxParser {
 
 ParseResult Parse(const QString& folder, const Zip& zip, const QString& fileName, const QDateTime& zipDateTime, const bool isDeleted)
 {

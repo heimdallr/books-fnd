@@ -7,8 +7,7 @@
 
 class QString;
 
-namespace HomeCompa::Util
-{
+namespace HomeCompa::Util {
 
 UTIL_EXPORT std::vector<QString> UniqTitle(QString value);
 UTIL_EXPORT QString&             Normalize(QString& value);

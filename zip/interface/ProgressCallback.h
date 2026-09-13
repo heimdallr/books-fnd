@@ -7,8 +7,7 @@
 class QIODevice;
 class QString;
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 class IZipFileProvider // NOLINT(cppcoreguidelines-special-member-functions)
 {
@@ -29,10 +28,9 @@ public:
 	virtual void AddFile(const QString& path)                                       = 0;
 };
 
-}
+} // namespace HomeCompa
 
-namespace HomeCompa::ZipDetails
-{
+namespace HomeCompa::ZipDetails {
 
 class ProgressCallback // NOLINT(cppcoreguidelines-special-member-functions)
 {

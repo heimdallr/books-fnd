@@ -2,8 +2,7 @@
 
 #include <QString>
 
-namespace HomeCompa::Platform
-{
+namespace HomeCompa::Platform {
 
 QString PathToString(const std::filesystem::path& path)
 {
@@ -15,4 +14,4 @@ std::filesystem::path StringToPath(const QString& string)
 	return std::filesystem::path { string.toStdWString() };
 }
 
-}
+} // namespace HomeCompa::Platform

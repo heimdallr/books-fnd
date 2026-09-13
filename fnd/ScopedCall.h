@@ -1,8 +1,7 @@
 #pragma once
 #include <functional>
 
-namespace HomeCompa
-{
+namespace HomeCompa {
 
 class ScopedCall
 {

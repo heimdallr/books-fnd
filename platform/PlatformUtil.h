@@ -5,8 +5,7 @@
 class QRect;
 class QString;
 
-namespace HomeCompa::Platform
-{
+namespace HomeCompa::Platform {
 
 enum class PlatformType
 {
@@ -29,4 +28,4 @@ PLATFORM_EXPORT void RemoveFromAutostart(const QString& key);
 
 PLATFORM_EXPORT QString GetDefaultInstallerSuffix();
 
-}
+} // namespace HomeCompa::Platform

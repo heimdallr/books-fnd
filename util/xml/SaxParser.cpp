@@ -19,8 +19,7 @@ using namespace HomeCompa;
 using namespace Util;
 namespace xercesc = xercesc_3_3;
 
-namespace
-{
+namespace {
 
 class XmlAttributesImpl final : public XmlAttributes
 {
@@ -174,8 +173,8 @@ public:
 };
 
 class SaxHandler final
-	: public xercesc::HandlerBase
-	, public IDeclHandler
+    : public xercesc::HandlerBase
+    , public IDeclHandler
 {
 public:
 	SaxHandler(SaxParser& parser, InputSource& inputSource)
