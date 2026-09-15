@@ -3,6 +3,7 @@
 #include <QCryptographicHash>
 
 #include "fnd/IsOneOf.h"
+#include "fnd/ScopedCall.h"
 
 #include "xml/SaxParser.h"
 #include "xml/XmlAttributes.h"
@@ -149,7 +150,17 @@ private: // Util::SaxParser
 		if (path.startsWith(ANNOTATION))
 		{
 			if (path != ANNOTATION)
-				m_annotation.append(QString("<%1>").arg(name));
+			{
+				const ScopedCall nodeGuard(
+					[&] {
+						m_annotation.append(QString("<%1").arg(name));
+					},
+					[&] {
+						m_annotation.append(QString(">"));
+					});
+				for (size_t i = 0, sz = attributes.GetCount(); i < sz; ++i)
+					m_annotation.append(QString(R"( %1="%2")").arg(attributes.GetName(i), attributes.GetValue(i)));
+			}
 			return true;
 		}
 

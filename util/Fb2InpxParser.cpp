@@ -3,6 +3,7 @@
 #include <QFileInfo>
 
 #include "fnd/FindPair.h"
+#include "fnd/ScopedCall.h"
 
 #include "util/xml/SaxParser.h"
 #include "util/xml/XmlAttributes.h"
@@ -111,7 +112,17 @@ private: // SaxParser
 		if (path.startsWith(ANNOTATION))
 		{
 			if (path != ANNOTATION)
-				m_data.annotation.append(QString("<%1>").arg(name));
+			{
+				const ScopedCall nodeGuard(
+					[&] {
+						m_data.annotation.append(QString("<%1").arg(name));
+					},
+					[&] {
+						m_data.annotation.append(QString(">"));
+					});
+				for (size_t i = 0, sz = attributes.GetCount(); i < sz; ++i)
+					m_data.annotation.append(QString(R"( %1="%2")").arg(attributes.GetName(i), attributes.GetValue(i)));
+			}
 			return true;
 		}
 
