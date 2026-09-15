@@ -184,10 +184,13 @@ private: // Util::SaxParser
 		}
 		else if (path.startsWith(ANNOTATION))
 		{
-			if (m_annotation.endsWith(QString("<%1>").arg(name)))
-				m_annotation.chop(name.length() + 2);
-			else
-				m_annotation.append(QString("</%1>").arg(name));
+			if (path != ANNOTATION)
+			{
+				if (m_annotation.endsWith(QString("<%1>").arg(name)))
+					m_annotation.chop(name.length() + 2);
+				else
+					m_annotation.append(QString("</%1>").arg(name));
+			}
 		}
 
 		return true;
