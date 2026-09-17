@@ -110,6 +110,27 @@ std::pair<std::vector<std::pair<size_t, QString>>, size_t> GetHashValues(const H
 		}));
 }
 
+[[maybe_unused]] size_t LOG_IMAGE_NUMBER = 0;
+
+[[maybe_unused]] QString GenerateFileName(const char* name, const char* ext)
+{
+	QDir dir(QString("%1/%2").arg(QDir::tempPath(), PRODUCT_ID));
+	if (!dir.exists())
+		dir.mkpath(".");
+	return dir.filePath(QString("%1-%2.%3").arg(name).arg(LOG_IMAGE_NUMBER, 4, 10, QChar { '0' }).arg(ext));
+}
+
+void Save([[maybe_unused]] const CImg<unsigned char>& img, [[maybe_unused]] const char* name, [[maybe_unused]] const char* ext)
+{
+#ifdef Q_OS_WIN
+	img.save(GenerateFileName(name, ext).toStdString().data());
+#endif
+}
+
+void SaveStub(const CImg<unsigned char>&, const char*, const char*)
+{
+}
+
 struct HtmlParser final : private SaxParser
 {
 	std::unordered_map<QString, size_t> hist;
@@ -208,25 +229,6 @@ CalculateHashResult CalculateHash(Hist& hist)
 	hist.clear();
 
 	return { .hashValues = std::move(hashValues.first), .hash = std::move(hash), .count = count, .size = hashValues.second, .simHash = simHash };
-}
-
-size_t LOG_IMAGE_NUMBER = 0;
-
-QString GenerateFileName(const char* name, const char* ext)
-{
-	QDir dir(QString("%1/%2").arg(QDir::tempPath(), PRODUCT_ID));
-	if (!dir.exists())
-		dir.mkpath(".");
-	return dir.filePath(QString("%1-%2.%3").arg(name).arg(LOG_IMAGE_NUMBER, 4, 10, QChar { '0' }).arg(ext));
-}
-
-void Save(const CImg<unsigned char>& img, const char* name, const char* ext)
-{
-	img.save(GenerateFileName(name, ext).toStdString().data());
-}
-
-void SaveStub(const CImg<unsigned char>&, const char*, const char*)
-{
 }
 
 void GetPHash(ImageHashItem& item, const bool logImage)
