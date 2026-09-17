@@ -179,7 +179,8 @@ private:
 	void WaitForDjvuMessage(
 		const ddjvu_message_tag_t                          tag,
 		const std::function<void(const ddjvu_message_s&)>& callback = [](const auto&) {
-		}) const
+		}
+	) const
 	{
 		m_djvu_message_wait(m_context.get());
 		for (const ddjvu_message_t* msg = m_djvu_message_peek(m_context.get()); msg; msg = m_djvu_message_peek(m_context.get()))

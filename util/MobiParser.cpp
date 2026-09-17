@@ -44,11 +44,11 @@ public:
 
 	ParseResult Parse(const Mode mode) const
 	{
-		ParseResult result { .title = GetString(&mobi_meta_get_title),
-			.language               = GetString(&mobi_meta_get_language),
-			.genres                 = GetGenres(),
-			.authors                = GetAuthors(),
-			.annotation             = GetString(&mobi_meta_get_description) };
+		ParseResult result { .title      = GetString(&mobi_meta_get_title),
+		                     .language   = GetString(&mobi_meta_get_language),
+		                     .genres     = GetGenres(),
+		                     .authors    = GetAuthors(),
+		                     .annotation = GetString(&mobi_meta_get_description) };
 
 		if (!!(mode & Mode::Texts))
 		{

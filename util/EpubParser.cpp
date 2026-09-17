@@ -192,10 +192,11 @@ QString RemoveNS(const QString& path)
 		return path;
 
 	return (path.split('/') | std::views::as_rvalue | std::views::transform([](QString&& item) {
-		if (const auto index = item.indexOf(':'); index >= 0)
-			return item.mid(index + 1);
-		return std::forward<QString>(item);
-	}) | std::ranges::to<QStringList>())
+				if (const auto index = item.indexOf(':'); index >= 0)
+					return item.mid(index + 1);
+				return std::forward<QString>(item);
+			})
+	        | std::ranges::to<QStringList>())
 	    .join('/');
 }
 
@@ -290,8 +291,8 @@ public:
 		if (!!(mode & Mode::TextsStatistics))
 		{
 			for (auto [id, body] : result.texts | std::views::filter([](const auto& item) {
-					 return EpubParser::IsEPubTextFile(item.id);
-				 }))
+									   return EpubParser::IsEPubTextFile(item.id);
+								   }))
 			{
 				QBuffer buffer(&body);
 				buffer.open(QIODevice::ReadOnly);
@@ -345,12 +346,14 @@ public:
 				cleanPath = HtmlParserImagePathFinder::GetImagePath(zipData, cleanPath);
 			if (cleanPath.isEmpty())
 				return;
-			if (const auto it = std::ranges::find(images,
+			if (const auto it = std::ranges::find(
+					images,
 					cleanPath,
 					[](const auto& item) {
 						return item.id;
-					});
-				it != images.end())
+					}
+				);
+			    it != images.end())
 			{
 				auto cover = std::move(*it);
 				images.erase(it);
@@ -571,10 +574,12 @@ ImageIndex GetImageIndex(const QByteArray& bytes)
 	}
 
 	return doc.array() | std::views::transform([](const auto& item) {
-		return item.toObject();
-	}) | std::views::transform([](const auto& item) {
-		return std::make_pair(item[Epub::IMAGE_INDEX_ID].toString(), item[Epub::IMAGE_INDEX_NUM].toInt());
-	}) | std::ranges::to<std::vector>();
+			   return item.toObject();
+		   })
+	     | std::views::transform([](const auto& item) {
+			   return std::make_pair(item[Epub::IMAGE_INDEX_ID].toString(), item[Epub::IMAGE_INDEX_NUM].toInt());
+		   })
+	     | std::ranges::to<std::vector>();
 }
 
 bool IsEPubTextFile(const QStringView fileName)

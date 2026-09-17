@@ -16,7 +16,8 @@ concept BinaryLogicalPredicate = requires(const std::remove_reference_t<Predicat
 };
 
 /// Ищем в диапазоне пар по first, возвращаем итератор
-template <typename InputIterator,
+template <
+	typename InputIterator,
 	typename Value                                              = typename std::iterator_traits<InputIterator>::value_type,
 	BinaryLogicalPredicate<typename Value::first_type> KeyEqual = std::equal_to<typename Value::first_type>>
 InputIterator FindPairIteratorByFirst(InputIterator begin, InputIterator end, const typename Value::first_type& key, KeyEqual comparer = KeyEqual {})
@@ -45,7 +46,8 @@ const Value* FindPairIteratorByFirst(Value (&array)[ArraySize], const typename V
 //.............................................................................
 
 /// Ищем в диапазоне пар по first, возвращаем second
-template <typename InputIterator,
+template <
+	typename InputIterator,
 	typename Value                                              = typename std::iterator_traits<InputIterator>::value_type,
 	BinaryLogicalPredicate<typename Value::first_type> KeyEqual = std::equal_to<typename Value::first_type>>
 const typename Value::second_type& FindSecond(InputIterator begin, InputIterator end, const typename Value::first_type& key, KeyEqual comparer = KeyEqual {})
@@ -74,7 +76,8 @@ const typename Value::second_type& FindSecond(Value (&array)[ArraySize], const t
 //.............................................................................
 
 /// Ищем в диапазоне пар по first, если нашли - возвращаем second, иначе - defaultValue
-template <typename InputIterator,
+template <
+	typename InputIterator,
 	typename Value                                              = typename std::iterator_traits<InputIterator>::value_type,
 	BinaryLogicalPredicate<typename Value::first_type> KeyEqual = std::equal_to<typename Value::first_type>>
 const typename Value::second_type& FindSecond(InputIterator begin, InputIterator end, const typename Value::first_type& key, const typename Value::second_type& defaultValue, KeyEqual comparer = KeyEqual {})
@@ -102,7 +105,8 @@ const typename Value::second_type& FindSecond(Value (&array)[ArraySize], const t
 //.............................................................................
 
 /// Ищем в диапазоне пар по second, возвращаем итератор
-template <typename InputIterator,
+template <
+	typename InputIterator,
 	typename Value                                               = typename std::iterator_traits<InputIterator>::value_type,
 	BinaryLogicalPredicate<typename Value::second_type> KeyEqual = std::equal_to<typename Value::second_type>>
 InputIterator FindPairIteratorBySecond(InputIterator begin, InputIterator end, const typename Value::second_type& key, KeyEqual comparer = KeyEqual {})
@@ -131,7 +135,8 @@ const Value* FindPairIteratorBySecond(Value (&array)[ArraySize], const typename 
 //.............................................................................
 
 /// Ищем в диапазоне пар по second, возвращаем first
-template <typename InputIterator,
+template <
+	typename InputIterator,
 	typename Value                                               = typename std::iterator_traits<InputIterator>::value_type,
 	BinaryLogicalPredicate<typename Value::second_type> KeyEqual = std::equal_to<typename Value::second_type>>
 const typename Value::first_type& FindFirst(InputIterator begin, InputIterator end, const typename Value::second_type& key, KeyEqual comparer = KeyEqual {})
@@ -160,7 +165,8 @@ const typename Value::first_type& FindFirst(Value (&array)[ArraySize], const typ
 //.............................................................................
 
 /// Ищем в диапазоне пар по second, если нашли - возвращаем first, иначе - defaultValue
-template <typename InputIterator,
+template <
+	typename InputIterator,
 	typename Value                                               = typename std::iterator_traits<InputIterator>::value_type,
 	BinaryLogicalPredicate<typename Value::second_type> KeyEqual = std::equal_to<typename Value::second_type>>
 const typename Value::first_type& FindFirst(InputIterator begin, InputIterator end, const typename Value::second_type& key, const typename Value::first_type& defaultValue, KeyEqual comparer = KeyEqual {})

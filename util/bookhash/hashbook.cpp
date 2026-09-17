@@ -104,10 +104,12 @@ std::pair<std::vector<std::pair<size_t, QString>>, size_t> GetHashValues(const H
 		return std::make_pair(item.second, item.first);
 	});
 
-	return std::make_pair(counter | std::views::take(10) | std::ranges::to<std::vector<std::pair<size_t, QString>>>(),
+	return std::make_pair(
+		counter | std::views::take(10) | std::ranges::to<std::vector<std::pair<size_t, QString>>>(),
 		std::accumulate(hist.cbegin(), hist.cend(), size_t { 0 }, [](const auto init, const auto& item) {
 			return init + item.first.length() * item.second;
-		}));
+		})
+	);
 }
 
 [[maybe_unused]] size_t LOG_IMAGE_NUMBER = 0;
@@ -200,8 +202,8 @@ CalculateHashResult CalculateHash(Hist& hist)
 	std::array<int64_t, 64> counters;
 	counters.fill(0);
 	for (const auto& [word, count] : hist | std::views::filter([](const auto& item) {
-			 return item.first.length() > 3;
-		 }))
+										 return item.first.length() > 3;
+									 }))
 	{
 		cryptographicHash.reset();
 		cryptographicHash.addData(word.toUtf8());

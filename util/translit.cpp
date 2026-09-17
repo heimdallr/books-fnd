@@ -35,7 +35,7 @@ struct Transliterator::Impl
 			return fileName.replace(' ', '_');
 
 		if (auto result = fileName;
-			TransliterateImpl(transliterate, "ru-ru_Latn/BGN", result) && TransliterateImpl(transliterate, "Any-Latin", result) && TransliterateImpl(transliterate, "Latin-ASCII", result))
+		    TransliterateImpl(transliterate, "ru-ru_Latn/BGN", result) && TransliterateImpl(transliterate, "Any-Latin", result) && TransliterateImpl(transliterate, "Latin-ASCII", result))
 			fileName = std::move(result);
 
 		return fileName.replace(' ', '_');

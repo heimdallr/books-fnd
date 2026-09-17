@@ -28,7 +28,8 @@ public:
 			},
 			[this] {
 				m_outStream.close();
-			});
+			}
+		);
 		std::vector<std::byte> buffer;
 		zip.extractTo(buffer, fileItem.index);
 		m_bytes = QByteArray { reinterpret_cast<char*>(buffer.data()), static_cast<qsizetype_t>(buffer.size()) };

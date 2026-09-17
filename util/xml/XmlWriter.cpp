@@ -24,37 +24,9 @@ constexpr XMLCh gStartPI[] = { chOpenAngle, chQuestion, chNull };
 // ?>
 constexpr XMLCh gEndPI[] = { chQuestion, chCloseAngle, chNull };
 // <?xml version="1.0" encoding="
-constexpr XMLCh gXMLDecl1[] = { chOpenAngle,
-	chQuestion,
-	chLatin_x,
-	chLatin_m,
-	chLatin_l,
-	chSpace,
-	chLatin_v,
-	chLatin_e,
-	chLatin_r,
-	chLatin_s,
-	chLatin_i,
-	chLatin_o,
-	chLatin_n,
-	chEqual,
-	chDoubleQuote,
-	chDigit_1,
-	chPeriod,
-	chDigit_0,
-	chDoubleQuote,
-	chSpace,
-	chLatin_e,
-	chLatin_n,
-	chLatin_c,
-	chLatin_o,
-	chLatin_d,
-	chLatin_i,
-	chLatin_n,
-	chLatin_g,
-	chEqual,
-	chDoubleQuote,
-	chNull };
+constexpr XMLCh gXMLDecl1[] = { chOpenAngle, chQuestion, chLatin_x, chLatin_m,     chLatin_l, chSpace,   chLatin_v, chLatin_e,     chLatin_r, chLatin_s, chLatin_i,
+                                chLatin_o,   chLatin_n,  chEqual,   chDoubleQuote, chDigit_1, chPeriod,  chDigit_0, chDoubleQuote, chSpace,   chLatin_e, chLatin_n,
+                                chLatin_c,   chLatin_o,  chLatin_d, chLatin_i,     chLatin_n, chLatin_g, chEqual,   chDoubleQuote, chNull };
 // "?>
 constexpr XMLCh gXMLDecl2[] = { chDoubleQuote, chQuestion, chCloseAngle, chNull };
 
@@ -81,10 +53,12 @@ constexpr std::pair<XmlWriter::Type, void (*)(XMLFormatter&)> STARTERS[] {
 	{ XmlWriter::Type::Headless, &HeadlessStarter },
 };
 
-void FormatBuf(XMLFormatter&        formatter,
+void FormatBuf(
+	XMLFormatter&                   formatter,
 	const QStringView               str,
 	const XMLFormatter::EscapeFlags escapeFlags = XMLFormatter::DefaultEscape,
-	const XMLFormatter::UnRepFlags  unrepFlags  = XMLFormatter::DefaultUnRep)
+	const XMLFormatter::UnRepFlags  unrepFlags  = XMLFormatter::DefaultUnRep
+)
 {
 	formatter.formatBuf(reinterpret_cast<const XMLCh*>(str.data()), str.size(), escapeFlags, unrepFlags);
 }

@@ -225,7 +225,8 @@ struct TupleHash
 			[&]<typename... T>(const T&... e) {
 				((update(e)), ...);
 			},
-			value);
+			value
+		);
 
 		return result;
 	}

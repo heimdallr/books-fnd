@@ -75,7 +75,8 @@ IConnection::Headers Connection::GetPage(const std::string& page)
 
 			eventLoop.exit();
 		},
-		Qt::DirectConnection);
+		Qt::DirectConnection
+	);
 
 	QObject::connect(reply, &QNetworkReply::errorOccurred, [reply, &page](const QNetworkReply::NetworkError code) {
 		PLOGE << QString("Error (%1 - %2) occurred when processing request %3").arg(code).arg(reply->errorString()).arg(page.c_str());

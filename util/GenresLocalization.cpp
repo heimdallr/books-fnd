@@ -34,7 +34,8 @@ struct Fixer
 				},
 				[&] {
 					QCoreApplication::removeTranslator(&translator);
-				});
+				}
+			);
 
 			for (const auto* genre : GENRES)
 				m_map.try_emplace(QCoreApplication::translate(GENRE, genre).toLower(), genre);
@@ -96,10 +97,10 @@ void ParseGenresString(QStringList& dst, QString src)
 	src.replace(',', '/');
 	src.replace(';', '/');
 	for (const auto& genre : src.split('/') | std::views::transform([](const auto& item) {
-			 return item.trimmed();
-		 }) | std::views::filter([](const auto& item) {
-			 return item.length() > 2;
-		 }))
+								 return item.trimmed();
+							 }) | std::views::filter([](const auto& item) {
+								 return item.length() > 2;
+							 }))
 		dst << FixGenre(genre);
 }
 

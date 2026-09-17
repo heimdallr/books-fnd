@@ -18,7 +18,8 @@ QByteArray Encode(const QImage& image, int quality)
 	const JxlEncoderPtr              enc    = JxlEncoderMake(/*memory_manager=*/nullptr);
 	const JxlThreadParallelRunnerPtr runner = JxlThreadParallelRunnerMake(
 		/*memory_manager=*/nullptr,
-		JxlThreadParallelRunnerDefaultNumWorkerThreads());
+		JxlThreadParallelRunnerDefaultNumWorkerThreads()
+	);
 	if (JXL_ENC_SUCCESS != JxlEncoderSetParallelRunner(enc.get(), JxlThreadParallelRunner, runner.get()))
 	{
 		PLOGE << "JxlEncoderSetParallelRunner failed";

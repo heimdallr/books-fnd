@@ -114,13 +114,15 @@ CompareResult CompareImageHashes(std::multimap<QString, QString>& fileItems, con
 			const auto hammingDistance     = std::popcount(l.first ^ r.first);
 			const auto imageCompareResult  = FromHammingDistance(hammingDistance);
 			compareResult                 |= imageCompareResult;
-			fileItems.emplace(GetComparable(l.second),
+			fileItems.emplace(
+				GetComparable(l.second),
 				QString("images are %6: %1: %4 vs %2: %5, Hamming distance: %3")
 					.arg(l.second, r.second)
 					.arg(hammingDistance)
 					.arg(l.first, 16, 16, QChar { '0' })
 					.arg(r.first, 16, 16, QChar { '0' })
-					.arg(imageCompareResult == CompareResult::All ? "different" : "probably the same"));
+					.arg(imageCompareResult == CompareResult::All ? "different" : "probably the same")
+			);
 		}
 	}
 
@@ -169,16 +171,20 @@ CompareResult CompareImages(QStringList& result, const ImageHashItems& lhs, cons
 	const auto transform = [](const auto& item) {
 		return std::make_pair(item.pHash, item.file);
 	};
-	std::ranges::transform(std::ranges::subrange(lIt, lhs.cend()) | std::views::filter([](const auto& item) {
-		return item.linked;
-	}),
+	std::ranges::transform(
+		std::ranges::subrange(lIt, lhs.cend()) | std::views::filter([](const auto& item) {
+			return item.linked;
+		}),
 		std::inserter(lpHashes, lpHashes.end()),
-		transform);
-	std::ranges::transform(std::ranges::subrange(rIt, rhs.cend()) | std::views::filter([](const auto& item) {
-		return item.linked;
-	}),
+		transform
+	);
+	std::ranges::transform(
+		std::ranges::subrange(rIt, rhs.cend()) | std::views::filter([](const auto& item) {
+			return item.linked;
+		}),
 		std::inserter(rpHashes, rpHashes.end()),
-		transform);
+		transform
+	);
 
 	if (lpHashes.empty() && rpHashes.empty())
 		return (result << "images are equal"), CompareResult::None;
@@ -230,16 +236,20 @@ BookHashItem BookHashItemProvider::Get(const QString& file) const
 		bookHashItem.cover = { QString {}, m_impl->coversZip->Read(baseName)->GetStream().readAll() };
 
 	if (m_impl->imagesZip)
-		std::ranges::transform(std::ranges::equal_range(m_impl->images,
-								   baseName + "/",
-								   {},
-								   [n = baseName.length() + 1](const QString& item) {
-									   return QStringView { item.begin(), std::next(item.begin(), n) };
-								   }),
+		std::ranges::transform(
+			std::ranges::equal_range(
+				m_impl->images,
+				baseName + "/",
+				{},
+				[n = baseName.length() + 1](const QString& item) {
+					return QStringView { item.begin(), std::next(item.begin(), n) };
+				}
+			),
 			std::back_inserter(bookHashItem.images),
 			[&](const QString& item) {
 				return ImageHashItem { item.split("/").back(), m_impl->imagesZip->Read(item)->GetStream().readAll() };
-			});
+			}
+		);
 
 	return bookHashItem;
 }
@@ -277,7 +287,8 @@ std::ostream& operator<<(std::ostream& stream, const BookHashItem& bookHashItem)
 		return QString("%1: %2").arg(item.first).arg(item.second);
 	});
 	result << QString("cover%1").arg(
-		bookHashItem.cover.hash.isEmpty() ? QString { " not found" } : QString(" hash: %1, pHash: %2").arg(bookHashItem.cover.hash).arg(bookHashItem.cover.pHash, 16, 16, QChar { '0' }));
+		bookHashItem.cover.hash.isEmpty() ? QString { " not found" } : QString(" hash: %1, pHash: %2").arg(bookHashItem.cover.hash).arg(bookHashItem.cover.pHash, 16, 16, QChar { '0' })
+	);
 	std::ranges::transform(bookHashItem.images, std::back_inserter(result), [](const auto& item) {
 		return QString("image %1 hash: %2, pHash: %3").arg(item.file, item.hash).arg(item.pHash, 16, 16, QChar { '0' });
 	});
@@ -288,32 +299,38 @@ QByteArray Serialize(const BookHashItem& bookHashItem)
 {
 	QJsonArray images;
 	for (const auto& image : bookHashItem.images)
-		images.append(QJsonObject {
-			{ KEY_ID, image.file },
-			{ KEY_HASH, image.hash },
-			{ KEY_PHASH, QString("%1").arg(image.pHash, 16, 16, QChar { '0' }) },
-		});
+		images.append(
+			QJsonObject {
+				{ KEY_ID, image.file },
+				{ KEY_HASH, image.hash },
+				{ KEY_PHASH, QString("%1").arg(image.pHash, 16, 16, QChar { '0' }) },
+		}
+		);
 
 	QJsonArray histogram;
 	for (const auto& [count, word] : bookHashItem.parseResult.hashValues)
-		histogram.append(QJsonObject {
-			{ KEY_COUNT, static_cast<int>(count) },
-			{  KEY_WORD,                    word },
-		});
+		histogram.append(
+			QJsonObject {
+				{ KEY_COUNT, static_cast<int>(count) },
+				{  KEY_WORD,                    word },
+		}
+		);
 	QJsonObject obj {
 		{    KEY_FOLDER,               bookHashItem.folder },
-		{      KEY_FILE,                 bookHashItem.file },
-		{        KEY_ID,       bookHashItem.parseResult.id },
-		{      KEY_HASH, bookHashItem.parseResult.hashText },
+        {      KEY_FILE,                 bookHashItem.file },
+        {        KEY_ID,       bookHashItem.parseResult.id },
+        {      KEY_HASH, bookHashItem.parseResult.hashText },
 		{     KEY_TITLE,    bookHashItem.parseResult.title },
-		{ KEY_HISTOGRAM,              std::move(histogram) },
+        { KEY_HISTOGRAM,              std::move(histogram) },
 	};
 	if (!bookHashItem.cover.hash.isEmpty())
-		obj.insert(KEY_COVER,
+		obj.insert(
+			KEY_COVER,
 			QJsonObject {
 				{ KEY_HASH, bookHashItem.cover.hash },
 				{ KEY_PHASH, QString("%1").arg(bookHashItem.cover.pHash, 16, 16, QChar { '0' }) },
-		});
+		}
+		);
 	if (!images.isEmpty())
 		obj.insert(KEY_IMAGES, std::move(images));
 
@@ -356,23 +373,25 @@ BookHashItem Deserialize(const QByteArray& bytes)
 				return {};
 
 			return value.toArray() | std::views::transform([](const auto& item) {
-				const auto imageObj = item.toObject();
-				return ImageHashItem { .file = imageObj.value(KEY_ID).toString(), .hash = imageObj.value(KEY_HASH).toString(), .pHash = imageObj.value(KEY_PHASH).toString().toULongLong(nullptr, 16) };
-			}) | std::ranges::to<ImageHashItems>();
+					   const auto imageObj = item.toObject();
+					   return ImageHashItem { .file = imageObj.value(KEY_ID).toString(), .hash = imageObj.value(KEY_HASH).toString(), .pHash = imageObj.value(KEY_PHASH).toString().toULongLong(nullptr, 16) };
+				   })
+		         | std::ranges::to<ImageHashItems>();
 										  }
               (),
-		.parseResult = { .id = obj.value(KEY_ID).toString(),
-										  .title           = obj.value(KEY_TITLE).toString(),
-										  .hashText        = obj.value(KEY_HASH).toString(),
-										  .hashValues      = [&]() -> TextHistogram {
-				const auto histogramValue = obj.value(KEY_HISTOGRAM);
-				if (histogramValue.isNull() || !histogramValue.isArray())
-					return {};
-				return histogramValue.toArray() | std::views::transform([](const auto& item) {
-					const auto word = item.toObject();
-					return std::make_pair(word.value(KEY_COUNT).toInt(), word.value(KEY_WORD).toString());
-				}) | std::ranges::to<TextHistogram>();
-			}() }
+		.parseResult = { .id         = obj.value(KEY_ID).toString(),
+		                                  .title      = obj.value(KEY_TITLE).toString(),
+		                                  .hashText   = obj.value(KEY_HASH).toString(),
+		                                  .hashValues = [&]() -> TextHistogram {
+							 const auto histogramValue = obj.value(KEY_HISTOGRAM);
+							 if (histogramValue.isNull() || !histogramValue.isArray())
+								 return {};
+							 return histogramValue.toArray() | std::views::transform([](const auto& item) {
+										const auto word = item.toObject();
+										return std::make_pair(word.value(KEY_COUNT).toInt(), word.value(KEY_WORD).toString());
+									})
+		                          | std::ranges::to<TextHistogram>();
+						 }() }
 	};
 }
 
@@ -383,12 +402,13 @@ QStringList Compare(const BookHashItem& lhs, const BookHashItem& rhs)
 	auto compareResult  = CompareTexts(result, lhs.parseResult, rhs.parseResult);
 	compareResult      |= CompareImages(result, lhs.images, rhs.images);
 
-	result << (compareResult == CompareResult::None                         ? "books are the same"
-	           : compareResult == CompareResult::Images                     ? "books are probably the same"
-	           : (compareResult & CompareResult::All) == CompareResult::All ? "books are different"
-	           : !!(compareResult | CompareResult::Left)                    ? QString("left%1 includes right").arg(!!(compareResult | CompareResult::Images) ? " probably" : "")
-	           : !!(compareResult | CompareResult::Right)                   ? QString("right%1 includes left").arg(!!(compareResult | CompareResult::Images) ? " probably" : "")
-	                                                                        : (assert(false && "bad logic"), "wtf"));
+	result
+	    << (compareResult == CompareResult::None                         ? "books are the same"
+	        : compareResult == CompareResult::Images                     ? "books are probably the same"
+	        : (compareResult & CompareResult::All) == CompareResult::All ? "books are different"
+	        : !!(compareResult | CompareResult::Left)                    ? QString("left%1 includes right").arg(!!(compareResult | CompareResult::Images) ? " probably" : "")
+	        : !!(compareResult | CompareResult::Right)                   ? QString("right%1 includes left").arg(!!(compareResult | CompareResult::Images) ? " probably" : "")
+	                                                                     : (assert(false && "bad logic"), "wtf"));
 
 	return result;
 }

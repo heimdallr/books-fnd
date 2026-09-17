@@ -43,7 +43,8 @@ public:
 				[&](auto&&... tupleArgs) {
 					std::invoke(function, observer, tupleArgs...);
 				},
-				tuple);
+				tuple
+			);
 	}
 
 protected:

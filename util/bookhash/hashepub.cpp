@@ -67,8 +67,8 @@ private: // BookHash::IParser
 		std::unordered_set<QString> linkedImage;
 
 		for (auto [id, body] : m_result.texts | std::views::filter([](const auto& item) {
-				 return EpubParser::IsEPubTextFile(item.id);
-			 }))
+								   return EpubParser::IsEPubTextFile(item.id);
+							   }))
 		{
 #ifdef ADDITIONAL_LOG_ENABLED
 			PLOGV << "process " << id;
@@ -100,8 +100,9 @@ private: // BookHash::IParser
 		};
 
 		const auto imageIndex = EpubParser::GetImageIndex(m_result.imageIndex) | std::views::transform([](const auto& item) {
-			return std::make_pair(QFileInfo(item.first).fileName().toLower(), item.second);
-		}) | std::ranges::to<std::unordered_map>();
+									return std::make_pair(QFileInfo(item.first).fileName().toLower(), item.second);
+								})
+		                      | std::ranges::to<std::unordered_map>();
 		for (const auto& imageName : linkedImage)
 			if (const auto it = imageIndex.find(QFileInfo(imageName).fileName().toLower()); it != imageIndex.end())
 				result.linkedImages.emplace(QString::number(it->second));
@@ -122,8 +123,9 @@ private: // BookHash::IParser
 	ImageHashItems GetImages() override
 	{
 		return m_result.images | std::views::as_rvalue | std::views::drop(m_result.coverExists ? 1 : 0) | std::views::transform([](auto&& item) {
-			return ImageHashItem { .file = std::move(item.id), .body = std::move(item.body) };
-		}) | std::ranges::to<std::vector>();
+				   return ImageHashItem { .file = std::move(item.id), .body = std::move(item.body) };
+			   })
+		     | std::ranges::to<std::vector>();
 	}
 
 private:

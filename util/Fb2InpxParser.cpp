@@ -119,7 +119,8 @@ private: // SaxParser
 					},
 					[&] {
 						m_data.annotation.append(QString(">"));
-					});
+					}
+				);
 				for (size_t i = 0, sz = attributes.GetCount(); i < sz; ++i)
 					m_data.annotation.append(QString(R"( %1="%2")").arg(attributes.GetName(i), attributes.GetValue(i)));
 			}

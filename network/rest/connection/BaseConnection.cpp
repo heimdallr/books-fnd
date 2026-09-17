@@ -59,11 +59,13 @@ void BaseConnection::Get(const std::string& request)
 		page               = GetNextPage(headers);
 	}
 
-	if (const auto it = std::ranges::find_if(m_impl->data,
+	if (const auto it = std::ranges::find_if(
+			m_impl->data,
 			[](const auto& item) {
 				return item.isObject();
-			});
-		it != m_impl->data.end())
+			}
+		);
+	    it != m_impl->data.end())
 		return m_impl->Perform(&IObserver::HandleReceivedData, *it);
 
 	PLOGE << "No data on " << request;
