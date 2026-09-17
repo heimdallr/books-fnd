@@ -26,7 +26,7 @@ public:
 
 public:
 	explicit Canny(int gaussianFilterSize = 3, double gaussianSigma = 1, int thresholdLow = 20, int thresholdHigh = 40);
-	Rect Process(const cimg_library::CImg<unsigned char>& img) const;
+	Rect Process(const cimg_library::CImg<unsigned char>& img, void (*logImage)(const cimg_library::CImg<unsigned char>&, const char*, const char*) = nullptr) const;
 
 private:
 	const int m_thresholdLow, m_thresholdHigh;

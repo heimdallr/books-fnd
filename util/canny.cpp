@@ -227,7 +227,7 @@ Canny::Canny(const int gaussianFilterSize, const double gaussianSigma, const int
 {
 }
 
-Canny::Rect Canny::Process(const CImg<unsigned char>& img) const
+Canny::Rect Canny::Process(const CImg<unsigned char>& img, void (*logImage)(const CImg<unsigned char>&, const char*, const char*)) const
 {
 	if (std::min(img.width(), img.height()) < 20)
 		return Rect {};
@@ -235,7 +235,15 @@ Canny::Rect Canny::Process(const CImg<unsigned char>& img) const
 	const auto gFiltered           = ApplyFilter(img, m_gaussianFilter);
 	const auto [sFiltered, angles] = ApplySobel(gFiltered);
 	const auto nonMaxSupped        = nonMaxSupp(sFiltered, angles);
-	const auto threshold           = ApplyThreshold(nonMaxSupped, m_thresholdLow, m_thresholdHigh);
+	auto       threshold           = ApplyThreshold(nonMaxSupped, m_thresholdLow, m_thresholdHigh);
+
+	if (logImage)
+	{
+		logImage(gFiltered, "30-filtered", "pnm");
+		logImage(sFiltered, "31-sobel", "pnm");
+		logImage(nonMaxSupped, "32-supped", "pnm");
+		logImage(threshold, "33-threshold", "pnm");
+	}
 
 	Rect rect { .top = 0, .left = 0, .bottom = static_cast<int16_t>(threshold._height), .right = static_cast<int16_t>(threshold._width) };
 	for (const auto* data = threshold.data(); rect.top < rect.bottom; ++rect.top, data += threshold._width)
@@ -257,6 +265,12 @@ leftFound:
 			if (threshold(rect.right - 1, i) == 255)
 				goto rightFound;
 rightFound:
+
+	if (logImage)
+	{
+		threshold.crop(rect.left, rect.top, rect.right - 1, rect.bottom - 1);
+		logImage(threshold, "34-cropped", "pnm");
+	}
 
 	return rect;
 }

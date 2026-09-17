@@ -11,6 +11,8 @@
 #include <array>
 #include <set>
 
+#include <QDir>
+
 #include "fnd/ScopedCall.h"
 #include "fnd/linear.h"
 
@@ -21,6 +23,8 @@
 #include "StrUtil.h"
 #include "log.h"
 #include "parser.h"
+
+#include "config/version.h"
 
 #define BOOK_HASH_PARSER_ITEMS_X_MACRO                                                                                                                                                                         \
 	BOOK_HASH_PARSER_ITEM(fb2)                                                                                                                                                                                 \
@@ -57,70 +61,6 @@ CImg<float> GetDctMatrix(const int N)
 const CImg<float> DCT   = GetDctMatrix(32);
 const CImg<float> DCT_T = DCT.get_transpose();
 const CImg<float> MEAN_FILTER(7, 7, 1, 1, 1);
-
-void GetPHash(ImageHashItem& item)
-{
-	item.encodedSize = item.body.size();
-	auto image       = Decode(item.body);
-	if (image.isNull())
-		return;
-
-	item.size = image.size();
-
-	item.decodedSize = image.bytesPerLine() * image.height();
-	item.hasAlpha    = image.pixelFormat().alphaUsage() == QPixelFormat::UsesAlpha;
-	image.convertTo(item.hasAlpha ? QImage::Format_RGBA8888 : QImage::Format_Grayscale8);
-
-	auto          data = new uint8_t[static_cast<size_t>(image.width()) * image.height()];
-	CImg<uint8_t> img(data, image.width(), image.height(), 1, 1, true);
-	img._is_shared = false;
-
-	if (item.hasAlpha)
-	{
-		auto* dst = img.data();
-		for (auto h = 0, szh = image.height(), szw = image.width(); h < szh; ++h)
-		{
-			const auto* src = image.scanLine(h);
-			for (auto w = 0; w < szw; ++w, ++dst, src += 4)
-				*dst = static_cast<uint8_t>(std::lround((0.299 * src[0] + 0.587 * src[1] + 0.114 * src[2]) * src[3] / 255.0 + (255.0 - src[3])));
-		}
-	}
-	else
-	{
-		auto* dst = img.data();
-		for (auto h = 0, szh = image.height(), szw = image.width(); h < szh; ++h, dst += szw)
-			memcpy(dst, image.scanLine(h), szw);
-	}
-
-	const Canny canny;
-	const auto  cropRect = canny.Process(img);
-	static_assert(sizeof(cropRect) == sizeof(uint64_t));
-
-	if (cropRect.width() > img.width() / 2 && cropRect.height() > img.height() / 2)
-		img.crop(cropRect.left, cropRect.top, cropRect.right - 1, cropRect.bottom - 1);
-
-	const auto resized = img.get_convolve(MEAN_FILTER).resize(32, 32);
-	const auto dct     = (DCT * resized * DCT_T).crop(1, 1, 8, 8);
-
-#ifndef NDEBUG
-	QString          str;
-	const ScopedCall strGuard([&] {
-		PLOGV << item.file << ": " << str;
-	});
-#endif
-
-	item.pHash = std::accumulate(dct._data, dct._data + 64, uint64_t { 0 }, [&, median = dct.median()](const uint64_t init, const float value) {
-		auto result = init << 1;
-		if (value > median)
-			result |= 1;
-
-#ifndef NDEBUG
-		str.append(value > median ? "1" : "0");
-#endif
-
-		return result;
-	});
-}
 
 using ParserCreator = std::unique_ptr<IParser> (*)(QIODevice& stream);
 
@@ -268,6 +208,97 @@ CalculateHashResult CalculateHash(Hist& hist)
 	hist.clear();
 
 	return { .hashValues = std::move(hashValues.first), .hash = std::move(hash), .count = count, .size = hashValues.second, .simHash = simHash };
+}
+
+size_t LOG_IMAGE_NUMBER = 0;
+
+QString GenerateFileName(const char* name, const char* ext)
+{
+	QDir dir(QString("%1/%2").arg(QDir::tempPath(), PRODUCT_ID));
+	if (!dir.exists())
+		dir.mkpath(".");
+	return dir.filePath(QString("%1-%2.%3").arg(name).arg(LOG_IMAGE_NUMBER, 4, 10, QChar { '0' }).arg(ext));
+}
+
+void Save(const CImg<unsigned char>& img, const char* name, const char* ext)
+{
+	img.save(GenerateFileName(name, ext).toStdString().data());
+}
+
+void SaveStub(const CImg<unsigned char>&, const char*, const char*)
+{
+}
+
+void GetPHash(ImageHashItem& item, const bool logImage)
+{
+	++LOG_IMAGE_NUMBER;
+
+	item.encodedSize = item.body.size();
+	auto image       = Decode(item.body);
+	if (image.isNull())
+		return;
+
+	const auto save = logImage ? &Save : &SaveStub;
+
+	if (logImage)
+		std::ignore = image.save(GenerateFileName("10-source", "bmp"));
+
+	item.size = image.size();
+
+	item.decodedSize = image.bytesPerLine() * image.height();
+	item.hasAlpha    = image.pixelFormat().alphaUsage() == QPixelFormat::UsesAlpha;
+	image.convertTo(item.hasAlpha ? QImage::Format_RGBA8888 : QImage::Format_Grayscale8);
+
+	auto          data = new uint8_t[static_cast<size_t>(image.width()) * image.height()];
+	CImg<uint8_t> img(data, image.width(), image.height(), 1, 1, true);
+	img._is_shared = false;
+
+	if (item.hasAlpha)
+	{
+		auto* dst = img.data();
+		for (auto h = 0, szh = image.height(), szw = image.width(); h < szh; ++h)
+		{
+			const auto* src = image.scanLine(h);
+			for (auto w = 0; w < szw; ++w, ++dst, src += 4)
+				*dst = static_cast<uint8_t>(std::lround((0.299 * src[0] + 0.587 * src[1] + 0.114 * src[2]) * src[3] / 255.0 + (255.0 - src[3])));
+		}
+	}
+	else
+	{
+		auto* dst = img.data();
+		for (auto h = 0, szh = image.height(), szw = image.width(); h < szh; ++h, dst += szw)
+			memcpy(dst, image.scanLine(h), szw);
+	}
+
+	save(img, "20-converted", "pnm");
+
+	const Canny canny;
+	const auto  cropRect = canny.Process(img, logImage ? &Save : nullptr);
+	static_assert(sizeof(cropRect) == sizeof(uint64_t));
+
+	if (cropRect.width() > img.width() / 2 && cropRect.height() > img.height() / 2)
+		img.crop(cropRect.left, cropRect.top, cropRect.right - 1, cropRect.bottom - 1);
+	save(img, "40-cropped", "pnm");
+
+	const auto resized = img.get_convolve(MEAN_FILTER).resize(32, 32);
+	save(resized, "50-resized", "pnm");
+
+	const auto dct = (DCT * resized * DCT_T).crop(1, 1, 8, 8);
+	Save(dct, "60-dct", "pnm");
+
+#ifndef NDEBUG
+	const ScopedCall strGuard([&] {
+		PLOGV << item.file << ": " << QString("%1").arg(item.pHash, 64, 2, QChar { '0' });
+	});
+#endif
+
+	item.pHash = std::accumulate(dct._data, dct._data + 64, uint64_t { 0 }, [&, median = dct.median()](const uint64_t init, const float value) {
+		auto result = init << 1;
+		if (value > median)
+			result |= 1;
+
+		return result;
+	});
 }
 
 void ParseBookHash(BookHashItem& bookHashItem, QCryptographicHash& cryptographicHash)

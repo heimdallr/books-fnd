@@ -11,6 +11,7 @@ namespace HomeCompa::Util {
 using HashValues = std::vector<std::pair<size_t, QString>>;
 using Hist       = std::unordered_map<QString, size_t>;
 
+UTIL_EXPORT void GetPHash(ImageHashItem& item, bool logImage = false);
 UTIL_EXPORT void ParseBookHash(BookHashItem& bookHashItem, QCryptographicHash& cryptographicHash);
 UTIL_EXPORT Hist CollectHistogram(QByteArray body, QCryptographicHash& md5);
 
