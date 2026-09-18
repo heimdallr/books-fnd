@@ -381,6 +381,20 @@ QByteArray PrepareToExport_epub(QIODevice& stream, Covers covers, std::unique_pt
 
 	const auto zipFiles = Zip::CreateZipFileController();
 
+	if (const auto mimetypeIt = std::ranges::find(
+			parseResult.texts,
+			"mimetype",
+			[](const auto& item) {
+				return item.id;
+			}
+		);
+	    mimetypeIt != parseResult.texts.end())
+	{
+		const auto [id, body] = *mimetypeIt;
+		parseResult.texts.erase(mimetypeIt);
+		zipFiles->AddFile(id, body);
+	}
+
 	auto addImage = [&](const QString& id, const QByteArray& body, const bool isCover) {
 		if (const auto [bytes, _] = RecodeImage(isCover, imageProcessing, body, QFileInfo(id).suffix()); !bytes.isEmpty())
 			zipFiles->AddFile(id, bytes);
@@ -420,6 +434,7 @@ QByteArray PrepareToExport_epub(QIODevice& stream, Covers covers, std::unique_pt
 		Zip output(buffer, Zip::Format::Zip);
 		output.Write(*zipFiles);
 	}
+
 	return result;
 }
 
