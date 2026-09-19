@@ -432,6 +432,8 @@ QByteArray PrepareToExport_epub(QIODevice& stream, Covers covers, std::unique_pt
 		QBuffer buffer(&result);
 		buffer.open(QIODevice::WriteOnly);
 		Zip output(buffer, Zip::Format::Zip);
+		output.SetProperty(Zip::PropertyId::CompressionMethod, QVariant::fromValue(Zip::CompressionMethod::Deflate));
+		output.SetProperty(Zip::PropertyId::CompressionLevel, QVariant::fromValue(Zip::CompressionLevel::Ultra));
 		output.Write(*zipFiles);
 	}
 
