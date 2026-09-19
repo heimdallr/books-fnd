@@ -66,7 +66,7 @@ CompareResult CompareTexts(QStringList& result, const HashParseResult& lhs, cons
 	if (lhs.hashText == rhs.hashText)
 		return (result << "texts are equal"), CompareResult::None;
 
-	result << QString("texts are different: %1 vs %2").arg(lhs.hashText, rhs.hashText);
+	result << QString("texts are different: %1 vs %2, SimHash hamming distance: %3").arg(lhs.hashText, rhs.hashText).arg(std::popcount(lhs.simHash ^ rhs.simHash));
 	std::ranges::transform(std::views::zip(lhs.hashValues, rhs.hashValues), std::back_inserter(result), [](const auto& item) {
 		const auto& lhsItem = std::get<0>(item);
 		const auto& rhsItem = std::get<1>(item);
