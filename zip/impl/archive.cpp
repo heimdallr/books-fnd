@@ -383,6 +383,12 @@ protected:
 		return {};
 	}
 
+	template <typename Impl, typename... ARGS>
+	[[nodiscard]] auto CreateArchiveImpl(ARGS&&... args) const
+	{
+		return std::make_unique<Impl>(m_lib, std::forward<ARGS>(args)...);
+	}
+
 private:
 	void SetArchiveProperties() const
 	{
@@ -471,21 +477,15 @@ private: // IZip
 	}
 
 private:
-	template <typename T>
-	auto CreateArchive(const Format format) const
-	{
-		return std::make_unique<T>(m_lib, m_filename.toBit7zString(), GetInOutFormat(format));
-	}
-
-	std::unique_ptr<bit7z::BitArchiveWriter> CreateArchive(const Format format, const bool appendMode) const
+	[[nodiscard]] std::unique_ptr<bit7z::BitArchiveWriter> CreateArchive(const Format format, const bool appendMode) const
 	{
 		if (!appendMode && QFile::exists(m_filename))
 			QFile::remove(m_filename);
 
 		if (!QFile::exists(m_filename))
-			return CreateArchive<bit7z::BitArchiveWriter>(format);
+			return CreateArchiveImpl<bit7z::BitArchiveWriter>(m_filename.toBit7zString(), GetInOutFormat(format));
 
-		const bit7z::BitInOutFormat* outFormats[] {
+		static constexpr std::array outFormats {
 			&bit7z::BitFormat::Zip, &bit7z::BitFormat::BZip2, &bit7z::BitFormat::SevenZip, &bit7z::BitFormat::Xz, &bit7z::BitFormat::Wim, &bit7z::BitFormat::Tar, &bit7z::BitFormat::GZip,
 		};
 
@@ -497,7 +497,7 @@ private:
 		if (it == std::end(outFormats))
 			throw std::runtime_error(std::format("Unsupported file format for editing: ", m_filename));
 
-		return std::make_unique<bit7z::BitArchiveEditor>(m_lib, m_filename.toBit7zString(), **it);
+		return CreateArchiveImpl<bit7z::BitArchiveEditor>(m_filename.toBit7zString(), **it);
 	}
 
 private:
