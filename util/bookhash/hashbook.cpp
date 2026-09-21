@@ -233,6 +233,23 @@ CalculateHashResult CalculateHash(Hist& hist)
 	return { .hashValues = std::move(hashValues.first), .hash = std::move(hash), .count = count, .size = hashValues.second, .simHash = simHash };
 }
 
+uint64_t GetPHash(const CImg<uint8_t>& img, void (*save)(const CImg<unsigned char>&, const char*, const char*))
+{
+	const auto resized = img.get_convolve(MEAN_FILTER).resize(32, 32);
+	save(resized, "50-resized", "pnm");
+
+	const auto dct = (DCT * resized * DCT_T).crop(1, 1, 8, 8);
+	save(dct, "60-dct", "pnm");
+
+	return std::accumulate(dct._data, dct._data + 64, uint64_t { 0 }, [&, median = dct.median()](const uint64_t init, const float value) {
+		auto result = init << 1;
+		if (value > median)
+			result |= 1;
+
+		return result;
+	});
+}
+
 void GetPHash(ImageHashItem& item, const bool logImage)
 {
 	++LOG_IMAGE_NUMBER;
@@ -276,33 +293,27 @@ void GetPHash(ImageHashItem& item, const bool logImage)
 
 	save(img, "20-converted", "pnm");
 
+	item.pHash = GetPHash(img, save);
+
 	const Canny canny;
 	const auto  cropRect = canny.Process(img, logImage ? &Save : nullptr);
 	static_assert(sizeof(cropRect) == sizeof(uint64_t));
 
-	if (cropRect.width() > img.width() / 2 && cropRect.height() > img.height() / 2)
-		img.crop(cropRect.left, cropRect.top, cropRect.right - 1, cropRect.bottom - 1);
-	save(img, "40-cropped", "pnm");
-
-	const auto resized = img.get_convolve(MEAN_FILTER).resize(32, 32);
-	save(resized, "50-resized", "pnm");
-
-	const auto dct = (DCT * resized * DCT_T).crop(1, 1, 8, 8);
-	Save(dct, "60-dct", "pnm");
+	if ((cropRect.width() == img.width() / 2 && cropRect.height() == img.height()) || cropRect.width() < img.width() / 3 || cropRect.height() < img.height() / 3)
+	{
+		item.pHash2 = item.pHash;
+	}
+	else
+	{
+		if (cropRect.width() > img.width() / 2 && cropRect.height() > img.height() / 2)
+			img.crop(cropRect.left, cropRect.top, cropRect.right - 1, cropRect.bottom - 1);
+		save(img, "40-cropped", "pnm");
+		item.pHash2 = GetPHash(img, save);
+	}
 
 #ifndef NDEBUG
-	const ScopedCall strGuard([&] {
-		PLOGV << item.file << ": " << QString("%1").arg(item.pHash, 64, 2, QChar { '0' });
-	});
+	PLOGV << item.file << ": " << QString("%1").arg(item.pHash, 64, 2, QChar { '0' }) << ", " << QString("%1").arg(item.pHash2, 64, 2, QChar { '0' });
 #endif
-
-	item.pHash = std::accumulate(dct._data, dct._data + 64, uint64_t { 0 }, [&, median = dct.median()](const uint64_t init, const float value) {
-		auto result = init << 1;
-		if (value > median)
-			result |= 1;
-
-		return result;
-	});
 }
 
 void ParseBookHash(BookHashItem& bookHashItem, QCryptographicHash& cryptographicHash)

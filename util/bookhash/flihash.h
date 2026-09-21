@@ -41,6 +41,7 @@ struct ImageHashItem
 	QByteArray body;
 	QString    hash;
 	uint64_t   pHash { 0 };
+	uint64_t   pHash2 { 0 };
 	size_t     encodedSize { 0 };
 	size_t     decodedSize { 0 };
 	QSize      size;
