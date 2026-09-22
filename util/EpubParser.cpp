@@ -174,7 +174,7 @@ struct HtmlParserSymbolCounter final : private SaxParser
 private: // SaxParser
 	bool OnCharacters(const QStringView path, const QStringView value) override
 	{
-		if (!path.startsWith(u"html/body"))
+		if (!path.startsWith(u"html/body", Qt::CaseInsensitive))
 			return true;
 
 		m_result.textSize  += value.length();

@@ -145,8 +145,11 @@ struct HtmlParser final : private SaxParser
 	}
 
 private: // SaxParser
-	bool OnCharacters(QStringView, const QStringView value) override
+	bool OnCharacters(const QStringView path, const QStringView value) override
 	{
+		if (!path.startsWith(u"html/body", Qt::CaseInsensitive))
+			return true;
+
 		auto valueCopy = value.toString();
 
 		Normalize(valueCopy);
