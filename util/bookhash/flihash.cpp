@@ -199,8 +199,9 @@ CompareResult CompareImages(QStringList& result, const ImageHashItems& lhs, cons
 
 struct BookHashItemProvider::Impl
 {
-	Zip             zip;
+	QString         folder;
 	const QFileInfo fileInfo;
+	Zip             zip;
 
 	std::unique_ptr<Zip> coversZip { GetZip(fileInfo, Global::COVERS) };
 	std::unique_ptr<Zip> imagesZip { GetZip(fileInfo, Global::IMAGES) };
@@ -208,15 +209,16 @@ struct BookHashItemProvider::Impl
 	std::set<QString> covers { (coversZip ? coversZip->GetFileNameList() : QStringList {}) | std::ranges::to<std::set<QString>>() };
 	std::set<QString> images { (imagesZip ? imagesZip->GetFileNameList() : QStringList {}) | std::ranges::to<std::set<QString>>() };
 
-	explicit Impl(const QString& path)
-		: zip(path)
-		, fileInfo(path)
+	Impl(const QString& archivesFolder, QString folder)
+		: folder { std::move(folder) }
+		, fileInfo(archivesFolder + "/" + this->folder)
+		, zip(fileInfo.filePath())
 	{
 	}
 };
 
-BookHashItemProvider::BookHashItemProvider(const QString& path)
-	: m_impl(path)
+BookHashItemProvider::BookHashItemProvider(const QString& archivesFolder, QString folder)
+	: m_impl(archivesFolder, std::move(folder))
 {
 }
 
@@ -229,7 +231,7 @@ QStringList BookHashItemProvider::GetFiles() const
 
 BookHashItem BookHashItemProvider::Get(const QString& file) const
 {
-	BookHashItem bookHashItem { .folder = m_impl->fileInfo.fileName(), .file = file, .body = m_impl->zip.Read(file)->GetStream().readAll() };
+	BookHashItem bookHashItem { .folder = m_impl->folder, .file = file, .body = m_impl->zip.Read(file)->GetStream().readAll() };
 
 	const auto baseName = QFileInfo(file).completeBaseName();
 	if (m_impl->coversZip && m_impl->covers.contains(baseName))
@@ -256,12 +258,12 @@ BookHashItem BookHashItemProvider::Get(const QString& file) const
 
 namespace HomeCompa::Util {
 
-BookHashItem GetHash(const QString& path, const QString& file)
+BookHashItem GetHash(const QString& archivesFolder, QString folder, const QString& file)
 {
 	try
 	{
 		QCryptographicHash md5 { QCryptographicHash::Md5 };
-		auto               bookHashItem = BookHashItemProvider(path).Get(file);
+		auto               bookHashItem = BookHashItemProvider(archivesFolder, std::move(folder)).Get(file);
 		ParseBookHash(bookHashItem, md5);
 		bookHashItem.body.clear();
 		return bookHashItem;

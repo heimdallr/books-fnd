@@ -66,7 +66,7 @@ class UTIL_EXPORT BookHashItemProvider
 	NON_COPY_MOVABLE(BookHashItemProvider)
 
 public:
-	explicit BookHashItemProvider(const QString& path);
+	BookHashItemProvider(const QString& archivesFolder, QString folder);
 	~BookHashItemProvider();
 
 public:
@@ -78,7 +78,7 @@ private:
 	PropagateConstPtr<Impl> m_impl;
 };
 
-UTIL_EXPORT BookHashItem GetHash(const QString& path, const QString& file);
+UTIL_EXPORT BookHashItem GetHash(const QString& archivesFolder, QString folder, const QString& file);
 UTIL_EXPORT BookHashItem GetHash(DB::IDatabase& db, const QString& folder, const QString& file);
 UTIL_EXPORT std::ostream& operator<<(std::ostream& stream, const BookHashItem& bookHashItem);
 UTIL_EXPORT QByteArray    Serialize(const BookHashItem& bookHashItem);
