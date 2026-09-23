@@ -45,7 +45,9 @@ constexpr auto KEY_FILE      = "file";
 constexpr auto KEY_TITLE     = "title";
 constexpr auto KEY_ID        = "id";
 constexpr auto KEY_HASH      = "hash";
+constexpr auto KEY_SIM_HASH  = "simHash";
 constexpr auto KEY_PHASH     = "phash";
+constexpr auto KEY_PHASH2    = "phash2";
 constexpr auto KEY_COVER     = "cover";
 constexpr auto KEY_IMAGES    = "images";
 constexpr auto KEY_HISTOGRAM = "histogram";
@@ -318,12 +320,13 @@ QByteArray Serialize(const BookHashItem& bookHashItem)
 		}
 		);
 	QJsonObject obj {
-		{    KEY_FOLDER,               bookHashItem.folder },
-        {      KEY_FILE,                 bookHashItem.file },
-        {        KEY_ID,       bookHashItem.parseResult.id },
-        {      KEY_HASH, bookHashItem.parseResult.hashText },
-		{     KEY_TITLE,    bookHashItem.parseResult.title },
-        { KEY_HISTOGRAM,              std::move(histogram) },
+		{ KEY_FOLDER, bookHashItem.folder },
+		{ KEY_FILE, bookHashItem.file },
+		{ KEY_ID, bookHashItem.parseResult.id },
+		{ KEY_HASH, bookHashItem.parseResult.hashText },
+		{ KEY_SIM_HASH, QString("%1").arg(bookHashItem.parseResult.simHash, 16, 16, QChar { '0' }) },
+		{ KEY_TITLE, bookHashItem.parseResult.title },
+		{ KEY_HISTOGRAM, std::move(histogram) },
 	};
 	if (!bookHashItem.cover.hash.isEmpty())
 		obj.insert(
@@ -331,6 +334,7 @@ QByteArray Serialize(const BookHashItem& bookHashItem)
 			QJsonObject {
 				{ KEY_HASH, bookHashItem.cover.hash },
 				{ KEY_PHASH, QString("%1").arg(bookHashItem.cover.pHash, 16, 16, QChar { '0' }) },
+				{ KEY_PHASH2, QString("%1").arg(bookHashItem.cover.pHash2, 16, 16, QChar { '0' }) },
 		}
 		);
 	if (!images.isEmpty())
@@ -366,7 +370,9 @@ BookHashItem Deserialize(const QByteArray& bytes)
 				return {};
 
 			const auto object = value.toObject();
-			return ImageHashItem { .hash = object.value(KEY_HASH).toString(), .pHash = object.value(KEY_PHASH).toString().toULongLong(nullptr, 16) };
+			return ImageHashItem { .hash   = object.value(KEY_HASH).toString(),
+			                       .pHash  = object.value(KEY_PHASH).toString().toULongLong(nullptr, 16),
+			                       .pHash2 = object.value(KEY_PHASH2).toString().toULongLong(nullptr, 16) };
 										  }
               (),
 		.images = [&]() -> ImageHashItems {
@@ -393,7 +399,8 @@ BookHashItem Deserialize(const QByteArray& bytes)
 										return std::make_pair(word.value(KEY_COUNT).toInt(), word.value(KEY_WORD).toString());
 									})
 		                          | std::ranges::to<TextHistogram>();
-						 }() }
+						 }(),
+		                                  .simHash = obj.value(KEY_SIM_HASH).toString().toULongLong(nullptr, 16) }
 	};
 }
 
