@@ -34,6 +34,11 @@ constexpr auto SUBJECT     = u"subject";
 constexpr auto CREATOR     = u"creator";
 constexpr auto ITEMREF     = u"itemref";
 constexpr auto REFERENCE   = u"reference";
+constexpr auto IDENTIFIER  = u"identifier";
+constexpr auto SCHEME      = u"scheme";
+constexpr auto ISBN        = u"ISBN";
+constexpr auto URN_ISBN    = u"urn:isbn:";
+constexpr auto ID          = u"id";
 
 QString CleanPath(const QString& relativePath, const QString& path)
 {
@@ -454,6 +459,35 @@ private:
 				if (const QString creatorText = value.toString().trimmed(); !creatorText.isEmpty())
 					m_result.authors.emplace_back(ParseAuthor(creatorText));
 			});
+
+		if (name.endsWith(IDENTIFIER, Qt::CaseInsensitive))
+		{
+			return (void)(m_functor = [&](const QStringView value) {
+				for (size_t i = 0, sz = attributes.GetCount(); i < sz; ++i)
+				{
+					const auto attrName = attributes.GetName(i), attrValue = attributes.GetValue(i);
+
+					if (value.startsWith(URN_ISBN, Qt::CaseInsensitive))
+						return (void)(m_result.isbn = QStringView(std::next(value.begin(), 9), value.end()).toString());
+
+					if (attrName == ID)
+					{
+						if (attrValue.contains(ISBN, Qt::CaseInsensitive))
+							return (void)(m_result.isbn = value.toString());
+						if (IsOneOf(value.length(), 13, 17) && value.startsWith(u"978", Qt::CaseInsensitive) || value.startsWith(u"979", Qt::CaseInsensitive))
+							return (void)(m_result.isbn = value.toString());
+					}
+
+					if (attrName.endsWith(SCHEME, Qt::CaseInsensitive) && attrValue.endsWith(ISBN, Qt::CaseInsensitive))
+						return (void)(m_result.isbn = value.toString());
+
+					if (value.startsWith(u"isbn", Qt::CaseInsensitive))
+						return (void)(m_result.isbn = value.toString());
+
+					PLOGV << "dc:identifier " << attrName << ":" << attrValue << "=" << value;
+				}
+			});
+		}
 
 		if ((name == u"meta" || name == u"opf:meta" || name == u"ns0:meta") && attributes.GetAttribute(u"name") == u"cover")
 			m_coverId = attributes.GetAttribute(u"content").toString();

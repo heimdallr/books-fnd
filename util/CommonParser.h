@@ -22,6 +22,7 @@ enum class Mode
 
 struct ParseResult
 {
+	QString                  isbn;
 	QString                  title;
 	QString                  language;
 	QStringList              genres;

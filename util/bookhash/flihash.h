@@ -24,6 +24,7 @@ using TextHistogram = std::vector<std::pair<size_t, QString>>;
 struct HashParseResult
 {
 	QString                     id;
+	QString                     isbn;
 	QString                     title;
 	QString                     hashText;
 	QStringList                 hashSections;

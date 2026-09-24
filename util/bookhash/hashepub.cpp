@@ -89,6 +89,7 @@ private: // BookHash::IParser
 
 		HashParseResult result {
 			.id           = QString::fromUtf8(md5.result().toHex()),
+			.isbn         = std::move(m_result.isbn),
 			.title        = std::move(m_result.title),
 			.hashText     = std::move(hash),
 			.hashSections = std::move(sections),

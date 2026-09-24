@@ -51,6 +51,7 @@ class Fb2Parser final
 	static constexpr auto TITLE           = u"FictionBook/description/title-info/book-title";
 	static constexpr auto COVERPAGE_IMAGE = u"FictionBook/description/title-info/coverpage/image";
 	static constexpr auto ANNOTATION      = u"FictionBook/description/title-info/annotation";
+	static constexpr auto ISBN            = u"FictionBook/description/publish-info/isbn";
 
 	static constexpr auto ID      = u"id";
 	static constexpr auto SECTION = u"section";
@@ -103,6 +104,7 @@ private: // BookHash::IParser
 
 		return {
 			.id           = QString::fromUtf8(m_md5.result().toHex()),
+			.isbn         = std::move(m_isbn),
 			.title        = std::move(m_title),
 			.hashText     = std::move(m_section.hash),
 			.hashSections = std::move(sections),
@@ -239,6 +241,9 @@ private: // Util::SaxParser
 		if (path == TITLE)
 			return (m_title = std::move(valueCopy)), true;
 
+		if (path == ISBN)
+			return (m_isbn = std::move(valueCopy)), true;
+
 		Normalize(valueCopy);
 
 		if (path.startsWith(BODY, Qt::CaseInsensitive))
@@ -289,6 +294,7 @@ private:
 	bool    m_isBinary { false };
 	QString m_coverPage;
 	QString m_picId;
+	QString m_isbn;
 
 	std::unordered_set<QString> m_linkedImages;
 };
