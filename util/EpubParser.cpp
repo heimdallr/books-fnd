@@ -474,7 +474,7 @@ private:
 					{
 						if (attrValue.contains(ISBN, Qt::CaseInsensitive))
 							return (void)(m_result.isbn = value.toString());
-						if (IsOneOf(value.length(), 13, 17) && value.startsWith(u"978", Qt::CaseInsensitive) || value.startsWith(u"979", Qt::CaseInsensitive))
+						if (IsOneOf(value.length(), 13, 17) && (value.startsWith(u"978", Qt::CaseInsensitive) || value.startsWith(u"979", Qt::CaseInsensitive)))
 							return (void)(m_result.isbn = value.toString());
 					}
 
