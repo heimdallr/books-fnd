@@ -133,6 +133,16 @@ void SaveStub(const CImg<unsigned char>&, const char*, const char*)
 {
 }
 
+bool IsTextElement(const QStringView name, const QStringView path)
+{
+	static constexpr const char16_t* TEXT_TAGS[] { u"p", u"blockquote", u"li", u"h1", u"h2", u"h3", u"h4", u"h5", u"h6" };
+	static constexpr auto            BODY = u"html/body/";
+
+	return path.startsWith(BODY) && std::ranges::any_of(TEXT_TAGS, [&](const char16_t* item) {
+			   return name == item;
+		   });
+}
+
 struct HtmlParser final : private SaxParser
 {
 	std::unordered_map<QString, size_t> hist;
@@ -145,15 +155,21 @@ struct HtmlParser final : private SaxParser
 	}
 
 private: // SaxParser
-	bool OnCharacters(const QStringView path, const QStringView value) override
+	bool OnStartElement(const QStringView name, const QStringView path, const XmlAttributes&) override
 	{
-		if (!path.startsWith(u"html/body", Qt::CaseInsensitive))
+		if (IsTextElement(name, path))
+			++m_textMode;
+
+		return true;
+	}
+
+	bool OnEndElement(const QStringView name, const QStringView path) override
+	{
+		if (!IsTextElement(name, path) || --m_textMode)
 			return true;
 
-		auto valueCopy = value.toString();
-
-		Normalize(valueCopy);
-		for (auto&& word : valueCopy.split(' ', Qt::SkipEmptyParts))
+		Normalize(m_text);
+		for (auto&& word : m_text.split(' ', Qt::SkipEmptyParts))
 		{
 			UpdateHash(word);
 
@@ -166,6 +182,16 @@ private: // SaxParser
 
 			++hist[word];
 		}
+
+		m_text.clear();
+
+		return true;
+	}
+
+	bool OnCharacters(QStringView, const QStringView value) override
+	{
+		if (m_textMode)
+			m_text.append(value);
 		return true;
 	}
 
@@ -180,6 +206,8 @@ private:
 
 private:
 	QCryptographicHash& m_md5;
+	int                 m_textMode { 0 };
+	QString             m_text;
 };
 
 } // namespace
