@@ -28,6 +28,9 @@ struct ParseResult
 	QStringList              genres;
 	std::vector<QStringList> authors;
 	QString                  annotation;
+	QString                  publisher;
+	QString                  year;
+	QString                  city;
 	QByteArray               imageIndex;
 	bool                     coverExists { false };
 	std::vector<ContentItem> images;

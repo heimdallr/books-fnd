@@ -35,6 +35,9 @@ constexpr auto CREATOR     = u"creator";
 constexpr auto ITEMREF     = u"itemref";
 constexpr auto REFERENCE   = u"reference";
 constexpr auto IDENTIFIER  = u"identifier";
+constexpr auto COVERAGE    = u"coverage";
+constexpr auto PUBLISHER   = u"publisher";
+constexpr auto YEAR        = u"date";
 constexpr auto SCHEME      = u"scheme";
 constexpr auto ISBN        = u"ISBN";
 constexpr auto URN_ISBN    = u"urn:isbn:";
@@ -449,6 +452,21 @@ private:
 				m_result.language = value.toString().trimmed().left(2).toLower();
 			});
 
+		if (name.endsWith(PUBLISHER, Qt::CaseInsensitive))
+			return (void)(m_functor = [this](const QStringView value) {
+				m_result.publisher = value.toString().trimmed();
+			});
+
+		if (name.endsWith(COVERAGE, Qt::CaseInsensitive))
+			return (void)(m_functor = [this](const QStringView value) {
+				m_result.city = value.toString().trimmed();
+			});
+
+		if (name.endsWith(YEAR, Qt::CaseInsensitive))
+			return (void)(m_functor = [this](const QStringView value) {
+				m_result.year = First(value.toString().trimmed(), 4);
+			});
+
 		if (name.endsWith(SUBJECT, Qt::CaseInsensitive))
 			return (void)(m_functor = [this](const QStringView value) {
 				ParseGenresString(m_result.genres, value.toString());
@@ -488,6 +506,8 @@ private:
 				}
 			});
 		}
+
+		m_functor = {};
 
 		if ((name == u"meta" || name == u"opf:meta" || name == u"ns0:meta") && attributes.GetAttribute(u"name") == u"cover")
 			m_coverId = attributes.GetAttribute(u"content").toString();
