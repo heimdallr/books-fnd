@@ -1,5 +1,7 @@
 #include "init.h"
 
+#include <iostream>
+
 #include <QCommandLineParser>
 #include <QDir>
 #include <QFile>
@@ -16,6 +18,8 @@ using namespace HomeCompa::Log;
 
 namespace {
 
+QString DEFAULT_LOG_PATH;
+
 std::string CheckForAppend(QString path)
 {
 	const QFileInfo fileInfo(path);
@@ -29,17 +33,38 @@ std::string CheckForAppend(QString path)
 	return path.toStdString();
 }
 
+template <class Formatter>
+class ConsoleAppender : public plog::IAppender
+{
+private:
+	void write(const plog::Record& record) override
+	{
+		(record.getSeverity() < plog::Severity::warning ? std::cerr : std::cout) << Formatter::format(record);
+	}
+};
+
+std::unique_ptr<plog::IAppender> CreateAppender(QString path)
+{
+	if (path == "console")
+		return std::make_unique<ConsoleAppender<plog::TxtFormatter>>();
+
+	if (path.isEmpty())
+		path = DEFAULT_LOG_PATH;
+
+	return std::make_unique<plog::RollingFileAppender<plog::TxtFormatter>>(CheckForAppend(path).data(), 1024ULL * 1024 * 1024, 10);
+}
+
 } // namespace
 
 struct LoggingInitializer::Impl
 {
-	plog::RollingFileAppender<plog::TxtFormatter> rollingFileAppender;
-	LogAppender                                   logAppender;
-	QtLogHandler                                  qtLogHandler;
+	PropagateConstPtr<plog::IAppender> logAppenderImpl;
+	LogAppender                        logAppender;
+	QtLogHandler                       qtLogHandler;
 
 	explicit Impl(const QString& path)
-		: rollingFileAppender(CheckForAppend(path).data(), 1024ULL * 1024 * 1024, 10)
-		, logAppender(&rollingFileAppender)
+		: logAppenderImpl { CreateAppender(path) }
+		, logAppender { logAppenderImpl.get() }
 	{
 	}
 };
@@ -51,15 +76,16 @@ LoggingInitializer::LoggingInitializer(const QString& path)
 
 LoggingInitializer::~LoggingInitializer() = default;
 
-QString LoggingInitializer::AddLogFileOption(QCommandLineParser& parser, const QString& defaultPath)
+QString LoggingInitializer::AddLogFileOption(QCommandLineParser& parser, QString defaultPath)
 {
 	static constexpr auto LOG = "log";
 	parser.addOption(
 		{
 			{ QString(LOG[0]), QString(LOG) },
-			"Log file path",
+			"Log file path or console for log to stdout/stderr",
 			defaultPath
     }
 	);
+	DEFAULT_LOG_PATH = std::move(defaultPath);
 	return LOG;
 }
