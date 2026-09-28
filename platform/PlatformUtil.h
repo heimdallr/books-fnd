@@ -1,9 +1,10 @@
 #pragma once
 
+#include <QString>
+
 #include "export/platform.h"
 
 class QRect;
-class QString;
 
 namespace HomeCompa::Platform {
 
@@ -23,7 +24,7 @@ PLATFORM_EXPORT void    SetKeyboardLayoutId(const QString& id);
 PLATFORM_EXPORT QString GetKeyboardLayoutId();
 
 PLATFORM_EXPORT bool IsAppAddedToAutostart(const QString& key);
-PLATFORM_EXPORT void AddToAutostart(const QString& key, const QString& path);
+PLATFORM_EXPORT void AddToAutostart(const QString& key, const QString& path, const QString& cmdLineArguments = {});
 PLATFORM_EXPORT void RemoveFromAutostart(const QString& key);
 
 PLATFORM_EXPORT QString GetDefaultInstallerSuffix();

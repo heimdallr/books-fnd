@@ -84,9 +84,12 @@ bool IsAppAddedToAutostart(const QString& key)
 	return GetStartupSettings()->contains(GetStartupKey(key));
 }
 
-void AddToAutostart(const QString& key, const QString& path)
+void AddToAutostart(const QString& key, const QString& path, const QString& cmdLineArguments)
 {
-	GetStartupSettings()->setValue(GetStartupKey(key), QDir::toNativeSeparators(path));
+	auto commandLine = QDir::toNativeSeparators(path);
+	if (!cmdLineArguments.isEmpty())
+		commandLine.append(' ').append(cmdLineArguments);
+	GetStartupSettings()->setValue(GetStartupKey(key), commandLine);
 }
 
 void RemoveFromAutostart(const QString& key)

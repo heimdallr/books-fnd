@@ -39,7 +39,7 @@ bool IsAppAddedToAutostart(const QString& /*key*/)
 	return false;
 }
 
-void AddToAutostart(const QString& /*key*/, const QString& /*path*/)
+void AddToAutostart(const QString& /*key*/, const QString& /*path*/, const QString& /*cmdLineArguments*/)
 {
 	assert(false);
 }
