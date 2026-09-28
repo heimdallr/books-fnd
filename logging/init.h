@@ -16,6 +16,8 @@ class LOGGING_EXPORT LoggingInitializer final
 	NON_COPY_MOVABLE(LoggingInitializer)
 
 public:
+	static constexpr auto CONSOLE = "console";
+
 	static QString AddLogFileOption(QCommandLineParser& parser, QString defaultPath);
 
 public:

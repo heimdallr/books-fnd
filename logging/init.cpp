@@ -53,7 +53,7 @@ private:
 
 std::unique_ptr<plog::IAppender> CreateAppender(QString path)
 {
-	if (path == "console")
+	if (path == LoggingInitializer::CONSOLE)
 		return std::make_unique<ConsoleAppender<plog::TxtFormatter>>();
 
 	if (path.isEmpty())
@@ -90,7 +90,7 @@ QString LoggingInitializer::AddLogFileOption(QCommandLineParser& parser, QString
 	parser.addOption(
 		{
 			{ QString(LOG[0]), QString(LOG) },
-			"Log file path or console for log to stdout/stderr",
+			QString("Log file path or %1 for log to stdout/stderr").arg(CONSOLE),
 			defaultPath
     }
 	);
