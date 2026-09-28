@@ -39,8 +39,16 @@ class ConsoleAppender : public plog::IAppender
 private:
 	void write(const plog::Record& record) override
 	{
-		(record.getSeverity() < plog::Severity::warning ? std::cerr : std::cout) << Formatter::format(record);
+		(record.getSeverity() < plog::Severity::warning ? m_cerr : m_cout) << Formatter::format(record);
 	}
+private:
+#if PLOG_CHAR_IS_UTF8
+	std::ostream& m_cout = std::cout;
+	std::ostream& m_cerr = std::cerr;
+#else
+	std::wostream& m_cout = std::wcout;
+	std::wostream& m_cerr = std::wcerr;
+#endif
 };
 
 std::unique_ptr<plog::IAppender> CreateAppender(QString path)
