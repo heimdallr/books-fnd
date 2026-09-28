@@ -23,12 +23,14 @@ LogAppender::LogAppender(plog::IAppender* appender)
 		init(plog::Severity::verbose, g_dynamicAppender.get());
 	}
 
-	g_dynamicAppender->addAppender(m_appender);
+	if (m_appender)
+		g_dynamicAppender->addAppender(m_appender);
 }
 
 LogAppender::~LogAppender()
 {
-	g_dynamicAppender->removeAppender(m_appender);
+	if (m_appender)
+		g_dynamicAppender->removeAppender(m_appender);
 }
 
 } // namespace HomeCompa::Log
