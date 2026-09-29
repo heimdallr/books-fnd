@@ -501,8 +501,6 @@ private:
 
 					if (value.startsWith(u"isbn", Qt::CaseInsensitive))
 						return (void)(m_result.isbn = value.toString());
-
-					PLOGV << "dc:identifier " << attrName << ":" << attrValue << "=" << value;
 				}
 			});
 		}
