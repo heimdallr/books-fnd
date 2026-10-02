@@ -31,6 +31,7 @@ private:
 	QTimer*                       m_timerV;
 	QTimer*                       m_timerH;
 	QPointer<QAbstractScrollArea> m_area;
+	int                           m_gestureMode;
 };
 
 } // namespace HomeCompa::Util

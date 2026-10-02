@@ -7,6 +7,7 @@
 #include <QMenu>
 #include <QMouseEvent>
 #include <QScrollBar>
+#include <QScroller>
 #include <QStyle>
 #include <QTimer>
 
@@ -23,6 +24,7 @@ using namespace HomeCompa::Util;
 namespace {
 
 constexpr auto MENU_ITEM_ENABLED_TEMPLATE = "ui/ScrollBarContextMenu/Items/%1";
+constexpr auto GESTURE_MODE_KEY           = "Preferences/GestureMode";
 
 constexpr auto CONTEXT = "ScrollBarController";
 constexpr auto OPTIONS = QT_TRANSLATE_NOOP("ScrollBarController", "Options...");
@@ -127,12 +129,16 @@ ScrollBarController::ScrollBarController(std::shared_ptr<ISettings> settings, QO
 	, m_settings { std::move(settings) }
 	, m_timerV { CreateTimer(*m_settings, &ScrollBarController::OnTimeoutV) }
 	, m_timerH { CreateTimer(*m_settings, &ScrollBarController::OnTimeoutH) }
+	, m_gestureMode { m_settings->Get(GESTURE_MODE_KEY, 0) - 1 }
 {
 }
 
 void ScrollBarController::SetScrollArea(QAbstractScrollArea* area)
 {
 	m_area = area;
+
+	if (m_gestureMode >= 0)
+		QScroller::grabGesture(m_area, static_cast<QScroller::ScrollerGestureType>(m_gestureMode));
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 	m_area->setHorizontalScrollBar(new ScrollBar(m_settings, Qt::Horizontal, m_area));
