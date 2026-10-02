@@ -19,12 +19,13 @@
 using namespace HomeCompa;
 using namespace HomeCompa::Util;
 
+constexpr auto GESTURE_MODE_KEY = "Preferences/GestureMode";
+
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 
 namespace {
 
 constexpr auto MENU_ITEM_ENABLED_TEMPLATE = "ui/ScrollBarContextMenu/Items/%1";
-constexpr auto GESTURE_MODE_KEY           = "Preferences/GestureMode";
 
 constexpr auto CONTEXT = "ScrollBarController";
 constexpr auto OPTIONS = QT_TRANSLATE_NOOP("ScrollBarController", "Options...");
