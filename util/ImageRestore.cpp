@@ -169,9 +169,9 @@ class SaxPrinter final : public SaxParser
 public:
 	SaxPrinter(QIODevice& input, QIODevice& output, Covers covers, std::unique_ptr<const ExtractedBook> metadataReplacement, const ImageProcessing imageProcessing)
 		: SaxParser { input }
+		, m_outputStream { output }
 		, m_metadataReplacement { std::move(metadataReplacement) }
 		, m_imageProcessing { imageProcessing }
-		, m_writer { output }
 		, m_covers { std::move(covers) }
 	{
 		Parse();
@@ -184,9 +184,15 @@ public:
 	}
 
 private: // Util::SaxParser
+	bool OnXMLDecl(QStringView /*versionStr*/, const QStringView encodingStr, QStringView /*standaloneStr*/, QStringView /*actualEncodingStr*/) override
+	{
+		m_writer = std::make_unique<XmlWriter>(m_outputStream, Util::details::XmlWriterOptions { .encoding = encodingStr.toUtf8().constData() });
+		return true;
+	}
+
 	bool OnProcessingInstruction(const QStringView target, const QStringView data) override
 	{
-		return m_writer.WriteProcessingInstruction(target, data), true;
+		return m_writer->WriteProcessingInstruction(target, data), true;
 	}
 
 	bool OnStartElement(const QStringView name, const QStringView path, const XmlAttributes& attributes) override
@@ -197,7 +203,7 @@ private: // Util::SaxParser
 		if (name == BINARY && !m_covers.empty())
 			return WriteImage(attributes.GetAttribute(ID)), true;
 
-		m_writer.WriteStartElement(name, attributes);
+		m_writer->WriteStartElement(name, attributes);
 
 		if (path == TITLE_INFO && m_metadataReplacement)
 			for (const auto invoker : {
@@ -224,7 +230,7 @@ private: // Util::SaxParser
 
 		if (path == DOCUMENT_INFO && !m_hasProgramUsed)
 		{
-			m_writer.WriteStartElement(u"program-used").WriteCharacters(QString("%1 %2").arg(PRODUCT_ID, PRODUCT_VERSION)).WriteEndElement();
+			m_writer->WriteStartElement(u"program-used").WriteCharacters(QString("%1 %2").arg(PRODUCT_ID, PRODUCT_VERSION)).WriteEndElement();
 			m_hasProgramUsed = true;
 		}
 
@@ -232,7 +238,7 @@ private: // Util::SaxParser
 		{
 			if (!m_hasProgramUsed)
 			{
-				m_writer.WriteStartElement(u"document-info").WriteStartElement(u"program-used").WriteCharacters(QString("%1 %2").arg(PRODUCT_ID, PRODUCT_VERSION)).WriteEndElement().WriteEndElement();
+				m_writer->WriteStartElement(u"document-info").WriteStartElement(u"program-used").WriteCharacters(QString("%1 %2").arg(PRODUCT_ID, PRODUCT_VERSION)).WriteEndElement().WriteEndElement();
 				m_hasProgramUsed = true;
 			}
 		}
@@ -240,7 +246,7 @@ private: // Util::SaxParser
 		if (path == FICTION_BOOK)
 			WriteImages();
 
-		return m_writer.WriteEndElement(), true;
+		return m_writer->WriteEndElement(), true;
 	}
 
 	bool OnCharacters(const QStringView path, const QStringView value) override
@@ -249,10 +255,10 @@ private: // Util::SaxParser
 			return true;
 
 		if (path != PROGRAM_USED)
-			return m_writer.WriteCharacters(value), true;
+			return m_writer->WriteCharacters(value), true;
 
 		m_hasProgramUsed = true;
-		return m_writer.WriteCharacters(QString("%1, %2 %3").arg(value, PRODUCT_ID, PRODUCT_VERSION)), true;
+		return m_writer->WriteCharacters(QString("%1, %2 %3").arg(value, PRODUCT_ID, PRODUCT_VERSION)), true;
 	}
 
 	bool OnWarning(const size_t line, const size_t column, const QString& text) override
@@ -277,7 +283,7 @@ private:
 	void WriteAuthor()
 	{
 		assert(m_metadataReplacement);
-		const auto node = m_writer.Guard(u"author");
+		const auto node = m_writer->Guard(u"author");
 		node->WriteStartElement(AUTHOR_FIRST_NAME).WriteCharacters(m_metadataReplacement->authorFull.firstName).WriteEndElement();
 		node->WriteStartElement(AUTHOR_MIDDLE_NAME).WriteCharacters(m_metadataReplacement->authorFull.middleName).WriteEndElement();
 		node->WriteStartElement(AUTHOR_LAST_NAME).WriteCharacters(m_metadataReplacement->authorFull.lastName).WriteEndElement();
@@ -286,7 +292,7 @@ private:
 	void WriteTitle()
 	{
 		assert(m_metadataReplacement);
-		m_writer.WriteStartElement(u"book-title").WriteCharacters(m_metadataReplacement->title).WriteEndElement();
+		m_writer->WriteStartElement(u"book-title").WriteCharacters(m_metadataReplacement->title).WriteEndElement();
 	}
 
 	void WriteSeries()
@@ -295,7 +301,7 @@ private:
 		if (m_metadataReplacement->series.isEmpty())
 			return;
 
-		const auto node = m_writer.Guard(u"sequence");
+		const auto node = m_writer->Guard(u"sequence");
 		node->WriteAttribute(u"name", m_metadataReplacement->series);
 		if (m_metadataReplacement->seqNumber > 0)
 			node->WriteAttribute(u"number", QString::number(m_metadataReplacement->seqNumber));
@@ -345,13 +351,14 @@ private:
 	void WriteImage(const QStringView name, const bool isCover, const QByteArray& body)
 	{
 		if (const auto [bytes, mediaType] = RecodeImage(isCover, m_imageProcessing, body); !bytes.isEmpty())
-			m_writer.WriteStartElement(BINARY).WriteAttribute(ID, name).WriteAttribute(CONTENT_TYPE, QString(mediaType)).WriteCharacters(QString::fromUtf8(bytes.toBase64())).WriteEndElement();
+			m_writer->WriteStartElement(BINARY).WriteAttribute(ID, name).WriteAttribute(CONTENT_TYPE, QString(mediaType)).WriteCharacters(QString::fromUtf8(bytes.toBase64())).WriteEndElement();
 	}
 
 private:
+	QIODevice&                           m_outputStream;
 	std::unique_ptr<const ExtractedBook> m_metadataReplacement;
 	const ImageProcessing                m_imageProcessing;
-	XmlWriter                            m_writer;
+	std::unique_ptr<XmlWriter>           m_writer;
 	Covers                               m_covers;
 	bool                                 m_hasError { false };
 	bool                                 m_hasProgramUsed { false };
