@@ -1,5 +1,6 @@
 #include "error.h"
 
+#include <QCoreApplication>
 #include <QFileInfo>
 
 #include "log.h"
@@ -8,20 +9,24 @@ using namespace HomeCompa::ZipDetails;
 
 namespace {
 
-constexpr auto CANNOT_OPEN_FILE           = "Cannot open file '%1'";
-constexpr auto CANNOT_OPEN_ARCHIVE        = "Cannot open archive '%1'";
-constexpr auto CANNOT_FIND                = "Cannot find file '%1'";
-constexpr auto CANNOT_EXTRACT             = "Cannot extract file '%1'";
-constexpr auto CANNOT_CREATE_ARCHIVE      = "Cannot create file '%1'";
-constexpr auto CANNOT_ADD_FILE_TO_ARCHIVE = "Cannot add file '%1' to archive";
-constexpr auto LOAD_LIBRARY_FAILED        = "Cannot load %1";
-constexpr auto GET_PROC_FAILED            = "Cannon find entry point '%1'";
-constexpr auto CANNOT_CREATE_OBJECT       = "Cannot  create object";
+constexpr auto CONTEXT                    = "ZipError";
+constexpr auto CANNOT_OPEN_FILE           = QT_TRANSLATE_NOOP("ZipError", "Cannot open file '%1'");
+constexpr auto CANNOT_OPEN_ARCHIVE        = QT_TRANSLATE_NOOP("ZipError", "Cannot open archive '%1'");
+constexpr auto CANNOT_FIND                = QT_TRANSLATE_NOOP("ZipError", "Cannot find file '%1'");
+constexpr auto CANNOT_EXTRACT             = QT_TRANSLATE_NOOP("ZipError", "Cannot extract file '%1'");
+constexpr auto CANNOT_CREATE_ARCHIVE      = QT_TRANSLATE_NOOP("ZipError", "Cannot create file '%1'");
+constexpr auto CANNOT_ADD_FILE_TO_ARCHIVE = QT_TRANSLATE_NOOP("ZipError", "Cannot add file '%1' to archive");
+constexpr auto LOAD_LIBRARY_FAILED        = QT_TRANSLATE_NOOP("ZipError", "Cannot load %1");
+constexpr auto GET_PROC_FAILED            = QT_TRANSLATE_NOOP("ZipError", "Cannon find entry point '%1'");
+constexpr auto CANNOT_CREATE_OBJECT       = QT_TRANSLATE_NOOP("ZipError", "Cannot  create object");
 
 [[noreturn]] void Throw(const char* str, const QString& filename = {})
 {
 	PLOGE << QString(str).arg(filename);
-	throw std::ios_base::failure(QString(str).arg(QFileInfo(filename).fileName()).toStdString());
+	auto errorText = QCoreApplication::translate(CONTEXT, str);
+	if (!filename.isEmpty())
+		errorText = errorText.arg(filename);
+	throw std::runtime_error(errorText.toStdString());
 }
 
 } // namespace
