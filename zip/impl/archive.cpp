@@ -149,7 +149,7 @@ FileStorage CreateFileList(const bit7z::BitInputArchive& archive)
 	return result;
 }
 
-class ZipImpl : virtual public IZip
+class ZipImpl : public IZip
 {
 protected:
 	explicit ZipImpl(std::shared_ptr<ProgressCallback> progress)

@@ -1,5 +1,7 @@
 #include <memory>
 
+#include "fnd/NonCopyMovable.h"
+
 #include "executor/factory.h"
 
 #include "IExecutor.h"
@@ -9,8 +11,10 @@ namespace HomeCompa::Util::ExecutorPrivate::Sync {
 
 namespace {
 
-class Executor : virtual public Util::IExecutor
+class Executor final : public IExecutor
 {
+	NON_COPY_MOVABLE(Executor)
+
 public:
 	explicit Executor(ExecutorInitializer initializer)
 		: m_initializer(std::move(initializer))

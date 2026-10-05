@@ -11,7 +11,7 @@ class QJsonDocument;
 
 namespace HomeCompa::RestAPI {
 
-class BaseConnection : virtual public IConnection
+class BaseConnection : public IConnection
 {
 	NON_COPY_MOVABLE(BaseConnection)
 

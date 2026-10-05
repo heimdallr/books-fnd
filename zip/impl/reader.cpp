@@ -49,7 +49,7 @@ private:
 	std::unique_ptr<QBuffer> m_buffer;
 };
 
-class FileReader final : virtual public IFile
+class FileReader final : public IFile
 {
 public:
 	FileReader(const bit7z::BitInputArchive& zip, const FileItem& fileItem)

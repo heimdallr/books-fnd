@@ -11,7 +11,7 @@ int Index(const size_t index)
 	return static_cast<int>(index);
 }
 
-class Command final : virtual public ICommand
+class Command final : public ICommand
 {
 public:
 	Command(sqlite3pp::database& db, const std::string_view command)

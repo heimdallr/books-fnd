@@ -38,8 +38,8 @@ private:
 };
 
 class Executor final
-    : virtual public IExecutor
-    , virtual public IPool
+    : public IExecutor
+    , public IPool
 {
 	NON_COPY_MOVABLE(Executor)
 

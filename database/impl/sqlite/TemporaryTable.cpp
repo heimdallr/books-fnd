@@ -15,7 +15,7 @@ namespace {
 
 int id { 0 };
 
-class TemporaryTable final : virtual public ITemporaryTable
+class TemporaryTable final : public ITemporaryTable
 {
 	NON_COPY_MOVABLE(TemporaryTable)
 

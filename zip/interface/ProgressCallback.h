@@ -21,7 +21,7 @@ public:
 	virtual const std::vector<std::byte>& GetFileData(size_t index) const noexcept = 0;
 };
 
-class IZipFileController : virtual public IZipFileProvider
+class IZipFileController : public IZipFileProvider
 {
 public:
 	virtual void AddFile(QString name, const QByteArray& body, QDateTime time = {}) = 0;

@@ -41,7 +41,7 @@ private:
 	PropagateConstPtr<Impl> m_impl;
 };
 
-class UTILGUI_EXPORT GeometryRestorableObserver : virtual public GeometryRestorable::IObserver
+class UTILGUI_EXPORT GeometryRestorableObserver : public GeometryRestorable::IObserver
 {
 protected:
 	explicit GeometryRestorableObserver(QWidget& widget);

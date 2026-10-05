@@ -92,7 +92,7 @@ const std::string& GetValue(const ConnectionParameters& parameters, const std::s
 	return begin->second;
 }
 
-class DatabaseFunctionContext : virtual public DB::DatabaseFunctionContext
+class DatabaseFunctionContext : public DB::DatabaseFunctionContext
 {
 public:
 	explicit DatabaseFunctionContext(sqlite3pp::ext::context& ctx)
@@ -110,7 +110,7 @@ private:
 };
 
 class Database final
-    : virtual public IDatabase
+    : public IDatabase
     , public Observable<IDatabaseObserver>
 {
 	NON_COPY_MOVABLE(Database)

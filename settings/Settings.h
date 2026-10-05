@@ -8,7 +8,7 @@
 
 namespace HomeCompa::SettingsFactory {
 
-class AbstractSettings : virtual public ISettings
+class AbstractSettings : public ISettings
 {
 };
 

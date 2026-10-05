@@ -10,7 +10,7 @@ class IQuery;
 template <typename T>
 T GetImpl(const IQuery& query, size_t index) = delete;
 
-class IQuery : virtual public ICommand
+class IQuery : public ICommand
 {
 public:
 	virtual bool Eof()   = 0;

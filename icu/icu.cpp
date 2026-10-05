@@ -47,7 +47,7 @@ UConverter* CreateDecoder(const char* id)
 	return decoder;
 }
 
-class Decoder final : virtual public IDecoder
+class Decoder final : public IDecoder
 {
 	NON_COPY_MOVABLE(Decoder)
 

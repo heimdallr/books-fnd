@@ -14,7 +14,7 @@ std::unique_ptr<IQuery>   CreateQueryImpl(std::mutex& mutex, sqlite3pp::database
 
 namespace {
 
-class Transaction final : virtual public ITransaction
+class Transaction final : public ITransaction
 {
 	NON_COPY_MOVABLE(Transaction)
 
