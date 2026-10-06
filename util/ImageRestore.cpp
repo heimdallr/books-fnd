@@ -166,12 +166,14 @@ class SaxPrinter final : public SaxParser
 	static constexpr auto BOOK_TITLE         = u"FictionBook/description/title-info/book-title";
 	static constexpr auto SEQUENCE           = u"FictionBook/description/title-info/sequence";
 
+
 public:
-	SaxPrinter(QIODevice& input, QIODevice& output, Covers covers, std::unique_ptr<const ExtractedBook> metadataReplacement, const ImageProcessing imageProcessing)
+	SaxPrinter(QIODevice& input, QIODevice& output, Covers covers, std::unique_ptr<const ExtractedBook> metadataReplacement, const ImageProcessing imageProcessing, QString encoding)
 		: SaxParser { input }
 		, m_outputStream { output }
 		, m_metadataReplacement { std::move(metadataReplacement) }
 		, m_imageProcessing { imageProcessing }
+		, m_encoding { std::move(encoding) }
 		, m_covers { std::move(covers) }
 	{
 		Parse();
@@ -186,7 +188,8 @@ public:
 private: // Util::SaxParser
 	bool OnXMLDecl(QStringView /*versionStr*/, const QStringView encodingStr, QStringView /*standaloneStr*/, QStringView /*actualEncodingStr*/) override
 	{
-		m_writer = std::make_unique<XmlWriter>(m_outputStream, Util::details::XmlWriterOptions { .encoding = encodingStr.toUtf8().constData() });
+		const auto encoding = m_encoding.isEmpty() ? encodingStr.toUtf8() : m_encoding.toUtf8();
+		m_writer            = std::make_unique<XmlWriter>(m_outputStream, Util::details::XmlWriterOptions { .encoding = encoding.constData() });
 		return true;
 	}
 
@@ -358,6 +361,7 @@ private:
 	QIODevice&                           m_outputStream;
 	std::unique_ptr<const ExtractedBook> m_metadataReplacement;
 	const ImageProcessing                m_imageProcessing;
+	const QString                        m_encoding;
 	std::unique_ptr<XmlWriter>           m_writer;
 	Covers                               m_covers;
 	bool                                 m_hasError { false };
@@ -365,24 +369,24 @@ private:
 	bool                                 m_specialNode { false };
 };
 
-QByteArray PrepareToExport_stub(QIODevice& stream, Covers, std::unique_ptr<const ExtractedBook>, ImageProcessing)
+QByteArray PrepareToExport_stub(QIODevice& stream, Covers, std::unique_ptr<const ExtractedBook>, ImageProcessing, QString)
 {
 	return stream.readAll();
 }
 
-QByteArray PrepareToExport_fb2(QIODevice& stream, Covers covers, std::unique_ptr<const ExtractedBook> metadataReplacement, const ImageProcessing imageProcessing)
+QByteArray PrepareToExport_fb2(QIODevice& stream, Covers covers, std::unique_ptr<const ExtractedBook> metadataReplacement, const ImageProcessing imageProcessing, QString encoding)
 {
-	if (covers.empty() && imageProcessing == ImageProcessing::None && !metadataReplacement)
+	if (covers.empty() && imageProcessing == ImageProcessing::None && !metadataReplacement && encoding.isEmpty())
 		return stream.readAll();
 
 	QByteArray byteArray;
 	QBuffer    buffer(&byteArray);
 	buffer.open(QIODevice::WriteOnly);
-	const SaxPrinter saxPrinter(stream, buffer, std::move(covers), std::move(metadataReplacement), imageProcessing);
+	const SaxPrinter saxPrinter(stream, buffer, std::move(covers), std::move(metadataReplacement), imageProcessing, std::move(encoding));
 	return saxPrinter.HasError() ? QByteArray {} : byteArray;
 }
 
-QByteArray PrepareToExport_epub(QIODevice& stream, Covers covers, std::unique_ptr<const ExtractedBook> /*metadataReplacement*/, const ImageProcessing imageProcessing)
+QByteArray PrepareToExport_epub(QIODevice& stream, Covers covers, std::unique_ptr<const ExtractedBook> /*metadataReplacement*/, const ImageProcessing imageProcessing, QString)
 {
 	auto parseResult = EpubParser::Parse(stream, CommonParser::Mode::Images | CommonParser::Mode::Texts);
 
@@ -447,7 +451,7 @@ QByteArray PrepareToExport_epub(QIODevice& stream, Covers covers, std::unique_pt
 	return result;
 }
 
-using ExportPrepares = QByteArray (*)(QIODevice&, Covers, std::unique_ptr<const ExtractedBook>, ImageProcessing);
+using ExportPrepares = QByteArray (*)(QIODevice&, Covers, std::unique_ptr<const ExtractedBook>, ImageProcessing, QString encoding);
 
 constexpr std::pair<const char*, ExportPrepares> EXPORT_PREPARERS[] {
 #define ITEM(NAME) { "." #NAME, &PrepareToExport_##NAME }
@@ -456,7 +460,7 @@ constexpr std::pair<const char*, ExportPrepares> EXPORT_PREPARERS[] {
 #undef ITEM
 };
 
-QByteArray PrepareToExportImpl(QIODevice& stream, const QString& folder, const QString& fileName, const ISettings& settings, std::unique_ptr<const ExtractedBook> metadataReplacement)
+QByteArray PrepareToExportImpl(QIODevice& stream, const QString& folder, const QString& fileName, const ISettings& settings, QString encoding, std::unique_ptr<const ExtractedBook> metadataReplacement)
 {
 	Covers covers;
 	ExtractBookImages(folder, fileName, settings, [&covers](QString name, const bool isCover, QByteArray body) {
@@ -480,7 +484,7 @@ QByteArray PrepareToExportImpl(QIODevice& stream, const QString& folder, const Q
 		return it != std::end(EXPORT_PREPARERS) ? it->second : &PrepareToExport_stub;
 	}();
 
-	if (auto byteArray = std::invoke(preparer, stream, std::move(covers), std::move(metadataReplacement), imageProcessing); !byteArray.isEmpty())
+	if (auto byteArray = std::invoke(preparer, stream, std::move(covers), std::move(metadataReplacement), imageProcessing, std::move(encoding)); !byteArray.isEmpty())
 		return byteArray;
 
 	stream.seek(0);
@@ -564,9 +568,9 @@ void ExtractBookImagesImagesImpl(const QFileInfo& fileInfo, const QString& fileN
 
 namespace HomeCompa::Util {
 
-QByteArray PrepareToExport(QIODevice& input, const QString& folder, const QString& fileName, const ISettings& settings, std::unique_ptr<const ExtractedBook> metadataReplacement)
+QByteArray PrepareToExport(QIODevice& input, const QString& folder, const QString& fileName, const ISettings& settings, QString encoding, std::unique_ptr<const ExtractedBook> metadataReplacement)
 {
-	return PrepareToExportImpl(input, folder, fileName, settings, std::move(metadataReplacement));
+	return PrepareToExportImpl(input, folder, fileName, settings, std::move(encoding), std::move(metadataReplacement));
 }
 
 void ExtractBookImages(const QString& folder, const QString& fileName, const ISettings& settings, const ExtractBookImagesCallback& callback)
