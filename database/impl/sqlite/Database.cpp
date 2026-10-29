@@ -1,6 +1,5 @@
 #include "Database.h"
 
-#include <mutex>
 #include <numeric>
 #include <sstream>
 #include <string>
@@ -18,8 +17,8 @@
 
 namespace HomeCompa::DB::Impl::Sqlite {
 
-std::unique_ptr<ITransaction>    CreateTransactionImpl(std::mutex& mutex, sqlite3pp::database& db);
-std::unique_ptr<IQuery>          CreateQueryImpl(std::mutex& mutex, sqlite3pp::database& db, std::string_view query);
+std::unique_ptr<ITransaction>    CreateTransactionImpl(sqlite3pp::database& db);
+std::unique_ptr<IQuery>          CreateQueryImpl(sqlite3pp::database& db, std::string_view query);
 std::unique_ptr<ITemporaryTable> CreateTemporaryTableImpl(IDatabase& db, const std::vector<std::string_view>& fields, const std::vector<std::string_view>& additional);
 
 namespace {
@@ -80,7 +79,7 @@ int GetOpenFlags(const ConnectionParameters& parameters)
 	if (result & SQLITE_OPEN_CREATE)
 		result |= SQLITE_OPEN_READWRITE;
 
-	return result ? result : SQLITE_OPEN_READWRITE;
+	return (result ? result : SQLITE_OPEN_READWRITE) | SQLITE_OPEN_URI;
 }
 
 const std::string& GetValue(const ConnectionParameters& parameters, const std::string& key)
@@ -146,26 +145,26 @@ public:
 			m_observer.OnUpdate(opCode, dbName, tableName, rowId);
 		});
 
-		[[maybe_unused]] const auto ok = Database::CreateQuery("ATTACH DATABASE ':memory:' AS tmp;")->Execute();
+		[[maybe_unused]] const auto ok = Database::CreateQuery("ATTACH DATABASE 'file:shared_attached_mem?mode=memory&cache=shared' AS tmp;")->Execute();
 		assert(ok);
 
-		PLOGV << "database created";
+		PLOGV << "database connection established";
 	}
 
 	~Database() override
 	{
-		PLOGV << "database destroyed";
+		PLOGV << "database connection closed";
 	}
 
 private: // Database
 	[[nodiscard]] std::unique_ptr<ITransaction> CreateTransaction() override
 	{
-		return CreateTransactionImpl(m_guard, m_db);
+		return CreateTransactionImpl(m_db);
 	}
 
 	[[nodiscard]] std::unique_ptr<IQuery> CreateQuery(const std::string_view query) override
 	{
-		return CreateQueryImpl(m_guard, m_db, query);
+		return CreateQueryImpl(m_db, query);
 	}
 
 	[[nodiscard]] std::unique_ptr<ITemporaryTable> CreateTemporaryTable(const std::vector<std::string_view>& fields, const std::vector<std::string_view>& additional) override
@@ -193,7 +192,6 @@ private: // Database
 
 private:
 	ConnectionParameters                                                          m_connectionParameters;
-	std::mutex                                                                    m_guard;
 	sqlite3pp::database                                                           m_db;
 	ObserverImpl                                                                  m_observer;
 	std::map<std::string, std::unique_ptr<sqlite3pp::ext::function>, std::less<>> m_functions;

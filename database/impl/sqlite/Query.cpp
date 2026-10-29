@@ -1,5 +1,4 @@
 #include <cassert>
-#include <mutex>
 
 #include "Database.h"
 #include "IQuery.h"
@@ -18,9 +17,8 @@ int Index(const size_t index)
 class Query final : public IQuery
 {
 public:
-	Query(std::mutex& mutex, sqlite3pp::database& db, const std::string_view query)
-		: m_lock(mutex)
-		, m_query(db, LogStatement(query).data())
+	Query(sqlite3pp::database& db, const std::string_view query)
+		: m_query(db, LogStatement(query).data())
 	{
 	}
 
@@ -156,16 +154,15 @@ private:
 	}
 
 private:
-	std::lock_guard<std::mutex> m_lock;
 	sqlite3pp::query            m_query;
 	sqlite3pp::query::iterator  m_it;
 };
 
 } // namespace
 
-std::unique_ptr<IQuery> CreateQueryImpl(std::mutex& mutex, sqlite3pp::database& db, std::string_view query)
+std::unique_ptr<IQuery> CreateQueryImpl(sqlite3pp::database& db, std::string_view query)
 {
-	return std::make_unique<Query>(mutex, db, query);
+	return std::make_unique<Query>(db, query);
 }
 
 } // namespace HomeCompa::DB::Impl::Sqlite
