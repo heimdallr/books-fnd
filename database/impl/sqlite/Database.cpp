@@ -1,5 +1,6 @@
 #include "Database.h"
 
+#include <filesystem>
 #include <numeric>
 #include <sstream>
 #include <string>
@@ -25,7 +26,6 @@ namespace {
 
 constexpr auto PATH      = "path";
 constexpr auto EXTENSION = "extension";
-constexpr auto FLAG      = "flag";
 
 using ConnectionParameters = std::multimap<std::string, std::string, std::less<>>;
 
@@ -35,13 +35,6 @@ constexpr std::pair<int, ObserverMethod> g_opCodeToObserverMethod[] {
 	{ 18, &IDatabaseObserver::OnInsert },
 	{  9, &IDatabaseObserver::OnDelete },
 	{ 23, &IDatabaseObserver::OnUpdate },
-};
-
-constexpr std::pair<const char*, int> g_openFlags[] {
-#define ITEM(NAME) { #NAME, SQLITE_OPEN_##NAME }
-	ITEM(READONLY),     ITEM(READWRITE),    ITEM(CREATE),       ITEM(DELETEONCLOSE), ITEM(EXCLUSIVE),      ITEM(AUTOPROXY), ITEM(URI),       ITEM(MEMORY),      ITEM(MAIN_DB),      ITEM(TEMP_DB),
-	ITEM(TRANSIENT_DB), ITEM(MAIN_JOURNAL), ITEM(TEMP_JOURNAL), ITEM(SUBJOURNAL),    ITEM(MASTER_JOURNAL), ITEM(NOMUTEX),   ITEM(FULLMUTEX), ITEM(SHAREDCACHE), ITEM(PRIVATECACHE), ITEM(WAL),
-#undef ITEM
 };
 
 std::vector<std::string> Split(const std::string& src, const char separator)
@@ -70,23 +63,21 @@ ConnectionParameters ParseConnectionString(const std::string& connection)
 	return result;
 }
 
-int GetOpenFlags(const ConnectionParameters& parameters)
+int GetOpenFlags(const std::string& db, const bool readOnly)
 {
-	auto [begin, end] = parameters.equal_range(FLAG);
-	auto result       = std::accumulate(begin, end, 0, [](const int init, const auto& item) {
-		return init | FindSecond(g_openFlags, item.second.data(), 0, PszComparer {});
-	});
-	if (result & SQLITE_OPEN_CREATE)
-		result |= SQLITE_OPEN_READWRITE;
+	int result = readOnly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE;
 
-	return (result ? result : SQLITE_OPEN_READWRITE) | SQLITE_OPEN_URI;
+	if (!readOnly && !exists(std::filesystem::path(db)))
+		result |= SQLITE_OPEN_CREATE;
+
+	return result | SQLITE_OPEN_URI;
 }
 
 const std::string& GetValue(const ConnectionParameters& parameters, const std::string& key)
 {
 	auto [begin, end] = parameters.equal_range(key);
 	if (begin == end)
-		throw std::invalid_argument("must pass path");
+		throw std::invalid_argument(std::format("must pass {}", key));
 
 	return begin->second;
 }
@@ -133,9 +124,9 @@ private:
 	};
 
 public:
-	explicit Database(const std::string& connection)
+	explicit Database(const std::string& connection, const bool readOnly = false)
 		: m_connectionParameters(ParseConnectionString(connection))
-		, m_db(GetValue(m_connectionParameters, PATH).data(), GetOpenFlags(m_connectionParameters))
+		, m_db(GetValue(m_connectionParameters, PATH).data(), GetOpenFlags(GetValue(m_connectionParameters, PATH), readOnly))
 		, m_observer(*this)
 	{
 		for (auto [begin, end] = m_connectionParameters.equal_range(EXTENSION); begin != end; ++begin)
@@ -199,7 +190,12 @@ private:
 
 } // namespace
 
-std::unique_ptr<IDatabaseWritable> CreateDatabase(const std::string& connection)
+std::unique_ptr<IDatabase> CreateDatabase(const std::string& connection)
+{
+	return std::make_unique<Database>(connection, true);
+}
+
+std::unique_ptr<IDatabaseWritable> CreateDatabaseWritable(const std::string& connection)
 {
 	return std::make_unique<Database>(connection);
 }
