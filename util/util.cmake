@@ -6,6 +6,8 @@ AddTarget(util	shared_lib
 		cimg_display=0
 	INCLUDE_DIRECTORIES
 		"${EXT_ROOT}/libmobi/src"
+	EXCLUDE_SOURCES
+		${CMAKE_CURRENT_LIST_DIR}/ut
 	LINK_LIBRARIES
 		Qt${QT_MAJOR_VERSION}::Core
 		Qt${QT_MAJOR_VERSION}::Gui
@@ -20,4 +22,13 @@ AddTarget(util	shared_lib
 		zip
 	DEPENDENCIES
 		flicu
+)
+
+AddGTest(util
+	MOCK
+	PROJECT_GROUP UT/Foundation
+	SOURCE_DIRECTORY
+		"${CMAKE_CURRENT_LIST_DIR}/ut"
+	LINK_TARGETS
+		util
 )
