@@ -1,5 +1,3 @@
-#include <mutex>
-
 #include "fnd/NonCopyMovable.h"
 
 #include "ICommand.h"
@@ -10,7 +8,7 @@
 namespace HomeCompa::DB::Impl::Sqlite {
 
 std::unique_ptr<ICommand> CreateCommandImpl(sqlite3pp::database& db, std::string_view command);
-std::unique_ptr<IQuery>   CreateQueryImpl(std::mutex& mutex, sqlite3pp::database& db, std::string_view query);
+std::unique_ptr<IQuery>   CreateQueryImpl(sqlite3pp::database& db, std::string_view query);
 
 namespace {
 
@@ -19,10 +17,9 @@ class Transaction final : public ITransaction
 	NON_COPY_MOVABLE(Transaction)
 
 public:
-	Transaction(std::mutex& mutex, sqlite3pp::database& db)
-		: m_lock(std::make_unique<std::lock_guard<std::mutex>>(mutex))
-		, m_db(db)
-		, m_transaction(db)
+	explicit Transaction(sqlite3pp::database& db)
+		: m_db(db)
+		, m_transaction(db, false, true)
 	{
 	}
 
@@ -35,18 +32,14 @@ public:
 private: // Transaction
 	bool Commit() override
 	{
-		m_active          = false;
-		const auto result = m_transaction.commit() == 0;
-		m_lock.reset();
-		return result;
+		m_active = false;
+		return m_transaction.commit() == 0;
 	}
 
 	bool Rollback() override
 	{
-		m_active          = false;
-		const auto result = m_transaction.rollback() == 0;
-		m_lock.reset();
-		return result;
+		m_active = false;
+		return m_transaction.rollback() == 0;
 	}
 
 	std::unique_ptr<ICommand> CreateCommand(const std::string_view command) override
@@ -56,22 +49,20 @@ private: // Transaction
 
 	std::unique_ptr<IQuery> CreateQuery(const std::string_view query) override
 	{
-		return CreateQueryImpl(m_queryMutex, m_db, query);
+		return CreateQueryImpl(m_db, query);
 	}
 
 private:
-	std::unique_ptr<std::lock_guard<std::mutex>> m_lock;
-	sqlite3pp::database&                         m_db;
-	sqlite3pp::transaction                       m_transaction;
-	bool                                         m_active { true };
-	std::mutex                                   m_queryMutex;
+	sqlite3pp::database&   m_db;
+	sqlite3pp::transaction m_transaction;
+	bool                   m_active { true };
 };
 
 } // namespace
 
-std::unique_ptr<ITransaction> CreateTransactionImpl(std::mutex& mutex, sqlite3pp::database& db)
+std::unique_ptr<ITransaction> CreateTransactionImpl(sqlite3pp::database& db)
 {
-	return std::make_unique<Transaction>(mutex, db);
+	return std::make_unique<Transaction>(db);
 }
 
 } // namespace HomeCompa::DB::Impl::Sqlite

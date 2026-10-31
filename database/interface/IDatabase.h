@@ -37,13 +37,8 @@ public:
 	static constexpr auto DEFAULT_TEMPORARY_TABLE_FIELD = "id integer primary key not null";
 
 public:
-	virtual ~IDatabase()                                                                    = default;
-	[[nodiscard]] virtual std::unique_ptr<ITransaction> CreateTransaction()                 = 0;
-	[[nodiscard]] virtual std::unique_ptr<IQuery>       CreateQuery(std::string_view query) = 0;
-	[[nodiscard]] virtual std::unique_ptr<ITemporaryTable>
-	CreateTemporaryTable(const std::vector<std::string_view>& fields = { DEFAULT_TEMPORARY_TABLE_FIELD }, const std::vector<std::string_view>& additional = {}) = 0;
-
-	virtual void CreateFunction(std::string_view name, DatabaseFunction function) = 0;
+	virtual ~IDatabase()                                                              = default;
+	[[nodiscard]] virtual std::unique_ptr<IQuery> CreateQuery(std::string_view query) = 0;
 
 	virtual void RegisterObserver(IDatabaseObserver* observer)   = 0;
 	virtual void UnregisterObserver(IDatabaseObserver* observer) = 0;
@@ -63,6 +58,16 @@ public:
 		((binder << args), ...);
 		return query;
 	}
+};
+
+class IDatabaseWritable : public IDatabase
+{
+public:
+	[[nodiscard]] virtual std::unique_ptr<ITransaction> CreateTransaction() = 0;
+	[[nodiscard]] virtual std::unique_ptr<ITemporaryTable>
+	CreateTemporaryTable(const std::vector<std::string_view>& fields = { DEFAULT_TEMPORARY_TABLE_FIELD }, const std::vector<std::string_view>& additional = {}) = 0;
+
+	virtual void CreateFunction(std::string_view name, DatabaseFunction function) = 0;
 };
 
 } // namespace HomeCompa::DB

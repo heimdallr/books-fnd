@@ -10,9 +10,13 @@ namespace HomeCompa::DB::Factory {
 
 namespace {
 
-using FactoryCreator = std::unique_ptr<IDatabase> (*)(const std::string& connection);
-constexpr FactoryCreator g_creators[] {
-	&DB::Impl::Sqlite::CreateDatabase,
+using FactoryCreator         = std::unique_ptr<IDatabase> (*)(const std::string& connection);
+using FactoryCreatorWritable = std::unique_ptr<IDatabaseWritable> (*)(const std::string& connection);
+constexpr std::pair<FactoryCreator, FactoryCreatorWritable> g_creators[] {
+	{
+	 &DB::Impl::Sqlite::CreateDatabase,
+	 &DB::Impl::Sqlite::CreateDatabaseWritable,
+	 },
 };
 
 size_t ToIndex(const Impl impl)
@@ -29,9 +33,17 @@ auto GetCreator(const Impl impl)
 
 } // namespace
 
+
 std::unique_ptr<IDatabase> Create(const Impl impl, const std::string& connection)
 {
-	const auto creator = GetCreator(impl);
+	const auto creator = GetCreator(impl).first;
+	assert(creator);
+	return creator(connection);
+}
+
+std::unique_ptr<IDatabaseWritable> CreateWritable(const Impl impl, const std::string& connection)
+{
+	const auto creator = GetCreator(impl).second;
 	assert(creator);
 	return creator(connection);
 }

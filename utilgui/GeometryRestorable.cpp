@@ -80,7 +80,6 @@ public:
 
 	~Impl() override
 	{
-		m_settings->UnregisterObserver(this);
 		assert(!m_initialized);
 	}
 
