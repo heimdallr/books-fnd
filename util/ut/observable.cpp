@@ -101,7 +101,7 @@ TEST(Util_Observable, SubscribeCall2)
 
 TEST(Util_Observable, SubscribeCallUnsubscribe)
 {
-	TestObservable                      observable;
+	TestObservable                    observable;
 	testing::StrictMock<TestObserver> observer;
 	EXPECT_EQ(observable.Count(), 0);
 	observable.Register(&observer);

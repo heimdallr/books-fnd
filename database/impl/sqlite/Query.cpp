@@ -154,8 +154,8 @@ private:
 	}
 
 private:
-	sqlite3pp::query            m_query;
-	sqlite3pp::query::iterator  m_it;
+	sqlite3pp::query           m_query;
+	sqlite3pp::query::iterator m_it;
 };
 
 } // namespace
