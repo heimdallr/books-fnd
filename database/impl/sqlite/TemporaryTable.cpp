@@ -20,7 +20,7 @@ class TemporaryTable final : public ITemporaryTable
 	NON_COPY_MOVABLE(TemporaryTable)
 
 public:
-	TemporaryTable(IDatabase& db, const std::vector<std::string_view>& fields, const std::vector<std::string_view>& additional)
+	TemporaryTable(IDatabaseWritable& db, const std::vector<std::string_view>& fields, const std::vector<std::string_view>& additional)
 		: m_db { db }
 	{
 		assert(!fields.empty());
@@ -65,15 +65,15 @@ private: // Transaction
 	}
 
 private:
-	IDatabase&        m_db;
-	const std::string m_schemaName { "tmp" };
-	const std::string m_tableName { std::format("tab_{}", ++id) };
-	const std::string m_name { std::format("{}.{}", m_schemaName, m_tableName) };
+	IDatabaseWritable& m_db;
+	const std::string  m_schemaName { "tmp" };
+	const std::string  m_tableName { std::format("tab_{}", ++id) };
+	const std::string  m_name { std::format("{}.{}", m_schemaName, m_tableName) };
 };
 
 } // namespace
 
-std::unique_ptr<ITemporaryTable> CreateTemporaryTableImpl(IDatabase& db, const std::vector<std::string_view>& fields, const std::vector<std::string_view>& additional)
+std::unique_ptr<ITemporaryTable> CreateTemporaryTableImpl(IDatabaseWritable& db, const std::vector<std::string_view>& fields, const std::vector<std::string_view>& additional)
 {
 	return std::make_unique<TemporaryTable>(db, fields, additional);
 }

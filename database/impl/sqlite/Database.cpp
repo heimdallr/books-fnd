@@ -19,7 +19,7 @@ namespace HomeCompa::DB::Impl::Sqlite {
 
 std::unique_ptr<ITransaction>    CreateTransactionImpl(sqlite3pp::database& db);
 std::unique_ptr<IQuery>          CreateQueryImpl(sqlite3pp::database& db, std::string_view query);
-std::unique_ptr<ITemporaryTable> CreateTemporaryTableImpl(IDatabase& db, const std::vector<std::string_view>& fields, const std::vector<std::string_view>& additional);
+std::unique_ptr<ITemporaryTable> CreateTemporaryTableImpl(IDatabaseWritable& db, const std::vector<std::string_view>& fields, const std::vector<std::string_view>& additional);
 
 namespace {
 
@@ -109,7 +109,7 @@ private:
 };
 
 class Database final
-    : public IDatabase
+    : public IDatabaseWritable
     , public Observable<IDatabaseObserver>
 {
 	NON_COPY_MOVABLE(Database)
@@ -199,7 +199,7 @@ private:
 
 } // namespace
 
-std::unique_ptr<IDatabase> CreateDatabase(const std::string& connection)
+std::unique_ptr<IDatabaseWritable> CreateDatabase(const std::string& connection)
 {
 	return std::make_unique<Database>(connection);
 }
