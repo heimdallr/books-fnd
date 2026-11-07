@@ -2,6 +2,6 @@
 
 namespace HomeCompa::Util {
 
-std::atomic<size_t> IExecutor::s_id { 0 };
+std::atomic<size_t> IExecutor::Task::s_id { 0 };
 
 }

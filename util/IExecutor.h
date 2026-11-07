@@ -10,10 +10,8 @@
 
 namespace HomeCompa::Util {
 
-class UTIL_EXPORT IExecutor
+class IExecutor
 {
-	static std::atomic<size_t> s_id;
-
 public:
 	class IThreadHandled // NOLINT(cppcoreguidelines-special-member-functions)
 	{
@@ -51,6 +49,9 @@ public:
 			};
 		} };
 		size_t id { ++s_id };
+
+	private:
+		UTIL_EXPORT static std::atomic<size_t> s_id;
 	};
 
 public:
@@ -61,14 +62,20 @@ public:
 	IExecutor& operator=(IExecutor&&)      = default;
 	virtual ~IExecutor()                   = default;
 
-	virtual size_t operator()(Task&& task, int priority = 0, bool displace = true) = 0;
+	size_t operator()(Task&& task, const int priority = 0, const bool displace = true)
+	{
+		return DoExecute(std::move(task), priority, displace);
+	}
 
 	size_t operator()(Task&& task, const int priority = 0, const bool displace = true) const
 	{
-		return (*const_cast<IExecutor*>(this))(std::move(task), priority, displace);
+		return const_cast<IExecutor&>(*this).DoExecute(std::move(task), priority, displace);
 	}
 
 	virtual void Stop() = 0;
+
+private:
+	virtual size_t DoExecute(Task&& task, int priority = 0, bool displace = true) = 0;
 };
 
 } // namespace HomeCompa::Util

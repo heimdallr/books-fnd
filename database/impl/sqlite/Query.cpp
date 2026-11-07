@@ -29,7 +29,7 @@ private: // Query
 		return true;
 	}
 
-	bool Eof() override
+	bool Eof() const override
 	{
 		return m_it == m_query.end();
 	}
