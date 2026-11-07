@@ -22,7 +22,7 @@ public: // ICommand
 	MOCK_METHOD(int, BindString, (std::string_view name, std::string_view value), (override));
 
 public: // IQuery
-	MOCK_METHOD(bool, Eof, (), (override));
+	MOCK_METHOD(bool, Eof, (), (const, override));
 	MOCK_METHOD(void, Next, (), (override));
 	MOCK_METHOD(void, Reset, (), (override));
 	MOCK_METHOD(size_t, ColumnCount, (), (const, override));
