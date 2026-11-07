@@ -28,7 +28,7 @@ public:
 	}
 
 private: // Util::IExecutor
-	size_t operator()(Task&& task, int /*priority*/, bool) override
+	size_t DoExecute(Task&& task, int /*priority*/, bool) override
 	{
 		ThreadContext ctx;
 		m_initializer.beforeExecute();

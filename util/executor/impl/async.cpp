@@ -66,7 +66,7 @@ public:
 	}
 
 private: // Util::IExecutor
-	size_t operator()(Task&& task, int priority, const bool displace) override
+	size_t DoExecute(Task&& task, int priority, const bool displace) override
 	{
 		const auto id = task.id;
 		{
