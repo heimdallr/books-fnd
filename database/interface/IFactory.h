@@ -3,10 +3,9 @@
 #include <memory>
 #include <string>
 
-namespace HomeCompa::DB {
+#include "database/interface/IDatabase.h"
 
-class IDatabase;
-class IDatabaseWritable;
+namespace HomeCompa::DB {
 
 class IFactory // NOLINT(cppcoreguidelines-special-member-functions)
 {
@@ -27,7 +26,7 @@ public:
 	std::unique_ptr<T> CreateT(Impl impl, const std::string& connection) const = delete;
 };
 
-template<>
+template <>
 inline std::unique_ptr<IDatabase> IFactory::CreateT<IDatabase>(const Impl impl, const std::string& connection) const
 {
 	return Create(impl, connection);
