@@ -3,6 +3,8 @@
 #include <memory>
 #include <string>
 
+#include "database/interface/IFactory.h"
+
 #include "export/dbfactory.h"
 
 namespace HomeCompa::DB {
@@ -13,11 +15,6 @@ class IDatabaseWritable;
 }
 
 namespace HomeCompa::DB::Factory {
-
-enum class Impl
-{
-	Sqlite,
-};
 
 namespace Details {
 
@@ -30,9 +27,20 @@ concept ExportedDatabaseType = IsOneOf<T, IDatabase, IDatabaseWritable>;
 }
 
 template <Details::ExportedDatabaseType T>
-DBFACTORY_EXPORT std::unique_ptr<T> Create(Impl impl, const std::string& connection);
+DBFACTORY_EXPORT std::unique_ptr<T> Create(IFactory::Impl impl, const std::string& connection);
 
-extern template DBFACTORY_EXPORT std::unique_ptr<IDatabase> Create(Impl impl, const std::string& connection);
-extern template DBFACTORY_EXPORT std::unique_ptr<IDatabaseWritable> Create(Impl impl, const std::string& connection);
+extern template DBFACTORY_EXPORT std::unique_ptr<IDatabase> Create(IFactory::Impl impl, const std::string& connection);
+extern template DBFACTORY_EXPORT std::unique_ptr<IDatabaseWritable> Create(IFactory::Impl impl, const std::string& connection);
 
 } // namespace HomeCompa::DB::Factory
+
+namespace HomeCompa::DB {
+
+class DBFACTORY_EXPORT DatabaseFactory final : public IFactory
+{
+private: // IFactory
+	std::unique_ptr<IDatabase>         Create(Impl impl, const std::string& connection) const override;
+	std::unique_ptr<IDatabaseWritable> CreateWritable(Impl impl, const std::string& connection) const override;
+};
+
+}
