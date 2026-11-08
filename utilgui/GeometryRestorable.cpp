@@ -190,9 +190,9 @@ private: // ISettingsObserver
 private:
 	void OnFontChanged()
 	{
-		const SettingsGroup group(*m_settings, Global::FONT_KEY);
+		const auto group = m_settings->CreateGroupSettings(Global::FONT_KEY);
 		auto                font = m_observer.GetWidget().font();
-		Deserialize(font, *m_settings);
+		Deserialize(font, *group);
 		const auto sizeFactor = font.pointSizeF() / Global::FONT_SIZE_DEFAULT;
 
 		for (auto& [widget, pointSize] : CollectWidgets())

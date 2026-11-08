@@ -1,10 +1,12 @@
 #include "Settings.h"
 
+#include <mutex>
 #include <ranges>
 
 #include <QFile>
 #include <QSettings>
 
+#include "fnd/ScopedCall.h"
 #include "fnd/memory.h"
 #include "fnd/observable.h"
 
@@ -14,23 +16,33 @@ namespace HomeCompa::SettingsFactory {
 
 namespace {
 
+constexpr auto CUSTOM_FORMAT = "settingsInMemory";
+
+bool ReadMemorySettings(QIODevice& /*device*/, QSettings::SettingsMap& /*map*/)
+{
+	return true;
+}
+
+bool WriteMemorySettings(QIODevice& /*device*/, const QSettings::SettingsMap& /*map*/)
+{
+	return true;
+}
+
 void Copy(ISettings& dst, const ISettings& src)
 {
-	const auto enumerate = [&](const auto& r) -> void {
-		for (const auto& key : src.GetKeys())
+	const auto enumerate = [&](const QString& prefix, const auto& r) -> void {
+		for (const auto& key : src.GetKeys(prefix))
 		{
-			const auto value = src.Get(key);
-			dst.Set(key, value, false);
+			const auto prefixed = QString(prefix).append(prefix.isEmpty() ? "" : "/").append(key);
+			const auto value    = src.Get(prefixed);
+			dst.Set(prefixed, value, false);
 		}
 
-		for (const auto& group : src.GetGroups())
-		{
-			const SettingsGroup dstGroup(dst, group), srcGroup(src, group);
-			r(r);
-		}
+		for (const auto& group : src.GetGroups(prefix))
+			r(QString(prefix).append(prefix.isEmpty() ? "" : "/").append(group), r);
 	};
 
-	enumerate(enumerate);
+	enumerate({}, enumerate);
 }
 
 class SettingsStub final : public AbstractSettings
@@ -61,34 +73,30 @@ private: // ISettings
 		return false;
 	}
 
-	[[nodiscard]] QStringList GetKeys() const override
+	[[nodiscard]] QStringList GetKeys(const QString& /*prefix*/) const override
 	{
 		return {};
 	}
 
-	[[nodiscard]] QStringList GetGroups() const override
+	[[nodiscard]] QStringList GetGroups(const QString& /*prefix*/) const override
 	{
 		return {};
+	}
+
+	std::unique_ptr<ISettings> CreateGroupSettings(QString prefix) override
+	{
+		return CreateGroup(*this, std::move(prefix));
 	}
 
 	void Remove(const QString& /*key*/) override
 	{
 	}
 
-	void Save(const QString& /*path*/) const override
+	void Save(const QString& /*path*/, const QString& /*prefix*/) const override
 	{
 	}
 
-	void Load(const QString& /*path*/) override
-	{
-	}
-
-	std::recursive_mutex& BeginGroup(const QString&) const override
-	{
-		return m_mutex;
-	}
-
-	void EndGroup() const override
+	void Load(const QString& /*path*/, const QString& /*prefix*/) override
 	{
 	}
 
@@ -99,9 +107,6 @@ private: // ISettings
 	void UnregisterObserver(ISettingsObserver*) override
 	{
 	}
-
-private:
-	mutable std::recursive_mutex m_mutex;
 };
 
 class SettingsDecorator final : public AbstractSettings
@@ -132,7 +137,7 @@ private: // ISettings
 
 	bool Set(const QString& key, const QVariant& value, const bool sync) override
 	{
-		if (auto it = m_replacement.find(key); it != m_replacement.end())
+		if (const auto it = m_replacement.find(key); it != m_replacement.end())
 		{
 			if (it->second == value)
 				return false;
@@ -154,16 +159,21 @@ private: // ISettings
 		return m_impl->HasGroup(group);
 	}
 
-	[[nodiscard]] QStringList GetKeys() const override
+	[[nodiscard]] QStringList GetKeys(const QString& prefix) const override
 	{
-		auto keys = m_impl->GetKeys() | std::ranges::to<std::unordered_set>();
+		auto keys = m_impl->GetKeys(prefix) | std::ranges::to<std::unordered_set>();
 		std::ranges::copy(m_replacement | std::views::keys, std::inserter(keys, keys.end()));
 		return keys | std::ranges::to<QStringList>();
 	}
 
-	[[nodiscard]] QStringList GetGroups() const override
+	[[nodiscard]] QStringList GetGroups(const QString& prefix) const override
 	{
-		return m_impl->GetGroups();
+		return m_impl->GetGroups(prefix);
+	}
+
+	std::unique_ptr<ISettings> CreateGroupSettings(QString prefix) override
+	{
+		return CreateGroup(*this, std::move(prefix));
 	}
 
 	void Remove(const QString& key) override
@@ -172,23 +182,14 @@ private: // ISettings
 		m_replacement.erase(key);
 	}
 
-	void Save(const QString& path) const override
+	void Save(const QString& path, const QString& prefix) const override
 	{
-		m_impl->Save(path);
+		m_impl->Save(path, prefix);
 	}
 
-	void Load(const QString& path) override
+	void Load(const QString& path, const QString& prefix) override
 	{
-		m_impl->Load(path);
-	}
-
-	std::recursive_mutex& BeginGroup(const QString&) const override
-	{
-		return m_mutex;
-	}
-
-	void EndGroup() const override
-	{
+		m_impl->Load(path, prefix);
 	}
 
 	void RegisterObserver(ISettingsObserver* observer) override
@@ -202,9 +203,94 @@ private: // ISettings
 	}
 
 private:
-	mutable std::recursive_mutex                  m_mutex;
 	PropagateConstPtr<ISettings, std::shared_ptr> m_impl;
 	std::unordered_map<QString, QVariant>         m_replacement;
+};
+
+class SettingsGroup final : public AbstractSettings
+{
+public:
+	SettingsGroup(ISettings& impl, QString prefix)
+		: m_impl { impl }
+		, m_prefix { std::move(prefix) }
+	{
+	}
+
+private: // ISettings
+	[[nodiscard]] QVariant Get(const QString& key, const QVariant& defaultValue) const override
+	{
+		return m_impl.Get(Key(key), defaultValue);
+	}
+
+	QVariant Get(const QString& key, const std::function<QVariant()>& defaultValueGetter) const override
+	{
+		return m_impl.Get(Key(key), defaultValueGetter);
+	}
+
+	bool Set(const QString& key, const QVariant& value, const bool sync) override
+	{
+		return m_impl.Set(Key(key), value, sync);
+	}
+
+	[[nodiscard]] bool HasKey(const QString& key) const override
+	{
+		return m_impl.HasKey(Key(key));
+	}
+
+	[[nodiscard]] bool HasGroup(const QString& group) const override
+	{
+		return m_prefix.isEmpty() ? m_impl.HasGroup(group) : m_impl.GetGroups(m_prefix).contains(group);
+	}
+
+	[[nodiscard]] QStringList GetKeys(const QString& prefix) const override
+	{
+		return m_impl.GetKeys(Key(prefix));
+	}
+
+	[[nodiscard]] QStringList GetGroups(const QString& prefix) const override
+	{
+		return m_impl.GetGroups(Key(prefix));
+	}
+
+	std::unique_ptr<ISettings> CreateGroupSettings(QString prefix) override
+	{
+		return CreateGroup(*this, std::move(prefix));
+	}
+
+	void Remove(const QString& key) override
+	{
+		m_impl.Remove(Key(key));
+	}
+
+	void Save(const QString& path, const QString& prefix) const override
+	{
+		m_impl.Save(path, Key(prefix));
+	}
+
+	void Load(const QString& path, const QString& prefix) override
+	{
+		m_impl.Load(path, Key(prefix));
+	}
+
+	void RegisterObserver(ISettingsObserver* observer) override
+	{
+		m_impl.RegisterObserver(observer);
+	}
+
+	void UnregisterObserver(ISettingsObserver* observer) override
+	{
+		m_impl.UnregisterObserver(observer);
+	}
+
+private:
+	[[nodiscard]] QString Key(const QString& key) const
+	{
+		return QString(m_prefix).append(m_prefix.isEmpty() || key.isEmpty() ? "" : "/").append(key);
+	}
+
+private:
+	ISettings& m_impl;
+	QString    m_prefix;
 };
 
 class Settings final
@@ -219,6 +305,11 @@ public:
 
 	Settings(const QString& organization, const QString& application)
 		: m_settings(QSettings::NativeFormat, QSettings::UserScope, organization, application)
+	{
+	}
+
+	Settings(const QSettings::Format format, const QString& organization, const QString& application)
+		: m_settings(format, QSettings::UserScope, organization, application)
 	{
 	}
 
@@ -246,7 +337,7 @@ private: // ISettings
 
 		std::lock_guard lock(m_mutex);
 		m_settings.setValue(key, value);
-		Perform(&ISettingsObserver::HandleValueChanged, Key(key), std::cref(value));
+		Perform(&ISettingsObserver::HandleValueChanged, key, std::cref(value));
 
 		if (sync)
 			m_settings.sync();
@@ -262,19 +353,46 @@ private: // ISettings
 
 	[[nodiscard]] bool HasGroup(const QString& group) const override
 	{
-		return GetGroups().contains(group);
+		return GetGroups({}).contains(group);
 	}
 
-	[[nodiscard]] QStringList GetKeys() const override
+	[[nodiscard]] QStringList GetKeys(const QString& prefix) const override
 	{
 		std::lock_guard lock(m_mutex);
+		if (prefix.isEmpty())
+			return m_settings.childKeys();
+
+		const ScopedCall groupGuard(
+			[&] {
+				m_settings.beginGroup(prefix);
+			},
+			[this] {
+				m_settings.endGroup();
+			}
+		);
 		return m_settings.childKeys();
 	}
 
-	[[nodiscard]] QStringList GetGroups() const override
+	[[nodiscard]] QStringList GetGroups(const QString& prefix) const override
 	{
 		std::lock_guard lock(m_mutex);
+		if (prefix.isEmpty())
+			return m_settings.childGroups();
+
+		const ScopedCall groupGuard(
+			[&] {
+				m_settings.beginGroup(prefix);
+			},
+			[this] {
+				m_settings.endGroup();
+			}
+		);
 		return m_settings.childGroups();
+	}
+
+	std::unique_ptr<ISettings> CreateGroupSettings(QString prefix) override
+	{
+		return CreateGroup(*this, std::move(prefix));
 	}
 
 	void Remove(const QString& key) override
@@ -284,33 +402,44 @@ private: // ISettings
 		m_settings.sync();
 	}
 
-	void Save(const QString& path) const override
+	void Save(const QString& path, const QString& prefix) const override
 	{
 		QFile::remove(path);
 		Settings dst(path);
+
+		std::lock_guard lock(m_mutex);
+		if (prefix.isEmpty())
+			return Copy(dst, *this);
+
+		const ScopedCall groupGuard(
+			[&] {
+				m_settings.beginGroup(prefix);
+			},
+			[this] {
+				m_settings.endGroup();
+			}
+		);
 		Copy(dst, *this);
 	}
 
-	void Load(const QString& path) override
+	void Load(const QString& path, const QString& prefix) override
 	{
 		assert(QFile::exists(path));
 		const Settings src(path);
+
+		std::lock_guard lock(m_mutex);
+		if (prefix.isEmpty())
+			return Copy(*this, src);
+
+		const ScopedCall groupGuard(
+			[&] {
+				m_settings.beginGroup(prefix);
+			},
+			[this] {
+				m_settings.endGroup();
+			}
+		);
 		Copy(*this, src);
-	}
-
-	std::recursive_mutex& BeginGroup(const QString& group) const override
-	{
-		std::lock_guard lock(m_mutex);
-		m_settings.beginGroup(group);
-		m_group.push_back(Key(group));
-		return m_mutex;
-	}
-
-	void EndGroup() const override
-	{
-		std::lock_guard lock(m_mutex);
-		m_settings.endGroup();
-		m_group.pop_back();
 	}
 
 	void RegisterObserver(ISettingsObserver* observer) override
@@ -324,14 +453,7 @@ private: // ISettings
 	}
 
 private:
-	QString Key(const QString& key) const
-	{
-		return m_group.back() + (m_group.back().isEmpty() ? "" : "/") + key;
-	}
-
-private:
 	mutable QSettings            m_settings;
-	mutable std::vector<QString> m_group { 1 };
 	mutable std::recursive_mutex m_mutex;
 };
 
@@ -352,9 +474,20 @@ std::unique_ptr<AbstractSettings> Create(const QString& organization, const QStr
 	return std::make_unique<Settings>(organization, application);
 }
 
+std::unique_ptr<AbstractSettings> CreateMemory(const QString& organization, const QString& application)
+{
+	const auto format = QSettings::registerFormat(CUSTOM_FORMAT, &ReadMemorySettings, &WriteMemorySettings);
+	return std::make_unique<Settings>(format, organization, application);
+}
+
 std::unique_ptr<AbstractSettings> CreateDecorator(std::shared_ptr<ISettings> impl, std::unordered_map<QString, QVariant> replacement)
 {
 	return std::make_unique<SettingsDecorator>(std::move(impl), std::move(replacement));
+}
+
+std::unique_ptr<AbstractSettings> CreateGroup(ISettings& impl, QString prefix)
+{
+	return std::make_unique<SettingsGroup>(impl, std::move(prefix));
 }
 
 } // namespace HomeCompa::SettingsFactory

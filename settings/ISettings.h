@@ -1,10 +1,6 @@
 #pragma once
 
-#include <mutex>
-
 #include <QVariant>
-
-#include "fnd/NonCopyMovable.h"
 
 namespace HomeCompa {
 
@@ -38,13 +34,20 @@ public:
 	[[nodiscard]] virtual bool HasKey(const QString& key) const     = 0;
 	[[nodiscard]] virtual bool HasGroup(const QString& group) const = 0;
 
-	[[nodiscard]] virtual QStringList GetKeys() const   = 0;
-	[[nodiscard]] virtual QStringList GetGroups() const = 0;
+	[[nodiscard]] virtual QStringList GetKeys(const QString& prefix = {}) const   = 0;
+	[[nodiscard]] virtual QStringList GetGroups(const QString& prefix = {}) const = 0;
+
+	[[nodiscard]] virtual std::unique_ptr<ISettings> CreateGroupSettings(QString prefix) = 0;
+
+	[[nodiscard]] virtual std::unique_ptr<const ISettings> CreateGroupSettings(QString prefix) const
+	{
+		return const_cast<ISettings*>(this)->CreateGroupSettings(std::move(prefix));
+	}
 
 	virtual void Remove(const QString& key) = 0;
 
-	virtual void Save(const QString& path) const = 0;
-	virtual void Load(const QString& path)       = 0;
+	virtual void Save(const QString& path, const QString& prefix = {}) const = 0;
+	virtual void Load(const QString& path, const QString& prefix = {})       = 0;
 
 	virtual void RegisterObserver(ISettingsObserver* observer)   = 0;
 	virtual void UnregisterObserver(ISettingsObserver* observer) = 0;
@@ -82,32 +85,6 @@ public:
 		auto value = Get(key, QVariant::fromValue(defaultValue)).toDouble(&ok);
 		return ok ? static_cast<T>(value) : defaultValue;
 	}
-
-private:
-	virtual std::recursive_mutex& BeginGroup(const QString& group) const = 0;
-	virtual void                  EndGroup() const                       = 0;
-	friend class SettingsGroup;
-};
-
-class SettingsGroup
-{
-	NON_COPY_MOVABLE(SettingsGroup)
-
-public:
-	SettingsGroup(const ISettings& settings, const QString& group)
-		: m_settings { settings }
-		, m_lock { m_settings.BeginGroup(group) }
-	{
-	}
-
-	~SettingsGroup()
-	{
-		m_settings.EndGroup();
-	}
-
-private:
-	const ISettings&                      m_settings;
-	std::lock_guard<std::recursive_mutex> m_lock;
 };
 
 } // namespace HomeCompa
