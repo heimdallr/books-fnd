@@ -2,7 +2,6 @@
 
 #include <filesystem>
 #include <numeric>
-#include <sstream>
 #include <string>
 
 #include "fnd/FindPair.h"
@@ -37,30 +36,53 @@ constexpr std::pair<int, ObserverMethod> g_opCodeToObserverMethod[] {
 	{ 23, &IDatabaseObserver::OnUpdate },
 };
 
-std::vector<std::string> Split(const std::string& src, const char separator)
+std::vector<std::string> SplitWithQuotesStd(const std::string& input, const char delimiter, const char quote = '"')
 {
+	if (input.find(delimiter) == std::string::npos)
+		return { input };
+
 	std::vector<std::string> result;
-	std::istringstream       stream(src);
-	std::string              s;
-	while (std::getline(stream, s, separator))
-		result.push_back(s);
+	std::string              currentToken;
+
+	bool inQuotes   = false;
+	bool hasContent = false;
+
+	for (const char c : input)
+	{
+		hasContent = true;
+
+		if (c == quote)
+		{
+			inQuotes = !inQuotes;
+			continue;
+		}
+
+		if (c == delimiter && !inQuotes)
+		{
+			result.push_back(currentToken);
+			currentToken.clear();
+		}
+		else
+		{
+			currentToken.push_back(c);
+		}
+	}
+
+	if (hasContent)
+		result.push_back(currentToken);
 
 	return result;
 }
 
 ConnectionParameters ParseConnectionString(const std::string& connection)
 {
-	ConnectionParameters result;
-	for (const auto& parameter : Split(connection, ';'))
-	{
-		auto pair = Split(parameter, '=');
-		if (std::size(pair) == 1)
-			result.emplace(PATH, std::move(pair.front()));
-		else
-			result.emplace(std::move(pair.front()), std::move(pair.back()));
-	}
-
-	return result;
+	return SplitWithQuotesStd(connection, ';') | std::views::transform([](const std::string& item) {
+			   auto list = SplitWithQuotesStd(item, '=');
+			   if (list.size() < 2)
+				   return std::make_pair(std::string { PATH }, list.front());
+			   return std::make_pair(list.front(), list.back());
+		   })
+	     | std::views::common | std::ranges::to<ConnectionParameters>();
 }
 
 template <Details::ExportedDatabaseType T>
