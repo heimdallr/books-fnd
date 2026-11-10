@@ -4,6 +4,8 @@ AddTarget(zip	shared_lib
 	PROJECT_GROUP Foundation
 	SOURCE_DIRECTORY
 		"${CMAKE_CURRENT_LIST_DIR}"
+	EXCLUDE_SOURCES
+		${CMAKE_CURRENT_LIST_DIR}/unit-tests
     INCLUDE_DIRECTORIES
         "${EXT_ROOT}/bit7z/include"
 	LINK_LIBRARIES
@@ -13,6 +15,12 @@ AddTarget(zip	shared_lib
 		fnd
 		logging
 		platform
+)
+
+AddGTest(zip
+	PROJECT_GROUP UT/Foundation
+	SOURCE_DIRECTORY
+		"${CMAKE_CURRENT_LIST_DIR}/unit-tests"
 )
 
 set(7zip_BIN_FILENAME)

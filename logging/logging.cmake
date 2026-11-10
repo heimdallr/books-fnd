@@ -6,10 +6,18 @@ endif()
 AddTarget(logging	shared_lib
 	SOURCE_DIRECTORY
 		${CMAKE_CURRENT_LIST_DIR}
+	EXCLUDE_SOURCES
+		${CMAKE_CURRENT_LIST_DIR}/unit-tests
 	PROJECT_GROUP Foundation
 	LINK_LIBRARIES
 		Qt${QT_MAJOR_VERSION}::Core
 		LINK_PUBLIC plog::plog
 	COMPILE_DEFINITIONS
 		${PLOG_SHARED_EXPORT}
+)
+
+AddGTest(logging
+	PROJECT_GROUP UT/Foundation
+	SOURCE_DIRECTORY
+		"${CMAKE_CURRENT_LIST_DIR}/unit-tests"
 )

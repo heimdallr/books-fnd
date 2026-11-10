@@ -7,7 +7,7 @@ AddTarget(util	shared_lib
 	INCLUDE_DIRECTORIES
 		"${EXT_ROOT}/libmobi/src"
 	EXCLUDE_SOURCES
-		${CMAKE_CURRENT_LIST_DIR}/ut
+		${CMAKE_CURRENT_LIST_DIR}/unit-tests
 	LINK_LIBRARIES
 		Qt${QT_MAJOR_VERSION}::Core
 		Qt${QT_MAJOR_VERSION}::Gui
@@ -28,7 +28,7 @@ AddGTest(util
 	MOCK
 	PROJECT_GROUP UT/Foundation
 	SOURCE_DIRECTORY
-		"${CMAKE_CURRENT_LIST_DIR}/ut"
+		"${CMAKE_CURRENT_LIST_DIR}/unit-tests"
 	LINK_TARGETS
 		util
 )

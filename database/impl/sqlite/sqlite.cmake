@@ -2,6 +2,8 @@ AddTarget(dbsqlite	shared_lib
 	PROJECT_GROUP Foundation/Database/Impl
 	SOURCE_DIRECTORY
 		"${CMAKE_CURRENT_LIST_DIR}"
+	EXCLUDE_SOURCES
+		${CMAKE_CURRENT_LIST_DIR}/unit-tests
 	INCLUDE_DIRECTORIES
 		"${CMAKE_CURRENT_LIST_DIR}/../../../../sqlite/sqlite3pp/src"
 		"${CMAKE_CURRENT_LIST_DIR}/../../../../sqlite/sqlite"
@@ -15,4 +17,11 @@ AddTarget(dbsqlite	shared_lib
 		SQLite::SQLite3
 	COMPILE_DEFINITIONS
 		_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING
+)
+
+
+AddGTest(dbsqlite
+	PROJECT_GROUP UT/Foundation/Database/Impl
+	SOURCE_DIRECTORY
+		"${CMAKE_CURRENT_LIST_DIR}/unit-tests"
 )
