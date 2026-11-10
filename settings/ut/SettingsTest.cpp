@@ -182,11 +182,11 @@ TEST_F(SettingsTest, GroupSettings2)
 TEST_F(SettingsTest, GroupSettingsMultiThreading)
 {
 	Fill();
-	std::atomic_int value;
-	const unsigned      threadCount = std::thread::hardware_concurrency() * 2;
-	static constexpr const char* groups[]    = {"first", "first/tag", "second"};
+	std::atomic_int              value;
+	const unsigned               threadCount = std::thread::hardware_concurrency() * 2;
+	static constexpr const char* groups[]    = { "first", "first/tag", "second" };
 
-	const auto          work = [&](const std::stop_token stop, const unsigned n) {
+	const auto work = [&](const std::stop_token stop, const unsigned n) {
 		while (!stop.stop_requested())
 		{
 			const auto group = settings->CreateGroupSettings(groups[value % std::size(groups)]);

@@ -191,7 +191,7 @@ private:
 	void OnFontChanged()
 	{
 		const auto group = m_settings->CreateGroupSettings(Global::FONT_KEY);
-		auto                font = m_observer.GetWidget().font();
+		auto       font  = m_observer.GetWidget().font();
 		Deserialize(font, *group);
 		const auto sizeFactor = font.pointSizeF() / Global::FONT_SIZE_DEFAULT;
 
