@@ -1,5 +1,6 @@
 #include "zip.h"
 
+#include "src/ext/zip/7z/bit7z/include/bit7z/bit7zlibrary.hpp"
 #include <ranges>
 
 #include <QBuffer>
@@ -9,6 +10,15 @@
 using namespace HomeCompa;
 
 namespace {
+
+TEST(Bit7z, Create)
+{
+    const auto test = []{
+        bit7z::Bit7zLibrary lib;
+        lib.setLargePageMode();
+    };
+    EXPECT_NO_THROW(test());
+}
 
 void Process(const Zip::Format format, const std::vector<std::pair<QString, QByteArray>>& files = {})
 {
@@ -39,13 +49,30 @@ struct ZipTest : testing::TestWithParam<Zip::Format>
 {
 };
 
+struct ZipCreateTest : ZipTest
+{
+};
+
+INSTANTIATE_TEST_SUITE_P(ZipEmptyTests, ZipCreateTest, testing::Values(Zip::Format::Zip, Zip::Format::SevenZip, Zip::Format::BZip2, Zip::Format::GZip, Zip::Format::Tar, Zip::Format::Xz));
+
 struct ZipEmptyTest : ZipTest
 {
 };
 
+TEST_P(ZipCreateTest, JustCreate)
+{
+    const auto format = GetParam();
+    QBuffer buffer;
+    buffer.open(QIODevice::WriteOnly);
+    const auto test = [&]{
+        [[maybe_unused]] const Zip zip(buffer, format);
+    };
+    EXPECT_NO_THROW(test());
+}
+
 INSTANTIATE_TEST_SUITE_P(ZipEmptyTests, ZipEmptyTest, testing::Values(Zip::Format::Zip, Zip::Format::SevenZip));
 
-TEST_P(ZipEmptyTest, Create)
+TEST_P(ZipEmptyTest, ReadWrite)
 {
 	const auto format = GetParam();
 	Process(format);
@@ -57,7 +84,7 @@ struct ZipSingleFileTest : ZipTest
 
 INSTANTIATE_TEST_SUITE_P(ZipSingleFileTests, ZipSingleFileTest, testing::Values(Zip::Format::Zip, Zip::Format::SevenZip, Zip::Format::GZip));
 
-TEST_P(ZipSingleFileTest, Create)
+TEST_P(ZipSingleFileTest, ReadWrite)
 {
 	const auto format = GetParam();
 	Process(
