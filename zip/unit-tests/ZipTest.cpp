@@ -23,26 +23,37 @@ TEST(Bit7z, Create)
 void Process(const Zip::Format format, const std::vector<std::pair<QString, QByteArray>>& files = {})
 {
 	QByteArray data;
-	{
+    {
 		QBuffer buffer(&data);
-		buffer.open(QIODevice::WriteOnly);
-		Zip        zip(buffer, format);
-		const auto zipFiles = Zip::CreateZipFileController();
-		for (const auto& [name, body] : files)
+        buffer.open(QIODevice::WriteOnly);
+        Zip        zip(buffer, format);
+        const auto zipFiles = Zip::CreateZipFileController();
+        for (const auto& [name, body] : files)
 			zipFiles->AddFile(name, body);
-		ASSERT_NO_THROW(zip.Write(*zipFiles));
-	}
+        ASSERT_NO_THROW(zip.Write(*zipFiles));
+        std::cerr << 8 << std::endl;
+    }
+    std::cerr << 9 << std::endl;
 
 	QBuffer buffer(&data);
-	buffer.open(QIODevice::ReadOnly);
-	Zip        zip(buffer);
-	const auto unzippedFileNames = zip.GetFileNameList();
-	EXPECT_EQ(unzippedFileNames.size(), files.size());
-	for (const auto& [file, unzippedFileName] : std::views::zip(files, unzippedFileNames))
+    std::cerr << 10 << std::endl;
+    buffer.open(QIODevice::ReadOnly);
+    std::cerr << 11 << std::endl;
+    Zip        zip(buffer);
+    std::cerr << 12 << std::endl;
+    const auto unzippedFileNames = zip.GetFileNameList();
+    std::cerr << 13 << std::endl;
+    EXPECT_EQ(unzippedFileNames.size(), files.size());
+    std::cerr << 14 << std::endl;
+    for (const auto& [file, unzippedFileName] : std::views::zip(files, unzippedFileNames))
 	{
-		EXPECT_EQ(file.first, unzippedFileName);
-		EXPECT_EQ(file.second, zip.Read(unzippedFileName)->GetStream().readAll());
-	}
+        std::cerr << 15 << std::endl;
+        EXPECT_EQ(file.first, unzippedFileName);
+        std::cerr << 16 << std::endl;
+        EXPECT_EQ(file.second, zip.Read(unzippedFileName)->GetStream().readAll());
+        std::cerr << 17 << std::endl;
+    }
+    std::cerr << 18 << std::endl;
 }
 
 struct ZipTest : testing::TestWithParam<Zip::Format>
