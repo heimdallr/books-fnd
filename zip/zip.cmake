@@ -21,8 +21,12 @@ if(WIN32)
 elseif(UNIX)
 	set(7zip_BIN_FILENAME 7z.so)
 	set(7zip_BIN_PATH ${CMAKE_BINARY_DIR}/lib)
-    set(SEVENZIP_OUTPUT "${SEVENZIP_BUILD_DIR}/${7zip_BIN_FILENAME}")
+	set(SEVENZIP_OUTPUT "${SEVENZIP_BUILD_DIR}/${7zip_BIN_FILENAME}")
 	install(FILES "${SEVENZIP_BUILD_DIR}/${7zip_BIN_FILENAME}" DESTINATION lib)
+	
+    set(SEVENZIP_CC "${CMAKE_C_COMPILER}")
+    set(SEVENZIP_CXX "${CMAKE_CXX_COMPILER}")
+
     if(APPLE)
     	if(CMAKE_OSX_ARCHITECTURES)
 	        set(TARGET_ARCH "${CMAKE_OSX_ARCHITECTURES}")
@@ -39,6 +43,10 @@ elseif(UNIX)
 	    endif()
     else()
         set(SEVENZIP_MAK "../../cmpl_gcc.mak")
+        find_program(GCC12_C_COMPILER gcc-12)
+        if(GCC12_C_COMPILER)
+		set(SEVENZIP_CC "${GCC12_C_COMPILER}")
+	endif()
     endif()
 
     include(ProcessorCount)
@@ -52,8 +60,8 @@ elseif(UNIX)
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${SEVENZIP_BUILD_DIR}"
         COMMAND make -j${NPROC} -f "${SEVENZIP_MAK}"
         	"O=${SEVENZIP_BUILD_DIR}"
-        	"CC=${CMAKE_C_COMPILER}"
-        	"CXX=${CMAKE_CXX_COMPILER}"
+        	"CC=${SEVENZIP_CC}"
+        	"CXX=${SEVENZIP_CXX}"
         	"CFLAGS_WARN_WALL=-Wall -Wextra"
         WORKING_DIRECTORY "${SEVENZIP_SRC_DIR}"
         COMMENT "Building 7z.so with make..."
