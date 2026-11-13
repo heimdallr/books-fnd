@@ -21,11 +21,8 @@ AddGTest(zip
 	PROJECT_GROUP UT/Foundation
 	SOURCE_DIRECTORY
 		"${CMAKE_CURRENT_LIST_DIR}/unit-tests"
-        INCLUDE_DIRECTORIES
-                "${EXT_ROOT}/zip/bit7z/include"
         LINK_LIBRARIES
 		Qt${QT_MAJOR_VERSION}::Core
-                bit7z
         LINK_TARGETS
 		zip
 )

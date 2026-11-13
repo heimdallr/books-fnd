@@ -1,0 +1,12 @@
+<RCC>
+	<qresource prefix="src">
+		<file alias="input.txt">data/input.txt</file>
+	</qresource>
+	<qresource prefix="dst">
+		<file alias="archive.7z">data/archive.7z</file>
+		<file alias="archive.gz">data/archive.gz</file>
+		<file alias="archive.tar">data/archive.tar</file>
+		<file alias="archive.wim">data/archive.wim</file>
+		<file alias="archive.zip">data/archive.zip</file>
+	</qresource>
+</RCC>

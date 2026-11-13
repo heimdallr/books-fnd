@@ -1,9 +1,9 @@
 #include "zip.h"
 
-#include "src/ext/zip/7z/bit7z/include/bit7z/bit7zlibrary.hpp"
 #include <ranges>
 
 #include <QBuffer>
+#include <QFile>
 
 #include <gtest/gtest.h>
 
@@ -11,49 +11,58 @@ using namespace HomeCompa;
 
 namespace {
 
-TEST(Bit7z, Create)
+struct DecodeTest : testing::TestWithParam<QString>
 {
-    const auto test = []{
-        bit7z::Bit7zLibrary lib;
-        lib.setLargePageMode();
-    };
-    EXPECT_NO_THROW(test());
+};
+
+INSTANTIATE_TEST_SUITE_P(DecodeTests, DecodeTest, testing::Values("archive.7z", "archive.gz", "archive.tar", "archive.wim", "archive.zip"));
+
+TEST_P(DecodeTest, Read)
+{
+	const auto input = [] {
+		QFile src(":/src/input.txt");
+		return src.open(QIODevice::ReadOnly) ? src.readAll() : QByteArray {};
+	}();
+	ASSERT_FALSE(input.isEmpty());
+
+	const auto test = [&] {
+		const auto file = GetParam();
+		QFile      stream(QString(":/dst/%1").arg(file));
+		std::ignore = stream.open(QIODevice::ReadOnly);
+		const Zip  zip(stream);
+		const auto files = zip.GetFileNameList();
+		ASSERT_EQ(files.size(), 1);
+		const auto file1 = files.front().toStdString();
+		const auto fileStr = file1.data();
+		ASSERT_STREQ(fileStr, "input.txt");
+		EXPECT_EQ(zip.Read(files.front())->GetStream().readAll(), input);
+	};
+	EXPECT_NO_THROW(test());
 }
 
 void Process(const Zip::Format format, const std::vector<std::pair<QString, QByteArray>>& files = {})
 {
 	QByteArray data;
-    {
+	{
 		QBuffer buffer(&data);
-        buffer.open(QIODevice::WriteOnly);
-        Zip        zip(buffer, format);
-        const auto zipFiles = Zip::CreateZipFileController();
-        for (const auto& [name, body] : files)
+		buffer.open(QIODevice::WriteOnly);
+		Zip        zip(buffer, format);
+		const auto zipFiles = Zip::CreateZipFileController();
+		for (const auto& [name, body] : files)
 			zipFiles->AddFile(name, body);
-        ASSERT_NO_THROW(zip.Write(*zipFiles));
-        std::cerr << 8 << std::endl;
-    }
-    std::cerr << 9 << std::endl;
+		ASSERT_NO_THROW(zip.Write(*zipFiles));
+	}
 
 	QBuffer buffer(&data);
-    std::cerr << 10 << std::endl;
-    buffer.open(QIODevice::ReadOnly);
-    std::cerr << 11 << std::endl;
-    Zip        zip(buffer);
-    std::cerr << 12 << std::endl;
-    const auto unzippedFileNames = zip.GetFileNameList();
-    std::cerr << 13 << std::endl;
-    EXPECT_EQ(unzippedFileNames.size(), files.size());
-    std::cerr << 14 << std::endl;
-    for (const auto& [file, unzippedFileName] : std::views::zip(files, unzippedFileNames))
+	buffer.open(QIODevice::ReadOnly);
+	Zip        zip(buffer);
+	const auto unzippedFileNames = zip.GetFileNameList();
+	EXPECT_EQ(unzippedFileNames.size(), files.size());
+	for (const auto& [file, unzippedFileName] : std::views::zip(files, unzippedFileNames))
 	{
-        std::cerr << 15 << std::endl;
-        EXPECT_EQ(file.first, unzippedFileName);
-        std::cerr << 16 << std::endl;
-        EXPECT_EQ(file.second, zip.Read(unzippedFileName)->GetStream().readAll());
-        std::cerr << 17 << std::endl;
-    }
-    std::cerr << 18 << std::endl;
+		EXPECT_EQ(file.first, unzippedFileName);
+		EXPECT_EQ(file.second, zip.Read(unzippedFileName)->GetStream().readAll());
+	}
 }
 
 struct ZipTest : testing::TestWithParam<Zip::Format>
@@ -72,13 +81,13 @@ struct ZipEmptyTest : ZipTest
 
 TEST_P(ZipCreateTest, JustCreate)
 {
-    const auto format = GetParam();
-    QBuffer buffer;
-    buffer.open(QIODevice::WriteOnly);
-    const auto test = [&]{
-        [[maybe_unused]] const Zip zip(buffer, format);
-    };
-    EXPECT_NO_THROW(test());
+	const auto format = GetParam();
+	QBuffer    buffer;
+	buffer.open(QIODevice::WriteOnly);
+	const auto test = [&] {
+		[[maybe_unused]] const Zip zip(buffer, format);
+	};
+	EXPECT_NO_THROW(test());
 }
 
 INSTANTIATE_TEST_SUITE_P(ZipEmptyTests, ZipEmptyTest, testing::Values(Zip::Format::Zip, Zip::Format::SevenZip));
