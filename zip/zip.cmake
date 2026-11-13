@@ -50,7 +50,7 @@ elseif(UNIX)
     add_custom_command(
         OUTPUT "${SEVENZIP_OUTPUT}"
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${SEVENZIP_BUILD_DIR}"
-        COMMAND make -j${NPROC} -f "${SEVENZIP_MAK}" "ODIR=${SEVENZIP_BUILD_DIR}"
+        COMMAND make -j${NPROC} -f "${SEVENZIP_MAK}" "O=${SEVENZIP_BUILD_DIR}" "CFLAGS_WARN_WALL=-Wall -Wextra"
         WORKING_DIRECTORY "${SEVENZIP_SRC_DIR}"
         COMMENT "Building 7z.so with make..."
         VERBATIM
