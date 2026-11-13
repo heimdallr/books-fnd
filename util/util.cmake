@@ -1,3 +1,12 @@
+option(USE_LIBXML2 ON)
+add_subdirectory(${EXT_ROOT}/libmobi)
+if(MSVC)
+	set_property(TARGET mobi PROPERTY FOLDER ThirdParty)
+	set_target_properties(mobi PROPERTIES COMPILE_OPTIONS /W0)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID STREQUAL "GNU")
+	target_compile_options(mobi PRIVATE "$<$<COMPILE_LANGUAGE:C>:-Wno-stringop-overread>")
+endif()
+
 AddTarget(util	shared_lib
 	PROJECT_GROUP Foundation
 	SOURCE_DIRECTORY

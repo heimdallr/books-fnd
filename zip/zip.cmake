@@ -43,9 +43,27 @@ elseif(UNIX)
 	    endif()
     else()
         set(SEVENZIP_MAK "../../cmpl_gcc.mak")
-        find_program(GCC12_C_COMPILER gcc-12)
-        if(GCC12_C_COMPILER)
-		set(SEVENZIP_CC "${GCC12_C_COMPILER}")
+        
+        include(CheckCXXSourceCompiles)
+	check_c_source_compiles("
+    __attribute__((__target__(\"sha512,avx2\")))
+    static void test_sha512(void) {
+        __asm__ volatile(\"vsha512rnds2 %%xmm1, %%ymm7, %%ymm0\" ::: \"ymm0\");
+    }
+    int main() {
+        test_sha512();
+        return 0;
+    }
+" COMPILER_SUPPORTS_SHA512)
+	
+	if(NOT COMPILER_SUPPORTS_SHA512)
+    		find_program(GCC12_C_COMPILER gcc-12)
+    		if(GCC12_C_COMPILER)
+        		message(STATUS "Assembler lacks SHA-512 support; falling back to gcc-12 for 7z")
+        		set(SEVENZIP_CC "${GCC12_C_COMPILER}")
+        	else()
+        		message(FATAL_ERROR "GCC-12 or Assembler with SHA-512 support required")
+		endif()
 	endif()
     endif()
 
@@ -86,6 +104,21 @@ if(MSVC)
 	set_property(TARGET 7z PROPERTY FOLDER Foundation/Zip)
 endif()
 
+set(BIT7Z_AUTO_FORMAT ON CACHE BOOL "enable auto format support" FORCE)
+set(BIT7Z_USE_NATIVE_STRING ON CACHE BOOL "enable native string" FORCE)
+set(BIT7Z_USE_STD_BYTE ON CACHE BOOL "enable std::byte" FORCE)
+set(BIT7Z_CUSTOM_7ZIP_PATH "${EXT_ROOT}/zip/7z/7-zip" CACHE PATH "")
+if(APPLE)
+	set(BIT7Z_USE_LEGACY_IUNKNOWN ON CACHE BOOL "enable p7zip-compatible IUnknown" FORCE)
+endif()
+add_subdirectory(${EXT_ROOT}/zip/7z/bit7z)
+if(MSVC)
+	get_target_property(BIT7Z_LIBRARY_TARGET bit7z ALIASED_TARGET)
+	if(NOT BIT7Z_LIBRARY_TARGET)
+		set(BIT7Z_LIBRARY_TARGET bit7z)
+	endif()
+	set_property(TARGET ${BIT7Z_LIBRARY_TARGET} PROPERTY FOLDER ThirdParty)
+endif()
 
 AddTarget(zip	shared_lib
 	PROJECT_GROUP Foundation/Zip
