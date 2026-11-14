@@ -32,7 +32,7 @@ TEST_P(DecodeTest, Read)
 		const Zip  zip(stream);
 		const auto files = zip.GetFileNameList();
 		ASSERT_EQ(files.size(), 1);
-		const auto file1 = files.front().toStdString();
+		const auto file1   = files.front().toStdString();
 		const auto fileStr = file1.data();
 		ASSERT_STREQ(fileStr, "input.txt");
 		EXPECT_EQ(zip.Read(files.front())->GetStream().readAll(), input);
