@@ -30,4 +30,4 @@ TEST(Try, Success)
 	EXPECT_TRUE(!!value);
 }
 
-}
+} // namespace

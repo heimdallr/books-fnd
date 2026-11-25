@@ -2,7 +2,7 @@
 
 #include <QtGui/QFont>
 
-#include "settings/ISettings.h"
+#include "fnd/ISettings.h"
 
 namespace HomeCompa::Util {
 

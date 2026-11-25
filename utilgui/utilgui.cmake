@@ -8,9 +8,9 @@ AddTarget(utilgui shared_lib
 		Qt${QT_MAJOR_VERSION}::Core
 		Qt${QT_MAJOR_VERSION}::Widgets
 	LINK_TARGETS
+		fnd
 		logging
 		platformgui
-		settings
 )
 
 AddGTest(utilgui

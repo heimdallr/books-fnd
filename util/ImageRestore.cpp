@@ -8,11 +8,11 @@
 #include <QImage>
 
 #include "fnd/EnumBitmask.h"
+#include "fnd/ISettings.h"
 #include "fnd/IsOneOf.h"
 #include "fnd/algorithm.h"
 #include "fnd/try.h"
 
-#include "settings/ISettings.h"
 #include "xml/SaxParser.h"
 #include "xml/XmlAttributes.h"
 #include "xml/XmlWriter.h"

@@ -1,10 +1,9 @@
 #pragma once
 
 #include "fnd/EnumBitmask.h"
+#include "fnd/ISettings.h"
 #include "fnd/NonCopyMovable.h"
 #include "fnd/memory.h"
-
-#include "settings/ISettings.h"
 
 #include "export/utilgui.h"
 

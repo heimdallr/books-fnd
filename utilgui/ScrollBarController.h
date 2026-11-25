@@ -3,7 +3,7 @@
 #include <QObject>
 #include <QPointer>
 
-#include "settings/ISettings.h"
+#include "fnd/ISettings.h"
 
 #include "export/utilgui.h"
 

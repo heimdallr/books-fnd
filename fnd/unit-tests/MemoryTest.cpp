@@ -1,7 +1,7 @@
 #include "fnd/memory.h"
 
-#include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 using namespace HomeCompa;
 
@@ -56,7 +56,6 @@ TEST(PropagateConstPtrTest, SharedCtor2)
 	EXPECT_FALSE(!obj);
 }
 
-
 TEST(PropagateConstPtrTest, SharedCtor3)
 {
 	PropagateConstPtr<MyClass, std::shared_ptr> obj1;
@@ -98,7 +97,7 @@ TEST(PropagateConstPtrTest, SharedCtor6)
 TEST(PropagateConstPtrTest, SharedCtor7)
 {
 	PropagateConstPtr<MyClass, std::shared_ptr> obj1;
-	auto obj2 = static_cast<std::shared_ptr<MyClass>>(obj1);
+	auto                                        obj2 = static_cast<std::shared_ptr<MyClass>>(obj1);
 	EXPECT_TRUE(obj2.get());
 	EXPECT_TRUE(obj2);
 	EXPECT_FALSE(!obj2);

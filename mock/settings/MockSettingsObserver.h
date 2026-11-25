@@ -2,7 +2,7 @@
 
 #include <gmock/gmock.h>
 
-#include "settings/ISettingsObserver.h"
+#include "fnd/ISettingsObserver.h"
 
 namespace HomeCompa::Test {
 

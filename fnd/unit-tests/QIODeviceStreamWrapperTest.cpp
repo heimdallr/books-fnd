@@ -18,7 +18,7 @@ struct MockIODevice : QIODevice
 TEST(QIODeviceStreamWrapper, InputNotOpen)
 {
 	const auto ioStream = std::make_unique<testing::StrictMock<MockIODevice>>();
-	auto       stream    = QStdIStream::create(*ioStream);
+	auto       stream   = QStdIStream::create(*ioStream);
 	ASSERT_TRUE(!!stream);
 	int x;
 	*stream >> x;
@@ -68,7 +68,7 @@ TEST(QIODeviceStreamWrapper, InputInt)
 TEST(QIODeviceStreamWrapper, OutputNotOpen)
 {
 	const auto ioStream = std::make_unique<testing::StrictMock<MockIODevice>>();
-	auto       stream    = QStdOStream::create(*ioStream);
+	auto       stream   = QStdOStream::create(*ioStream);
 	ASSERT_TRUE(!!stream);
 	int x = 42;
 	*stream << x;

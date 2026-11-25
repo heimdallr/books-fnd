@@ -1,4 +1,4 @@
-#include "settings/Settings.h"
+#include "fnd/Settings.h"
 
 #include <ranges>
 #include <thread>
@@ -7,9 +7,10 @@
 
 #include <gtest/gtest.h>
 
+#include "fnd/ISettings.h"
+
 #include "mock/settings/MockSettings.h"
 #include "mock/settings/MockSettingsObserver.h"
-#include "settings/ISettings.h"
 
 using namespace HomeCompa::Test;
 using namespace HomeCompa;

@@ -1,8 +1,8 @@
 #include "fnd/IsOneOf.h"
 
-#include <gtest/gtest.h>
-
 #include <QString>
+
+#include <gtest/gtest.h>
 
 using namespace HomeCompa;
 
@@ -55,4 +55,4 @@ TEST(IsOneOf, Enum)
 	EXPECT_FALSE(IsOneOf(test, MyEnum::Last, MyEnum::Value0, MyEnum::Value2, MyEnum::Value3));
 }
 
-}
+} // namespace

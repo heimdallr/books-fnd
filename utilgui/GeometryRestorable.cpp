@@ -8,11 +8,11 @@
 #include <QTimer>
 #include <QWindow>
 
+#include "fnd/ISettingsObserver.h"
+#include "fnd/UiTimer.h"
 #include "fnd/algorithm.h"
 
 #include "platformgui/PlatformGuiUtil.h"
-#include "settings/ISettingsObserver.h"
-#include "settings/UiTimer.h"
 
 #include "Constant.h"
 #include "Font.h"

@@ -1,6 +1,6 @@
 #include "ColorUtil.h"
 
-#include "settings/ISettings.h"
+#include "fnd/ISettings.h"
 
 namespace HomeCompa::Util {
 
