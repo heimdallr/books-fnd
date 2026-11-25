@@ -37,13 +37,15 @@ using namespace HomeCompa::ICU;
 
 namespace {
 
-UConverter* CreateDecoder(const char* id)
+UConverter* CreateDecoder(const char* id, const bool setStopCallback)
 {
-	UErrorCode status;
+	UErrorCode status  = U_ZERO_ERROR;
 	auto*      decoder = ucnv_open(id, &status);
 	if (U_FAILURE(status))
 		throw std::runtime_error(std::format("cannot open {} decoder", id));
 
+	if (setStopCallback)
+		ucnv_setToUCallBack(decoder, UCNV_TO_U_CALLBACK_STOP, nullptr, nullptr, nullptr, &status);
 	return decoder;
 }
 
@@ -52,8 +54,8 @@ class Decoder final : public IDecoder
 	NON_COPY_MOVABLE(Decoder)
 
 public:
-	explicit Decoder(const char* id)
-		: m_decoder { CreateDecoder(id) }
+	Decoder(const char* id, const bool setStopCallback)
+		: m_decoder { CreateDecoder(id, setStopCallback) }
 	{
 		PLOGV << id << " decoder created";
 	}
@@ -76,7 +78,7 @@ private:
 	{
 		std::lock_guard lock(m_guard);
 
-		UErrorCode         status;
+		UErrorCode         status = U_ZERO_ERROR;
 		icu::UnicodeString uStr(src.data(), static_cast<int32_t>(src.size()), m_decoder, status);
 		if (U_FAILURE(status))
 			throw std::runtime_error(std::format("cannot decode {}", src));
@@ -91,7 +93,7 @@ private:
 
 } // namespace
 
-IDecoder::Ptr IDecoder::Create(const char* id)
+IDecoder::Ptr IDecoder::Create(const char* id, const bool setStopCallback)
 {
-	return std::make_unique<Decoder>(id);
+	return std::make_unique<Decoder>(id, setStopCallback);
 }

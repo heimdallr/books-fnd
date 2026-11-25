@@ -15,7 +15,7 @@ class IDecoder // NOLINT(cppcoreguidelines-special-member-functions)
 {
 public:
 	using Ptr = std::unique_ptr<IDecoder>;
-	FLICU_EXPORT static Ptr Create(const char* id);
+	FLICU_EXPORT static Ptr Create(const char* id, bool setStopCallback = false);
 
 public:
 	virtual ~IDecoder()                                    = default;
