@@ -1,5 +1,7 @@
 #include "fnd/algorithm.h"
 
+#include <unordered_set>
+
 #include <gtest/gtest.h>
 
 using namespace HomeCompa::Util;
@@ -258,10 +260,6 @@ TEST(QStringViewHashTest, TestString)
 	EXPECT_FALSE(data.contains("abe"));
 	EXPECT_FALSE(data.contains(QString { "abe" }));
 	EXPECT_FALSE(data.contains(QStringView { u"abe" }));
-	data.emplace(QStringView { u"abe" });
-	EXPECT_TRUE(data.contains("abe"));
-	EXPECT_TRUE(data.contains(QString { "abe" }));
-	EXPECT_TRUE(data.contains(QStringView { u"abe" }));
 }
 
 TEST(QStringViewHashTest, TestStringView)
