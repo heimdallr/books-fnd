@@ -3,7 +3,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "emitter.h"
+#include "private/emitter.h"
 
 namespace {
 

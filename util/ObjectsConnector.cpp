@@ -26,9 +26,10 @@ void registerMetaType(MetaObjects& metaObjects, QString id, MetaPair metaPair)
 	});
 }
 
-std::string GetMetaName(const QString& name, const QChar prefix)
+std::string GetMetaName(const QString& name, [[maybe_unused]] const QChar prefix)
 {
-	return ((name.startsWith(prefix)) ? name : prefix + name).toStdString();
+	assert(name.startsWith(prefix));
+	return name.toStdString();
 }
 
 } // namespace
