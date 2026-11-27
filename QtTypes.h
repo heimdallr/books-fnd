@@ -82,7 +82,10 @@ using enter_event_t = QEvent;
 template <typename T>
 inline void RemoveIf(QString& value, T&& functor)
 {
-	std::ranges::transform(value, value.begin(), std::forward<T>(functor));
+	QString result;
+	std::ranges::copy_if(value, std::back_inserter(result), [f = std::move(functor)](const auto ch) {
+		return !f(ch);
+	});
 }
 
 inline QString First(const QString& string, const qsizetype_t n)

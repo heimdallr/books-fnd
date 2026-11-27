@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 
-#include "mock/settings/MockSettings.h"
+#include "mock/util/MockSettings.h"
 
 using namespace HomeCompa::Test;
 using namespace HomeCompa::Util;

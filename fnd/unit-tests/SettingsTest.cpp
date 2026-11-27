@@ -9,8 +9,8 @@
 
 #include "fnd/ISettings.h"
 
-#include "mock/settings/MockSettings.h"
-#include "mock/settings/MockSettingsObserver.h"
+#include "mock/util/MockSettings.h"
+#include "mock/util/MockSettingsObserver.h"
 
 using namespace HomeCompa::Test;
 using namespace HomeCompa;
