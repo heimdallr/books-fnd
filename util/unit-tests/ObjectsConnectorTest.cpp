@@ -1,9 +1,9 @@
 #include "util/ObjectsConnector.h"
 
+#include <QEventLoop>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-
-#include <QEventLoop>
 
 #include "private/emitter.h"
 #include "private/receiver.h"

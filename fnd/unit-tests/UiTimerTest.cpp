@@ -14,7 +14,7 @@ TEST(UiTimerTest, Test)
 {
 	QEventLoop eventLoop;
 	bool       called = false;
-	const auto timer = CreateUiTimer([&, startedAt = QDateTime::currentMSecsSinceEpoch()]() {
+	const auto timer  = CreateUiTimer([&, startedAt = QDateTime::currentMSecsSinceEpoch()]() {
 		called = true;
 		eventLoop.exit();
 		EXPECT_GT(QDateTime::currentMSecsSinceEpoch() - startedAt, 100);

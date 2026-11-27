@@ -176,7 +176,7 @@ struct CaseInsensitiveComparerTest : testing::TestWithParam<std::tuple<Left, Rig
 	void runCheck()
 	{
 		const auto& [left, right, expected] = this->GetParam();
-		EXPECT_EQ(CaseInsensitiveComparer {}(left, right), expected);
+		EXPECT_EQ(Comparer<Qt::CaseInsensitive> {}(left, right), expected);
 	}
 };
 
@@ -185,11 +185,12 @@ struct CaseInsensitiveComparerTest : testing::TestWithParam<std::tuple<Left, Rig
     TEST_P(SuiteName##Fixture, Compare) { this->runCheck(); }                    \
     INSTANTIATE_TEST_SUITE_P(SuiteName, SuiteName##Fixture, testing::Values(__VA_ARGS__))
 
-#define REGISTER_COMPARER_TEST_ITEMS_X_MACRO                                             \
-REGISTER_COMPARER_TEST_ITEM(StringAndString, std::string, std::string)                   \
-REGISTER_COMPARER_TEST_ITEM(StringAndStringView, std::string, std::string_view)          \
-REGISTER_COMPARER_TEST_ITEM(StringViewAndStringView, std::string_view, std::string_view) \
-REGISTER_COMPARER_TEST_ITEM(QStringAndString, QString, std::string)
+#define REGISTER_COMPARER_TEST_ITEMS_X_MACRO                                            \
+REGISTER_COMPARER_TEST_ITEM(String, QString, QString)                                   \
+REGISTER_COMPARER_TEST_ITEM(StdString, std::string, std::string)                        \
+REGISTER_COMPARER_TEST_ITEM(StdStringAndStringView, std::string, std::string_view)      \
+REGISTER_COMPARER_TEST_ITEM(StringViewAndStdString, std::string_view, std::string)      \
+REGISTER_COMPARER_TEST_ITEM(StringViewAndStringView, std::string_view, std::string_view)
 
 #define REGISTER_COMPARER_TEST_ITEM(NAME, LEFT, RIGHT) \
 REGISTER_COMPARER_TEST(                                \
@@ -215,7 +216,7 @@ namespace CaseInsensitiveHashTest {
 
 struct CaseInsensitiveHashTestF : testing::Test
 {
-	const std::unordered_set<QString, CaseInsensitiveHash<QString>, CaseInsensitiveEqual<QString>> set { "abc", "abd" };
+	const QtStringSet<QString, Qt::CaseInsensitive> set { "abc", "abd" };
 };
 
 struct CaseInsensitiveHashTest
@@ -253,26 +254,26 @@ namespace QStringViewHashTest {
 
 TEST(QStringViewHashTest, TestString)
 {
-	std::unordered_set<QString, QStringViewHash, QStringViewEqual> data { "abc", "abd" };
-	EXPECT_TRUE(data.contains("abc"));
+	QtStringSet<QString> data { "abc", "abd" };
 	EXPECT_TRUE(data.contains(QString { "abc" }));
 	EXPECT_TRUE(data.contains(QStringView { u"abc" }));
-	EXPECT_FALSE(data.contains("abe"));
 	EXPECT_FALSE(data.contains(QString { "abe" }));
 	EXPECT_FALSE(data.contains(QStringView { u"abe" }));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+	data.emplace(QStringView { u"abe" });
+	EXPECT_TRUE(data.contains(QString { "abe" }));
+	EXPECT_TRUE(data.contains(QStringView { u"abe" }));
+#endif
 }
 
 TEST(QStringViewHashTest, TestStringView)
 {
-	std::unordered_set<QStringView, QStringViewHash, QStringViewEqual> data { u"abc", u"abd" };
-	EXPECT_TRUE(data.contains("abc"));
+	QtStringSet<QStringView> data { u"abc", u"abd" };
 	EXPECT_TRUE(data.contains(QString { "abc" }));
 	EXPECT_TRUE(data.contains(QStringView { u"abc" }));
-	EXPECT_FALSE(data.contains("abe"));
 	EXPECT_FALSE(data.contains(QString { "abe" }));
 	EXPECT_FALSE(data.contains(QStringView { u"abe" }));
 	data.emplace(QStringView { u"abe" });
-	EXPECT_TRUE(data.contains("abe"));
 	EXPECT_TRUE(data.contains(QString { "abe" }));
 	EXPECT_TRUE(data.contains(QStringView { u"abe" }));
 }

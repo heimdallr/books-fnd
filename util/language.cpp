@@ -5,6 +5,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
+#include "fnd/algorithm.h"
+
 #include "StrUtil.h"
 #include "log.h"
 
@@ -14,9 +16,9 @@ namespace {
 
 struct Storage
 {
-	std::unordered_set<QString, Util::WStringHash, Util::WStringEqualTo>          LANGS;
-	std::unordered_map<QString, QString, Util::WStringHash, Util::WStringEqualTo> LANG_MAP;
-	const QString                                                                 UNDEFINED_LANG = "un";
+	Util::QtStringSet<QString, Qt::CaseInsensitive>          LANGS;
+	Util::QtStringMap<QString, QString, Qt::CaseInsensitive> LANG_MAP;
+	const QString                                            UNDEFINED_LANG = "un";
 
 public:
 	Storage()

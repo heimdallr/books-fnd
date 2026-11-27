@@ -47,7 +47,7 @@ ENABLE_BITMASK_OPERATORS(ImageProcessing);
 
 namespace {
 
-using Covers = std::unordered_map<QString, std::pair<bool, QByteArray>, QStringViewHash, QStringViewEqual>;
+using Covers = QtStringMap<QString, std::pair<bool, QByteArray>>;
 
 constexpr auto BINARY       = u"binary";
 constexpr auto ID           = u"id";

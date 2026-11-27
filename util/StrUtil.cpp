@@ -8,42 +8,13 @@
 
 namespace HomeCompa::Util {
 
-namespace {
-
-QString& SimplifyTitle(QString& value)
+std::vector<QString> UniqTitle(QString value)
 {
+	Normalize(value);
 	RemoveIf(value, [](const QChar ch) {
 		return ch != ' ' && !IsOneOf(ch.category(), QChar::Number_DecimalDigit, QChar::Letter_Lowercase);
 	});
-
-	QStringList digits;
-	auto        split = value.split(' ');
-	for (auto& word : split)
-	{
-		QString digitsWord;
-		RemoveIf(word, [&](const QChar ch) {
-			const auto c = ch.category();
-			if (c == QChar::Number_DecimalDigit)
-			{
-				digitsWord.append(ch);
-				return true;
-			}
-
-			return c != QChar::Letter_Lowercase;
-		});
-		if (!digitsWord.isEmpty())
-			digits << std::move(digitsWord);
-	}
-	std::ranges::move(std::move(digits), std::back_inserter(split));
-
-	return value;
-}
-
-} // namespace
-
-std::vector<QString> UniqTitle(QString value)
-{
-	return SimplifyTitle(Normalize(value)).split(' ', Qt::SkipEmptyParts) | std::views::as_rvalue | std::ranges::to<std::vector>();
+	return value.split(' ', Qt::SkipEmptyParts) | std::views::as_rvalue | std::ranges::to<std::vector>();
 }
 
 QString& Normalize(QString& value)

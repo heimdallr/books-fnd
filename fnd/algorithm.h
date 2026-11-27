@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include <QDataStream>
@@ -9,8 +11,6 @@
 #include <QIODevice>
 #include <QString>
 #include <QVariant>
-
-#include "platform/StrUtil.h"
 
 namespace HomeCompa::Util {
 
@@ -124,130 +124,6 @@ void FixSize(T& width, T& height, const T max)
 	}
 }
 
-template <typename T>
-QString ToQString(const T& str) = delete;
-
-template <>
-inline QString ToQString<std::string>(const std::string& str)
-{
-	return QString::fromStdString(str);
-}
-
-template <>
-inline QString ToQString<std::string_view>(const std::string_view& str)
-{
-	return QString::fromStdString(std::string(str));
-}
-
-template <>
-inline QString ToQString<QString>(const QString& str)
-{
-	return str;
-}
-
-template <>
-inline QString ToQString<std::wstring>(const std::wstring& str)
-{
-	return QString::fromStdWString(str);
-}
-
-template <>
-inline QString ToQString<std::wstring_view>(const std::wstring_view& str)
-{
-	return QString::fromStdWString(std::wstring(str));
-}
-
-template <>
-inline QString ToQString<std::pair<std::wstring, std::wstring>>(const std::pair<std::wstring, std::wstring>& str)
-{
-	return QString("%1/%2").arg(QString::fromStdWString(str.first), QString::fromStdWString(str.second));
-}
-
-template <>
-inline QString ToQString<std::pair<QString, QString>>(const std::pair<QString, QString>& str)
-{
-	return QString("%1/%2").arg(str.first, str.second);
-}
-
-template <>
-inline QString ToQString<std::filesystem::path>(const std::filesystem::path& str)
-{
-	return Platform::PathToString(str);
-}
-
-template <class T>
-[[nodiscard]] T FakeCopyInit(T) noexcept = delete;
-
-template <class T = void>
-struct CaseInsensitiveComparer
-{
-	[[nodiscard]] constexpr bool operator()(const T& lhs, const T& rhs) const noexcept(noexcept(FakeCopyInit<bool>(lhs < rhs)))
-	{
-		return QString::compare(ToQString(lhs), ToQString(rhs), Qt::CaseInsensitive) < 0;
-	}
-};
-
-template <>
-struct CaseInsensitiveComparer<QString>
-{
-	[[nodiscard]] constexpr bool operator()(const QString& lhs, const QString& rhs) const noexcept
-	{
-		return QString::compare(lhs, rhs, Qt::CaseInsensitive) < 0;
-	}
-};
-
-template <>
-struct CaseInsensitiveComparer<void>
-{
-	template <class L, class R>
-	[[nodiscard]] constexpr bool operator()(L&& lhs, R&& rhs) const noexcept(noexcept(ToQString(static_cast<L&&>(lhs)) < ToQString(static_cast<R&&>(rhs))))
-	{
-		return QString::compare(ToQString(static_cast<L&&>(lhs)), ToQString(static_cast<R&&>(rhs)), Qt::CaseInsensitive) < 0;
-	}
-
-	using is_transparent = int;
-};
-
-template <class T = void>
-struct CaseInsensitiveEqual
-{
-	[[nodiscard]] constexpr bool operator()(const T& lhs, const T& rhs) const noexcept(noexcept(FakeCopyInit<bool>(lhs < rhs)))
-	{
-		return QString::compare(ToQString(lhs), ToQString(rhs), Qt::CaseInsensitive) == 0;
-	}
-};
-
-template <>
-struct CaseInsensitiveEqual<QString>
-{
-	[[nodiscard]] constexpr bool operator()(const QString& lhs, const QString& rhs) const noexcept
-	{
-		return QString::compare(lhs, rhs, Qt::CaseInsensitive) == 0;
-	}
-};
-
-template <>
-struct CaseInsensitiveEqual<void>
-{
-	template <class L, class R>
-	[[nodiscard]] constexpr bool operator()(L&& lhs, R&& rhs) const noexcept(noexcept(ToQString(static_cast<L&&>(lhs)) < ToQString(static_cast<R&&>(rhs))))
-	{
-		return QString::compare(ToQString(static_cast<L&&>(lhs)), ToQString(static_cast<R&&>(rhs)), Qt::CaseInsensitive) == 0;
-	}
-
-	using is_transparent = int;
-};
-
-template <typename T>
-struct CaseInsensitiveHash
-{
-	size_t operator()(const T& value) const
-	{
-		const auto result = std::hash<QString>()(ToQString(value).toLower());
-		return result;
-	}
-};
-
 template <typename First, typename Second>
 struct PairHash
 {
@@ -293,43 +169,194 @@ struct VariantHash
 	}
 };
 
-struct QStringViewHash
+namespace QtUnorderedDetails {
+
+template <typename T>
+concept QtStringKey = std::same_as<std::remove_cvref_t<T>, QString> || std::same_as<std::remove_cvref_t<T>, QStringView>;
+
+using QHashSeed = decltype(qHash(0));
+
+constexpr auto callQHash(const auto& key, QHashSeed seed = 0) noexcept(noexcept(qHash(key, seed))) -> QHashSeed
+{
+	return qHash(key, seed);
+}
+
+template <Qt::CaseSensitivity Sensitivity = Qt::CaseInsensitive>
+struct QtStringHash
 {
 	using is_transparent = void;
 
-	size_t operator()(const QStringView bv) const noexcept
+	template <QtStringKey T>
+	static QHashSeed operator()(const T& key) noexcept
 	{
-		return qHash(bv);
-	}
-
-	size_t operator()(const QString& str) const noexcept
-	{
-		return qHash(str);
+		const QStringView sv(key);
+		if constexpr (Sensitivity == Qt::CaseSensitive)
+		{
+			return qHash(sv);
+		}
+		else
+		{
+			QHashSeed seed = 0;
+			for (qsizetype i = 0; i < sv.size(); ++i)
+			{
+				char32_t ucs4 = sv[i].unicode();
+				if (QChar::isHighSurrogate(ucs4) && i + 1 < sv.size() && QChar::isLowSurrogate(sv[i + 1].unicode()))
+				{
+					ucs4 = QChar::surrogateToUcs4(ucs4, sv[++i].unicode());
+				}
+				seed = callQHash(QChar::toCaseFolded(ucs4), seed);
+			}
+			return seed;
+		}
 	}
 };
 
-struct QStringViewEqual
+template <Qt::CaseSensitivity Sensitivity = Qt::CaseInsensitive>
+struct QtStringEqual
 {
 	using is_transparent = void;
 
-	bool operator()(const QStringView lhs, const QStringView rhs) const noexcept
+	template <QtStringKey L, QtStringKey R>
+	static bool operator()(const L& lhs, const R& rhs) noexcept
 	{
-		return lhs == rhs;
+		return QStringView(lhs).compare(QStringView(rhs), Sensitivity) == 0;
+	}
+};
+
+} // namespace QtUnorderedDetails
+
+template <QtUnorderedDetails::QtStringKey Key, Qt::CaseSensitivity Sensitivity = Qt::CaseSensitive, typename Allocator = std::allocator<Key>>
+using QtStringSet = std::unordered_set<Key, QtUnorderedDetails::QtStringHash<Sensitivity>, QtUnorderedDetails::QtStringEqual<Sensitivity>, Allocator>;
+
+template <QtUnorderedDetails::QtStringKey Key, typename Value, Qt::CaseSensitivity Sensitivity = Qt::CaseSensitive, typename Allocator = std::allocator<std::pair<const Key, Value>>>
+using QtStringMap = std::unordered_map<Key, Value, QtUnorderedDetails::QtStringHash<Sensitivity>, QtUnorderedDetails::QtStringEqual<Sensitivity>, Allocator>;
+
+namespace ComparerDetails {
+
+template <Qt::CaseSensitivity Sensitivity, typename T>
+struct CompareHelper
+{
+	static bool Compare(const T& lhs, const T& rhs) noexcept = delete;
+};
+
+template <Qt::CaseSensitivity Sensitivity>
+struct CompareHelper<Sensitivity, QString>
+{
+	using is_transparent = void;
+
+	static bool Compare(const QString& lhs, const QString& rhs) noexcept
+	{
+		return lhs.compare(rhs, Sensitivity) < 0;
+	}
+};
+
+template <Qt::CaseSensitivity Sensitivity>
+struct CompareHelper<Sensitivity, std::string_view>
+{
+	using is_transparent = void;
+
+	static bool Compare(const std::string_view& lhs, const std::string_view& rhs) noexcept
+	{
+		return std::ranges::lexicographical_compare(lhs, rhs, [](unsigned char a, unsigned char b) {
+			return std::tolower(a) < std::tolower(b);
+		});
+	}
+};
+
+template <Qt::CaseSensitivity Sensitivity>
+struct CompareHelper<Sensitivity, std::string>
+{
+	using is_transparent = void;
+
+	static bool Compare(const std::string_view& lhs, const std::string_view& rhs) noexcept
+	{
+		return CompareHelper<Sensitivity, std::string_view>::Compare(lhs, rhs);
+	}
+};
+
+template <Qt::CaseSensitivity Sensitivity, typename... ARGS>
+struct CompareHelper<Sensitivity, std::tuple<ARGS...>>
+{
+	using is_transparent = void;
+
+	static bool Compare(const std::tuple<ARGS...>& lhs, const std::tuple<ARGS...>& rhs) noexcept
+	{
+		return CompareImpl(lhs, rhs, std::index_sequence_for<ARGS...> {});
 	}
 
-	bool operator()(const QString& lhs, const QString& rhs) const noexcept
+private:
+	template <typename Tuple, std::size_t... Is>
+	static constexpr bool CompareImpl(const Tuple& lhs, const Tuple& rhs, std::index_sequence<Is...>) noexcept
 	{
-		return lhs == rhs;
-	}
+		bool result = false;
 
-	bool operator()(const QString& lhs, const QStringView rhs) const noexcept
-	{
-		return lhs == rhs;
-	}
+		auto step = [&](auto idx) {
+			constexpr std::size_t I = decltype(idx)::value;
+			const auto&           a = std::get<I>(lhs);
+			const auto&           b = std::get<I>(rhs);
 
-	bool operator()(const QStringView lhs, const QString& rhs) const noexcept
+			using ItemType = std::remove_cvref_t<std::tuple_element_t<I, Tuple>>;
+
+			if (CompareHelper<Sensitivity, ItemType>::Compare(a, b))
+			{
+				result = true;
+				return true;
+			}
+			if (CompareHelper<Sensitivity, ItemType>::Compare(b, a))
+			{
+				result = false;
+				return true;
+			}
+			return false;
+		};
+
+		(step(std::integral_constant<std::size_t, Is> {}) || ...);
+		return result;
+	}
+};
+
+template <Qt::CaseSensitivity Sensitivity, typename First, typename Second>
+struct CompareHelper<Sensitivity, std::pair<First, Second>>
+{
+	using is_transparent = void;
+
+	static bool Compare(const std::pair<First, Second>& lhs, const std::pair<First, Second>& rhs) noexcept
 	{
-		return lhs == rhs;
+		const std::tuple<const First&, const Second&> lhst = lhs;
+		const std::tuple<const First&, const Second&> rhst = rhs;
+		return CompareHelper<Sensitivity, std::tuple<const First&, const Second&>>::Compare(lhst, rhst);
+	}
+};
+
+} // namespace ComparerDetails
+
+template <Qt::CaseSensitivity Sensitivity = Qt::CaseSensitive>
+struct Comparer
+{
+	using is_transparent = void;
+
+	template <typename L, typename R>
+	static bool operator()(const L& lhs, const R& rhs) noexcept
+	{
+		using CleanL = std::decay_t<L>;
+		using CleanR = std::decay_t<R>;
+
+		if constexpr (std::is_same_v<CleanL, CleanR>)
+		{
+			return ComparerDetails::CompareHelper<Sensitivity, L>::Compare(lhs, rhs);
+		}
+		else if constexpr (std::is_constructible_v<CleanL, CleanR>)
+		{
+			return ComparerDetails::CompareHelper<Sensitivity, L>::Compare(lhs, static_cast<CleanL>(rhs));
+		}
+		else if constexpr (std::is_convertible_v<CleanR, CleanL>)
+		{
+			return ComparerDetails::CompareHelper<Sensitivity, R>::Compare(static_cast<CleanR>(lhs), rhs);
+		}
+		else
+		{
+			static_assert(std::is_same_v<CleanL, CleanR>, "Types L and R are not convertible to each other");
+		}
 	}
 };
 

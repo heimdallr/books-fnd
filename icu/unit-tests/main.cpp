@@ -28,7 +28,6 @@ TEST(ICU, TransliterateFail)
 	EXPECT_FALSE(ICU_Transliterate("fake stub id", &src, &dst));
 }
 
-
 TEST(ICU, CreateDecoderFail)
 {
 	EXPECT_THROW(IDecoder::Create("fake stub encoding"), std::runtime_error);

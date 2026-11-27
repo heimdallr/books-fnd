@@ -1,9 +1,9 @@
 #include "util/ColorUtil.h"
 
 #include <QColor>
+#include <QGuiApplication>
 #include <QString>
 #include <QVariant>
-#include <QGuiApplication>
 
 #include <gtest/gtest.h>
 
@@ -87,7 +87,6 @@ TEST_P(ColorUtil_ToString, ToString)
 	const auto value          = ToString(color);
 	EXPECT_EQ(value.toUpper(), test);
 }
-
 
 TEST(ColorUtil_ToString2, ToString)
 {
